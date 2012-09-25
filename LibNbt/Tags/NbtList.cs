@@ -33,13 +33,13 @@ namespace LibNbt.Tags {
         }
 
 
-        public NbtTag Get( int tagIdx ) {
-            return Get<NbtTag>( tagIdx );
+        public NbtTag Get( int tagIndex ) {
+            return Get<NbtTag>( tagIndex );
         }
 
 
-        public T Get<T>( int tagIdx ) where T : NbtTag {
-            return (T)Tags[tagIdx];
+        public T Get<T>( int tagIndex ) where T : NbtTag {
+            return (T)Tags[tagIndex];
         }
 
 
@@ -98,7 +98,7 @@ namespace LibNbt.Tags {
 
         public void SetListType( NbtTagType listType ) {
             foreach( var tag in Tags ) {
-                if( tag.GetTagType() != listType ) {
+                if( tag.TagType != listType ) {
                     throw new Exception( "All list items must be the specified tag type." );
                 }
             }
@@ -213,9 +213,9 @@ namespace LibNbt.Tags {
             // Figure out the type of this list, then check
             // to make sure all elements are that type.
             if( Tags.Count > 0 ) {
-                NbtTagType listType = Tags[0].GetTagType();
+                NbtTagType listType = Tags[0].TagType;
                 foreach( NbtTag tag in Tags ) {
-                    if( tag.GetTagType() != listType ) {
+                    if( tag.TagType != listType ) {
                         throw new Exception( "All list items must be the same tag type." );
                     }
                 }
@@ -238,8 +238,8 @@ namespace LibNbt.Tags {
         #endregion
 
 
-        internal override NbtTagType GetTagType() {
-            return NbtTagType.List;
+        internal override NbtTagType TagType {
+            get { return NbtTagType.List; }
         }
 
 

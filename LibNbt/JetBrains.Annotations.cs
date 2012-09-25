@@ -372,10 +372,7 @@ namespace JetBrains.Annotations {
     public sealed class InstantHandleAttribute : Attribute {}
 
 
-    /// <summary>
-    /// Indicates that method doesn't contain observable side effects.
-    /// The same as <see cref="System.Diagnostics.Contracts.PureAttribute"/>
-    /// </summary>
+    /// <summary> Indicates that method doesn't contain observable side effects. </summary>
     [AttributeUsage( AttributeTargets.Method, Inherited = true )]
     public sealed class PureAttribute : Attribute {}
 }

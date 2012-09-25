@@ -7,16 +7,22 @@ using LibNbt.Tags;
 
 namespace LibNbt {
     public class NbtFile {
-        const int BufferSize = 4096;
+        const int BufferSize = 8192;
         const string ZLibNotice = "ZLib compression is not currently supported by LibNbt.";
 
         [CanBeNull]
         protected string FileName { get; set; }
+
+
         protected NbtCompression FileCompression { get; set; }
 
+
+        [CanBeNull]
         public NbtCompound RootTag { get; set; }
 
-        public NbtFile() : this( null, NbtCompression.AutoDetect ) {}
+
+        public NbtFile()
+            : this( null, NbtCompression.AutoDetect ) {}
 
 
         public NbtFile( [CanBeNull] string fileName, NbtCompression compression ) {
@@ -76,7 +82,7 @@ namespace LibNbt {
 
                     default:
                         // zlib does not have a "magic number" in its header,
-                        // but lower 4 bits of the first byte should be 0b1000 (8)
+                        // but lower nibble of the first byte should be 0b1000 (8)
                         if( ( firstByte & 0x0F ) == 8 ) {
                             compression = NbtCompression.ZLib;
                         } else {
@@ -115,7 +121,9 @@ namespace LibNbt {
         }
 
 
-        protected void LoadFileInternal( Stream fileStream ) {
+        protected void LoadFileInternal( [NotNull] Stream fileStream ) {
+            if( fileStream == null ) throw new ArgumentNullException( "fileStream" );
+
             // Make sure the stream is at the beginning
             fileStream.Seek( 0, SeekOrigin.Begin );
 
@@ -171,14 +179,16 @@ namespace LibNbt {
         }
 
 
-        public NbtTag Query( string query ) {
+        public NbtTag Query( [NotNull] string query ) {
+            if( query == null ) throw new ArgumentNullException( "query" );
             return Query<NbtTag>( query );
         }
 
 
-        public T Query<T>( string query ) where T : NbtTag {
+        public T Query<T>( [NotNull] string query ) where T : NbtTag {
+            if( query == null ) throw new ArgumentNullException( "query" );
+            if( RootTag == null ) return null;
             var tagQuery = new TagQuery( query );
-
             return RootTag.Query<T>( tagQuery );
         }
     }

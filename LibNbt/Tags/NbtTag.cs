@@ -1,22 +1,26 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt.Tags {
     public abstract class NbtTag {
         protected NbtTag() {
-            Name = "";
+            Name = null;
         }
 
 
-        public string Name { get; set; }
+        [CanBeNull]
+        public string Name { get; protected set; }
 
 
-        public virtual NbtTag Query( string query ) {
+        public virtual NbtTag Query( [NotNull] string query ) {
             return Query<NbtTag>( query );
         }
 
 
-        public virtual T Query<T>( string query ) where T : NbtTag {
+        public virtual T Query<T>( [NotNull] string query ) where T : NbtTag {
+            if( query == null ) throw new ArgumentNullException( "query" );
             var tagQuery = new TagQuery( query );
             return Query<T>( tagQuery );
         }
@@ -27,15 +31,14 @@ namespace LibNbt.Tags {
         }
 
 
-        /// <summary>
-        /// Queries the tag to easily find a tag in a structure.
-        /// </summary>
-        /// <typeparam name="T">Type of the tag to return.</typeparam>
-        /// <param name="query">Tokenized query</param>
-        /// <param name="bypassCheck">Bypass the name check when querying non-named queries.
-        /// NbtList elements are an example.</param>
-        /// <returns>The tag that was queried for.</returns>
-        internal virtual T Query<T>( TagQuery query, bool bypassCheck ) where T : NbtTag {
+        /// <summary> Queries the tag to easily find a tag in a structure. </summary>
+        /// <typeparam name="T"> Type of the tag to return. </typeparam>
+        /// <param name="query"> Tokenized query </param>
+        /// <param name="bypassCheck"> Bypass the name check when querying non-named queries.
+        /// NbtList elements are an example. </param>
+        /// <returns> The tag that was queried for. </returns>
+        internal virtual T Query<T>( [NotNull] TagQuery query, bool bypassCheck ) where T : NbtTag {
+            if( query == null ) throw new ArgumentNullException( "query" );
             if( bypassCheck ) {
                 return (T)this;
             }
@@ -54,21 +57,21 @@ namespace LibNbt.Tags {
         }
 
 
-        internal abstract void ReadTag( Stream readStream );
+        internal abstract void ReadTag( [NotNull] Stream readStream );
 
-        internal abstract void ReadTag( Stream readStream, bool readName );
+        internal abstract void ReadTag( [NotNull] Stream readStream, bool readName );
 
         // WriteTag writes the whole tag, including the ID byte
-        internal abstract void WriteTag( Stream writeStream );
+        internal abstract void WriteTag( [NotNull] Stream writeStream );
 
-        internal abstract void WriteTag( Stream writeStream, bool writeName );
+        internal abstract void WriteTag( [NotNull] Stream writeStream, bool writeName );
 
         // WriteData does not write the tag's ID byte or the name
-        internal abstract void WriteData( Stream writeStream );
+        internal abstract void WriteData( [NotNull] Stream writeStream );
 
 
-        internal virtual NbtTagType GetTagType() {
-            return NbtTagType.Unknown;
+        internal virtual NbtTagType TagType {
+            get { return NbtTagType.Unknown; }
         }
     }
 }

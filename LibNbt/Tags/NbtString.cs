@@ -64,8 +64,8 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override NbtTagType GetTagType() {
-            return NbtTagType.String;
+        internal override NbtTagType TagType {
+            get { return NbtTagType.String; }
         }
 
 

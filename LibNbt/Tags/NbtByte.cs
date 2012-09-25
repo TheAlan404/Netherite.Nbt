@@ -6,11 +6,11 @@ namespace LibNbt.Tags {
     public class NbtByte : NbtTag, INbtTagValue<byte> {
         public byte Value { get; set; }
 
-        public NbtByte() : this( "" ) {}
+        public NbtByte() : this( null ) {}
 
 
         [Obsolete( "This constructor will be removed in favor of using NbtByte(string tagName, byte value)" )]
-        public NbtByte( byte value ) : this( "", value ) {}
+        public NbtByte( byte value ) : this( null, value ) {}
 
 
         public NbtByte( string name, byte value = 0x00 ) {
@@ -60,8 +60,8 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override NbtTagType GetTagType() {
-            return NbtTagType.Byte;
+        internal override NbtTagType TagType {
+            get { return NbtTagType.Byte; }
         }
 
 

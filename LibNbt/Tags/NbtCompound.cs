@@ -9,9 +9,9 @@ namespace LibNbt.Tags {
         public List<NbtTag> Tags { get; protected set; }
 
 
-        public NbtTag this[ int tagIdx ] {
-            get { return Get<NbtTag>( tagIdx ); }
-            set { Set( tagIdx, value ); }
+        public NbtTag this[ int tagIndex ] {
+            get { return Get<NbtTag>( tagIndex ); }
+            set { Set( tagIndex, value ); }
         }
 
 
@@ -41,8 +41,8 @@ namespace LibNbt.Tags {
 
         #region INbtTagList Methods
 
-        public T Get<T>( int tagIdx ) where T : NbtTag {
-            return (T)Tags[tagIdx];
+        public T Get<T>( int tagIndex ) where T : NbtTag {
+            return (T)Tags[tagIndex];
         }
 
 
@@ -244,8 +244,8 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override NbtTagType GetTagType() {
-            return NbtTagType.Compound;
+        internal override NbtTagType TagType {
+            get { return NbtTagType.Compound; }
         }
 
 

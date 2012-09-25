@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace LibNbt.Tags {
     interface INbtTagList {
+        [NotNull]
         List<NbtTag> Tags { get; }
 
-        T Get<T>( int tagIdx ) where T : NbtTag;
+        [CanBeNull]
+        T Get<T>( int tagIndex ) where T : NbtTag;
     }
 }
