@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using LibNbt.Queries;
+﻿using System.Collections.Generic;
 
-namespace LibNbt.Tags
-{
-    internal interface INbtTagList
-    {
+namespace LibNbt.Tags {
+    interface INbtTagList {
         List<NbtTag> Tags { get; }
 
-        T Get<T>(int tagIdx) where T : NbtTag;
+        T Get<T>( int tagIdx ) where T : NbtTag;
     }
 }

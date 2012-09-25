@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace LibNbt.Tags
-{
-    internal interface INbtTagValue<T>
-    {
+﻿namespace LibNbt.Tags {
+    interface INbtTagValue<T> {
         T Value { get; set; }
     }
 }
