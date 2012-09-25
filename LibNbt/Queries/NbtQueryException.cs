@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LibNbt.Exceptions {
+namespace LibNbt.Queries {
     public class NbtQueryException : Exception {
         public NbtQueryException( string message ) : base( message ) {}
     }

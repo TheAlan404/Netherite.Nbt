@@ -14,6 +14,8 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,8 +43,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="JetBrains.Annotations.cs" />
+    <Compile Include="NbtCompression.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Exceptions\NbtQueryException.cs" />
+    <Compile Include="Queries\NbtQueryException.cs" />
     <Compile Include="NbtFile.cs" />
     <Compile Include="Queries\TagQuery.cs" />
     <Compile Include="Queries\TagQueryToken.cs" />

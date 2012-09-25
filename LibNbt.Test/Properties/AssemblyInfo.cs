@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("LibNbt.Test")]
 [assembly: AssemblyDescription("LibNbt Unit Tests")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("LibNbt Project - http://www.github.com/aphistic/libnbt/")]
+[assembly: AssemblyCompany( "LibNbt Project, github.com/fragmer/libnbt" )]
 [assembly: AssemblyProduct("LibNbt.Test")]
-[assembly: AssemblyCopyright("2010, Erik Davidson")]
+[assembly: AssemblyCopyright( "2010 Erik Davidson, 2012 Matvei Stefarov" )]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.2.0.0")]
-[assembly: AssemblyFileVersion("0.2.0.0")]
+[assembly: AssemblyVersion( "0.3.0.0" )]
+[assembly: AssemblyFileVersion( "0.3.0.0" )]

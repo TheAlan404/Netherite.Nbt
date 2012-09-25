@@ -1,68 +1,116 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using JetBrains.Annotations;
 using LibNbt.Queries;
 using LibNbt.Tags;
 
 namespace LibNbt {
     public class NbtFile {
         const int BufferSize = 4096;
+        const string ZLibNotice = "ZLib compression is not currently supported by LibNbt.";
 
-        protected byte[] FileContents { get; set; }
-
-        protected string LoadedFile { get; set; }
-        protected bool CompressedFile { get; set; }
+        [CanBeNull]
+        protected string FileName { get; set; }
+        protected NbtCompression FileCompression { get; set; }
 
         public NbtCompound RootTag { get; set; }
 
-        public NbtFile() : this( "" ) {}
+        public NbtFile() : this( null, NbtCompression.AutoDetect ) {}
 
 
-        public NbtFile( string fileName, bool compressed = true ) {
-            LoadedFile = fileName;
-            CompressedFile = compressed;
+        public NbtFile( [CanBeNull] string fileName, NbtCompression compression ) {
+            FileName = fileName;
+            FileCompression = compression;
         }
 
 
         public virtual void LoadFile() {
-            LoadFile( LoadedFile, CompressedFile );
+            if( FileName == null ) {
+                throw new NullReferenceException( "FileName is null." );
+            }
+            LoadFile( FileName, FileCompression );
         }
 
 
-        public virtual void LoadFile( string fileName ) {
-            LoadFile( fileName, true );
+        public virtual void LoadFile( [NotNull] string fileName ) {
+            if( fileName == null ) throw new ArgumentNullException( "fileName" );
+            LoadFile( fileName, NbtCompression.AutoDetect );
         }
 
 
-        public virtual void LoadFile( string fileName, bool compressed ) {
+        public virtual void LoadFile( [NotNull] string fileName, NbtCompression compression ) {
+            if( fileName == null ) throw new ArgumentNullException( "fileName" );
             if( !File.Exists( fileName ) ) {
-                throw new FileNotFoundException( string.Format( "Could not find NBT file: {0}", fileName ), fileName );
+                throw new FileNotFoundException( String.Format( "Could not find NBT file: {0}", fileName ),
+                                                 fileName );
             }
 
-            LoadedFile = fileName;
-            CompressedFile = compressed;
+            FileName = fileName;
+            FileCompression = compression;
 
             using( FileStream readFileStream = File.OpenRead( fileName ) ) {
-                LoadFile( readFileStream, CompressedFile );
+                LoadFile( readFileStream, FileCompression );
             }
         }
 
 
-        public virtual void LoadFile( Stream fileStream, bool compressed ) {
-            if( compressed ) {
-                using( var decStream = new GZipStream( fileStream, CompressionMode.Decompress ) ) {
-                    using( var memStream = new MemoryStream( (int)fileStream.Length ) ) {
-                        var buffer = new byte[4096];
-                        int bytesRead;
-                        while( ( bytesRead = decStream.Read( buffer, 0, buffer.Length ) ) != 0 ) {
-                            memStream.Write( buffer, 0, bytesRead );
-                        }
+        public virtual void LoadFile( [NotNull] Stream fileStream, NbtCompression compression ) {
+            if( fileStream == null ) throw new ArgumentNullException( "fileStream" );
 
-                        LoadFileInternal( memStream );
-                    }
+            // detect compression, based on the first byte
+            if( compression == NbtCompression.AutoDetect ) {
+                int firstByte = fileStream.ReadByte();
+                switch( firstByte ) {
+                    case -1:
+                        throw new EndOfStreamException();
+
+                    case (byte)NbtTagType.Compound: // 0x0A
+                        compression = NbtCompression.None;
+                        break;
+
+                    case 0x1F:
+                        // gzip magic number
+                        compression = NbtCompression.GZip;
+                        break;
+
+                    default:
+                        // zlib does not have a "magic number" in its header,
+                        // but lower 4 bits of the first byte should be 0b1000 (8)
+                        if( ( firstByte & 0x0F ) == 8 ) {
+                            compression = NbtCompression.ZLib;
+                        } else {
+                            throw new InvalidDataException( "Could not auto-detect compression format." );
+                        }
+                        break;
                 }
-            } else {
-                LoadFileInternal( fileStream );
+                fileStream.Seek( -1, SeekOrigin.Current );
+            }
+
+            switch( compression ) {
+                case NbtCompression.GZip:
+                    using( var decStream = new GZipStream( fileStream, CompressionMode.Decompress ) ) {
+                        using( var memStream = new MemoryStream( (int)fileStream.Length ) ) {
+                            var buffer = new byte[4096];
+                            int bytesRead;
+                            while( ( bytesRead = decStream.Read( buffer, 0, buffer.Length ) ) != 0 ) {
+                                memStream.Write( buffer, 0, bytesRead );
+                            }
+
+                            LoadFileInternal( memStream );
+                        }
+                    }
+                    break;
+
+                case NbtCompression.None:
+                    LoadFileInternal( fileStream );
+                    break;
+
+                case NbtCompression.ZLib:
+                    throw new NotImplementedException( ZLibNotice );
+
+                default:
+                    throw new ArgumentOutOfRangeException( "compression" );
             }
         }
 
@@ -83,76 +131,42 @@ namespace LibNbt {
         }
 
 
-        public virtual void SaveFile( string fileName ) {
-            SaveFile( fileName, true );
-        }
+        public virtual void SaveFile( [NotNull] string fileName, NbtCompression compression ) {
+            if( fileName == null ) throw new ArgumentNullException( "fileName" );
 
-
-        public virtual void SaveFile( string fileName, bool compressed ) {
-            using( var saveStream = new MemoryStream() ) {
-                SaveFile( saveStream, compressed );
-
-                saveStream.Seek( 0, SeekOrigin.Begin );
-
-                if( File.Exists( fileName ) ) {
-                    File.Delete( fileName );
-                }
-                using( FileStream saveFile = File.OpenWrite( fileName ) ) {
-                    var buffer = new byte[4096];
-                    int bytesRead;
-                    while( ( bytesRead = saveStream.Read( buffer, 0, buffer.Length ) ) != 0 ) {
-                        saveFile.Write( buffer, 0, bytesRead );
-                    }
-                }
+            using( FileStream saveFile = File.Create( fileName ) ) {
+                SaveFile( saveFile, compression );
             }
         }
 
 
-        public virtual void SaveFile( Stream fileStream ) {
-            SaveFile( fileStream, true );
-        }
+        public virtual void SaveFile( [NotNull] Stream fileStream, NbtCompression compression ) {
+            if( fileStream == null ) throw new ArgumentNullException( "fileStream" );
 
+            switch( compression ) {
+                case NbtCompression.AutoDetect:
+                    throw new ArgumentException( "AutoDetect is not a valid NbtCompression value for saving." );
+                case NbtCompression.ZLib:
+                    throw new NotImplementedException( ZLibNotice );
+                case NbtCompression.GZip:
+                case NbtCompression.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException( "compression" );
+            }
 
-        public virtual void SaveFile( Stream fileStream, bool compressed ) {
-            if( RootTag != null ) {
-                using( var memStream = new MemoryStream() ) {
-                    var buffer = new byte[BufferSize];
+            // do not write anything for empty tags
+            if( RootTag == null ) return;
 
-                    RootTag.WriteTag( memStream );
-                    memStream.Seek( 0, SeekOrigin.Begin );
-
-                    if( compressed ) {
-                        using( var msCompressStream = new MemoryStream() ) {
-                            using( var compressStream = new GZipStream( msCompressStream, CompressionMode.Compress ) ) {
-                                int compressRead;
-                                while( ( compressRead = memStream.Read( buffer, 0, buffer.Length ) ) != 0 ) {
-                                    compressStream.Write( buffer, 0, compressRead );
-                                }
-                            }
-
-                            FileContents = msCompressStream.ToArray();
-                        }
-                    } else {
-                        FileContents = new byte[memStream.Length];
-
-                        int amtSaved, pos = 0;
-                        while( pos < memStream.Length &&
-                               ( amtSaved = memStream.Read( buffer, pos, buffer.Length ) ) != 0 ) {
-                            Buffer.BlockCopy( buffer, 0, FileContents, pos, amtSaved );
-                            pos += amtSaved;
-                        }
+            if( compression == NbtCompression.GZip ) {
+                using( var compressStream = new GZipStream( fileStream, CompressionMode.Compress ) ) {
+                    // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
+                    using( BufferedStream bs = new BufferedStream( compressStream, BufferSize ) ) {
+                        RootTag.WriteTag( bs );
                     }
                 }
-
-                int outPos = 0;
-                while( outPos < FileContents.Length ) {
-                    int outAmt = 0;
-                    if( BufferSize > FileContents.Length ) {
-                        outAmt = FileContents.Length;
-                    }
-                    fileStream.Write( FileContents, outPos, outAmt );
-                    outPos += BufferSize;
-                }
+            } else {
+                RootTag.WriteTag( fileStream );
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using LibNbt.Exceptions;
 using LibNbt.Queries;
 
 namespace LibNbt.Tags {

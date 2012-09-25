@@ -37,7 +37,7 @@ namespace LibNbt.Test {
         [Test]
         public void TestNbtSmallFileLoadingUncompressed() {
             var file = new NbtFile();
-            file.LoadFile( "TestFiles/test.nbt", false );
+            file.LoadFile( "TestFiles/test.nbt", NbtCompression.None );
 
             AssertNbtSmallFile( file );
         }
@@ -76,7 +76,7 @@ namespace LibNbt.Test {
         [Test]
         public void TestnbtBigFileLoadingUncompressed() {
             var file = new NbtFile();
-            file.LoadFile( "TestFiles/bigtest.nbt", false );
+            file.LoadFile( "TestFiles/bigtest.nbt", NbtCompression.None );
 
             AssertNbtBigFile( file );
         }
@@ -257,7 +257,7 @@ namespace LibNbt.Test {
                 } )
             };
 
-            file.SaveFile( "TestTemp/test.nbt", false );
+            file.SaveFile( "TestTemp/test.nbt", NbtCompression.None );
 
             FileAssert.AreEqual( "TestFiles/test.nbt", "TestTemp/test.nbt" );
         }
@@ -272,7 +272,7 @@ namespace LibNbt.Test {
             };
 
             var nbtStream = new MemoryStream();
-            file.SaveFile( nbtStream, false );
+            file.SaveFile( nbtStream, NbtCompression.None );
 
             FileStream testFileStream = File.OpenRead( "TestFiles/test.nbt" );
 
@@ -290,8 +290,7 @@ namespace LibNbt.Test {
             NbtList list = new NbtList( "Entities", null, mytype );
             file.RootTag.Tags.Add( list );
 
-            file.SaveFile( "TestFiles/NbtListType.nbt" );
-
+            file.SaveFile( "TestFiles/NbtListType.nbt", NbtCompression.GZip );
 
             NbtFile read = new NbtFile();
             read.LoadFile( "TestFiles/NbtListType.nbt" );

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using LibNbt.Exceptions;
 using LibNbt.Queries;
 
 namespace LibNbt.Tags {
