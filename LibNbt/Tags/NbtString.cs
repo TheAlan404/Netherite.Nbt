@@ -14,37 +14,27 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void ReadTag( Stream readStream ) {
-            ReadTag( readStream, true );
+        internal override void ReadTag( NbtReader readStream ) {
+            Name = readStream.ReadString();
+            Value = readStream.ReadString();
         }
 
 
-        internal override void ReadTag( Stream readStream, bool readName ) {
+        internal override void ReadTag( NbtReader readStream, bool readName ) {
             if( readName ) {
-                var name = new NbtString();
-                name.ReadTag( readStream, false );
-
-                Name = name.Value;
+                Name = readStream.ReadString();
             }
-
-            // Get the length of the string
-            var length = new NbtShort();
-            length.ReadTag( readStream, false );
-
-            byte[] buffer = new byte[length.Value];
-            int totalRead = 0;
-            while( ( totalRead += readStream.Read( buffer, totalRead, length.Value ) ) < length.Value ) {}
-            Value = Encoding.UTF8.GetString( buffer );
+            Value = readStream.ReadString();
         }
 
 
-        internal override void WriteTag( Stream writeStream ) {
+        internal override void WriteTag( NbtWriter writeStream ) {
             WriteTag( writeStream, true );
         }
 
 
-        internal override void WriteTag( Stream writeStream, bool writeName ) {
-            writeStream.WriteByte( (byte)NbtTagType.String );
+        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+            writeStream.Write( (byte)NbtTagType.String );
             if( writeName ) {
                 var name = new NbtString( "", Name );
                 name.WriteData( writeStream );
@@ -54,7 +44,7 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void WriteData( Stream writeStream ) {
+        internal override void WriteData( NbtWriter writeStream ) {
             byte[] str = Encoding.UTF8.GetBytes( Value );
 
             var length = new NbtShort( "", (short)str.Length );

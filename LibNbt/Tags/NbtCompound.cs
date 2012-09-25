@@ -1,17 +1,42 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt.Tags {
-    public class NbtCompound : NbtTag, INbtTagList {
-        public List<NbtTag> Tags { get; protected set; }
+    public class NbtCompound : NbtTag, ICollection<NbtTag> {
+        [ContractAnnotation("=> void")]
+        static void ThrowNoTagName() {
+            throw new ArgumentException( "All tags in a compound tag must be named." );
+        }
 
 
-        public NbtTag this[ int tagIndex ] {
-            get { return Get<NbtTag>( tagIndex ); }
-            set { Set( tagIndex, value ); }
+        internal override NbtTagType TagType {
+            get { return NbtTagType.Compound; }
+        }
+
+
+        public Dictionary<string, NbtTag> Tags { get; private set; }
+
+
+        public NbtCompound()
+            : this( null ) {}
+
+
+        public NbtCompound( string tagName )
+            : this( tagName, new NbtTag[0] ) {}
+
+
+        public NbtCompound( string tagName, IEnumerable<NbtTag> tags ) {
+            Name = tagName;
+            Tags = new Dictionary<string, NbtTag>();
+            foreach( NbtTag tag in tags ) {
+                if( tag.Name == null ) ThrowNoTagName();
+                Tags.Add( tag.Name, tag );
+            }
         }
 
 
@@ -21,39 +46,148 @@ namespace LibNbt.Tags {
         }
 
 
-        protected Dictionary<string, NbtTag> TagCache { get; set; }
+        public NbtTag Get( [NotNull] string tagName ) {
+            if( tagName == null ) throw new ArgumentNullException( "tagName" );
+            return Get<NbtTag>( tagName );
+        }
 
-        public NbtCompound() : this( "" ) {}
 
-        public NbtCompound( string tagName ) : this( tagName, new NbtTag[] { } ) {}
+        public T Get<T>( [NotNull] string tagName ) where T : NbtTag {
+            if( tagName == null ) throw new ArgumentNullException( "tagName" );
+            NbtTag result;
+            if( Tags.TryGetValue( tagName, out result ) ) {
+                return (T)result;
+            }
+            return null;
+        }
 
 
-        public NbtCompound( string tagName, IEnumerable<NbtTag> tags ) {
-            Name = tagName;
-            Tags = new List<NbtTag>();
-            TagCache = new Dictionary<string, NbtTag>();
+        public void Set( [NotNull] string tagName, [NotNull] NbtTag tag ) {
+            if( tagName == null ) throw new ArgumentNullException( "tagName" );
+            if( tag == null ) throw new ArgumentNullException( "tag" );
+            Tags[tagName] = tag;
+        }
 
-            if( tags != null ) {
-                Tags.AddRange( tags );
+
+        #region Reading Tag
+
+        internal override void ReadTag( NbtReader readStream ) {
+            ReadTag( readStream, true );
+        }
+
+
+        internal override void ReadTag( NbtReader readStream, bool readName ) {
+            // First read the name of this tag
+            if( readName ) {
+                Name = readStream.ReadString();
+            }
+
+            Tags.Clear();
+            bool foundEnd = false;
+            while( !foundEnd ) {
+                NbtTagType nextTag = readStream.ReadTagType();
+                switch( nextTag ) {
+                    case NbtTagType.End:
+                        foundEnd = true;
+                        break;
+
+                    case NbtTagType.Byte:
+                        var nextByte = new NbtByte();
+                        nextByte.ReadTag( readStream );
+                        Add( nextByte );
+                        break;
+
+                    case NbtTagType.Short:
+                        var nextShort = new NbtShort();
+                        nextShort.ReadTag( readStream );
+                        Add( nextShort );
+                        break;
+
+                    case NbtTagType.Int:
+                        var nextInt = new NbtInt();
+                        nextInt.ReadTag( readStream );
+                        Add( nextInt );
+                        break;
+
+                    case NbtTagType.Long:
+                        var nextLong = new NbtLong();
+                        nextLong.ReadTag( readStream );
+                        Add( nextLong );
+                        break;
+
+                    case NbtTagType.Float:
+                        var nextFloat = new NbtFloat();
+                        nextFloat.ReadTag( readStream );
+                        Add( nextFloat );
+                        break;
+
+                    case NbtTagType.Double:
+                        var nextDouble = new NbtDouble();
+                        nextDouble.ReadTag( readStream );
+                        Add( nextDouble );
+                        break;
+
+                    case NbtTagType.ByteArray:
+                        var nextByteArray = new NbtByteArray();
+                        nextByteArray.ReadTag( readStream );
+                        Add( nextByteArray );
+                        break;
+
+                    case NbtTagType.String:
+                        var nextString = new NbtString();
+                        nextString.ReadTag( readStream );
+                        Add( nextString );
+                        break;
+
+                    case NbtTagType.List:
+                        var nextList = new NbtList();
+                        nextList.ReadTag( readStream );
+                        Add( nextList );
+                        break;
+
+                    case NbtTagType.Compound:
+                        var nextCompound = new NbtCompound();
+                        nextCompound.ReadTag( readStream );
+                        Add( nextCompound );
+                        break;
+
+                    default:
+                        throw new Exception( String.Format("Unsupported tag type found in NBT_Compound: {0}", nextTag) );
+                }
             }
         }
 
+        #endregion
 
-        #region INbtTagList Methods
 
-        public T Get<T>( int tagIndex ) where T : NbtTag {
-            return (T)Tags[tagIndex];
+        #region Writing Tag
+
+        internal override void WriteTag( NbtWriter writeStream ) {
+            WriteTag( writeStream, true );
         }
 
 
-        public void Set( int tagIdx, NbtTag tag ) {
-            if( tagIdx > Tags.Count ) {
-                throw new IndexOutOfRangeException();
+        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+            writeStream.Write( NbtTagType.Compound );
+            if( writeName ) {
+                writeStream.Write( Name );
             }
 
-            Tags[tagIdx] = tag;
+            WriteData( writeStream );
         }
 
+
+        internal override void WriteData( NbtWriter writeStream ) {
+            foreach( NbtTag tag in Tags.Values ) {
+                tag.WriteTag( writeStream );
+            }
+            writeStream.Write( NbtTagType.End );
+        }
+
+        #endregion
+
+
+        #region Query
 
         public override NbtTag Query( string query ) {
             return Query<NbtTag>( query );
@@ -92,177 +226,93 @@ namespace LibNbt.Tags {
         #endregion
 
 
-        public NbtTag Get( string tagName ) {
-            return Get<NbtTag>( tagName );
-        }
-
-
-        public T Get<T>( string tagName ) where T : NbtTag {
-            if( TagCache.ContainsKey( tagName ) &&
-                TagCache[tagName].Name.Equals( tagName ) ) {
-                return (T)TagCache[tagName];
-            }
-            foreach( NbtTag tag in Tags ) {
-                if( tag.Name.Equals( tagName ) ) {
-                    lock( TagCache ) {
-                        if( !TagCache.ContainsKey( tagName ) ) {
-                            TagCache.Add( tagName, tag );
-                        }
-                    }
-                    return (T)tag;
-                }
-            }
-            throw new KeyNotFoundException();
-        }
-
-
-        public void Set( string tagName, NbtTag tag ) {
-            foreach( var tg in Tags ) {
-                if( tg.Name.Equals( tagName ) ) {
-                    int idx = Tags.IndexOf( tg );
-                    Tags[idx] = tag;
-                    if( TagCache.ContainsKey( tagName ) ) {
-                        TagCache[tagName] = tag;
-                    }
-                    return;
-                }
-            }
-        }
-
-
-        #region Reading Tag
-
-        internal override void ReadTag( Stream readStream ) {
-            ReadTag( readStream, true );
-        }
-
-
-        internal override void ReadTag( Stream readStream, bool readName ) {
-            // First read the name of this tag
-            Name = "";
-            if( readName ) {
-                var name = new NbtString();
-                name.ReadTag( readStream, false );
-
-                Name = name.Value;
-            }
-
-            Tags.Clear();
-            bool foundEnd = false;
-            while( !foundEnd ) {
-                int nextTag = readStream.ReadByte();
-                switch( (NbtTagType)nextTag ) {
-                    case NbtTagType.End:
-                        foundEnd = true;
-                        break;
-                    case NbtTagType.Byte:
-                        var nextByte = new NbtByte();
-                        nextByte.ReadTag( readStream );
-                        Tags.Add( nextByte );
-                        break;
-                    case NbtTagType.Short:
-                        var nextShort = new NbtShort();
-                        nextShort.ReadTag( readStream );
-                        Tags.Add( nextShort );
-                        break;
-                    case NbtTagType.Int:
-                        var nextInt = new NbtInt();
-                        nextInt.ReadTag( readStream );
-                        Tags.Add( nextInt );
-                        break;
-                    case NbtTagType.Long:
-                        var nextLong = new NbtLong();
-                        nextLong.ReadTag( readStream );
-                        Tags.Add( nextLong );
-                        break;
-                    case NbtTagType.Float:
-                        var nextFloat = new NbtFloat();
-                        nextFloat.ReadTag( readStream );
-                        Tags.Add( nextFloat );
-                        break;
-                    case NbtTagType.Double:
-                        var nextDouble = new NbtDouble();
-                        nextDouble.ReadTag( readStream );
-                        Tags.Add( nextDouble );
-                        break;
-                    case NbtTagType.ByteArray:
-                        var nextByteArray = new NbtByteArray();
-                        nextByteArray.ReadTag( readStream );
-                        Tags.Add( nextByteArray );
-                        break;
-                    case NbtTagType.String:
-                        var nextString = new NbtString();
-                        nextString.ReadTag( readStream );
-                        Tags.Add( nextString );
-                        break;
-                    case NbtTagType.List:
-                        var nextList = new NbtList();
-                        nextList.ReadTag( readStream );
-                        Tags.Add( nextList );
-                        break;
-                    case NbtTagType.Compound:
-                        var nextCompound = new NbtCompound();
-                        nextCompound.ReadTag( readStream );
-                        Tags.Add( nextCompound );
-                        break;
-                    default:
-                        Console.WriteLine( "Unsupported Tag Found: {0}", nextTag );
-                        break;
-                }
-            }
-        }
-
-        #endregion
-
-
-        #region Writing Tag
-
-        internal override void WriteTag( Stream writeStream ) {
-            WriteTag( writeStream, true );
-        }
-
-
-        internal override void WriteTag( Stream writeStream, bool writeName ) {
-            writeStream.WriteByte( (byte)NbtTagType.Compound );
-            if( writeName ) {
-                var name = new NbtString( "", Name );
-                name.WriteData( writeStream );
-            }
-
-            WriteData( writeStream );
-        }
-
-        #endregion
-
-
-        internal override void WriteData( Stream writeStream ) {
-            foreach( NbtTag tag in Tags ) {
-                tag.WriteTag( writeStream );
-            }
-
-            writeStream.WriteByte( (byte)NbtTagType.End );
-        }
-
-
-        internal override NbtTagType TagType {
-            get { return NbtTagType.Compound; }
-        }
-
-
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Compound" );
-            if( Name.Length > 0 ) {
+            if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
             sb.AppendFormat( ": {0} entries\n", Tags.Count );
 
             sb.Append( "{\n" );
-            foreach( NbtTag tag in Tags ) {
+            foreach( NbtTag tag in Tags.Values ) {
                 sb.AppendFormat( "\t{0}\n", tag.ToString().Replace( "\n", "\n\t" ) );
             }
             sb.Append( "}" );
             return sb.ToString();
+        }
+
+
+        #region Implementation of IEnumerable<NbtTag>
+
+        public IEnumerator<NbtTag> GetEnumerator() {
+            return Tags.Values.GetEnumerator();
+        }
+
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return Tags.Values.GetEnumerator();
+        }
+
+        #endregion
+
+
+        #region Implementation of ICollection<NbtTag>
+
+        public void Add( NbtTag item ) {
+            if( item.Name == null ) {
+                throw new ArgumentException( "Only named tags are allowed in compound tags." );
+            }
+            Tags.Add( item.Name, item );
+        }
+
+
+        public void Clear() {
+            Tags.Clear();
+        }
+
+
+        public bool Contains( NbtTag item ) {
+            return Tags.ContainsValue( item );
+        }
+
+
+        public void CopyTo( NbtTag[] array, int arrayIndex ) {
+            Tags.Values.CopyTo( array, arrayIndex );
+        }
+
+
+        public bool Remove( [NotNull] NbtTag item ) {
+            if( item == null ) throw new ArgumentNullException( "item" );
+            NbtTag maybeItem;
+            if( Tags.TryGetValue( item.Name, out maybeItem ) ) {
+                if( maybeItem == item ) {
+                    return Tags.Remove( item.Name );
+                }
+            }
+            return false;
+        }
+
+
+        public int Count {
+            get { return Tags.Count; }
+        }
+
+
+        public bool IsReadOnly {
+            get { return false; }
+        }
+
+        #endregion
+
+
+        public NbtTag[] ToArray() {
+            NbtTag[] array = new NbtTag[Tags.Count];
+            int i = 0;
+            foreach( NbtTag tag in Tags.Values ) {
+                array[i++] = tag;
+            }
+            return array;
         }
     }
 }

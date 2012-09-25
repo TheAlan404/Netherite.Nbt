@@ -19,48 +19,47 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void ReadTag( Stream readStream ) {
-            ReadTag( readStream, true );
-        }
-
-
-        internal override void ReadTag( Stream readStream, bool readName ) {
-            if( readName ) {
-                var name = new NbtString();
-                name.ReadTag( readStream, false );
-
-                Name = name.Value;
-            }
-
+        internal static short ReadShort( Stream readStream ) {
             var buffer = new byte[2];
             int numRead = readStream.Read( buffer, 0, buffer.Length );
+            if( numRead != 2 ) throw new EndOfStreamException();
             if( BitConverter.IsLittleEndian ) Array.Reverse( buffer );
-            if( numRead == 2 ) {
-                Value = BitConverter.ToInt16( buffer, 0 );
+            return BitConverter.ToInt16( buffer, 0 );
+        }
+
+
+        internal override void ReadTag( NbtReader readStream ) {
+            Name = readStream.ReadString();
+            Value = readStream.ReadInt16();
+        }
+
+
+        internal override void ReadTag( NbtReader readStream, bool readName ) {
+            if( readName ) {
+                Name = readStream.ReadString();
             }
+            Value = readStream.ReadInt16();
         }
 
 
-        internal override void WriteTag( Stream writeStream ) {
-            WriteTag( writeStream, true );
+        internal override void WriteTag( NbtWriter writeStream ) {
+            writeStream.Write( NbtTagType.Short );
+            writeStream.Write( Name );
+            writeStream.Write( Value );
         }
 
 
-        internal override void WriteTag( Stream writeStream, bool writeName ) {
-            writeStream.WriteByte( (byte)NbtTagType.Short );
+        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+            writeStream.Write( NbtTagType.Short );
             if( writeName ) {
-                var name = new NbtString( "", Name );
-                name.WriteData( writeStream );
+                writeStream.Write( Name );
             }
-
-            WriteData( writeStream );
+            writeStream.Write( Value );
         }
 
 
-        internal override void WriteData( Stream writeStream ) {
-            byte[] data = BitConverter.GetBytes( Value );
-            if( BitConverter.IsLittleEndian ) Array.Reverse( data );
-            writeStream.Write( data, 0, data.Length );
+        internal override void WriteData( NbtWriter writeStream ) {
+            writeStream.Write( Value );
         }
 
 

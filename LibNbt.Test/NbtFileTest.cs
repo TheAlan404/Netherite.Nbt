@@ -51,10 +51,9 @@ namespace LibNbt.Test {
             Assert.AreEqual( "hello world", root.Name );
             Assert.AreEqual( 1, root.Tags.Count );
 
-            Assert.IsInstanceOf<NbtString>( root[0] );
             Assert.IsInstanceOf<NbtString>( root["name"] );
 
-            var node = (NbtString)root[0];
+            var node = (NbtString)root["name"];
             Assert.AreEqual( "name", node.Name );
             Assert.AreEqual( "Bananrama", node.Value );
         }
@@ -90,85 +89,70 @@ namespace LibNbt.Test {
             Assert.AreEqual( "Level", root.Name );
             Assert.AreEqual( 11, root.Tags.Count );
 
-            NbtTag node;
-            Assert.IsInstanceOf<NbtLong>( root[0] );
             Assert.IsInstanceOf<NbtLong>( root["longTest"] );
-            node = root[0];
+            NbtTag node = root["longTest"];
             Assert.AreEqual( "longTest", node.Name );
             Assert.AreEqual( 9223372036854775807, ( (NbtLong)node ).Value );
 
-            Assert.IsInstanceOf<NbtShort>( root[1] );
             Assert.IsInstanceOf<NbtShort>( root["shortTest"] );
-            node = root[1];
+            node = root["shortTest"];
             Assert.AreEqual( "shortTest", node.Name );
             Assert.AreEqual( 32767, ( (NbtShort)node ).Value );
 
-            Assert.IsInstanceOf<NbtString>( root[2] );
             Assert.IsInstanceOf<NbtString>( root["stringTest"] );
-            node = root[2];
+            node = root["stringTest"];
             Assert.AreEqual( "stringTest", node.Name );
             Assert.AreEqual( "HELLO WORLD THIS IS A TEST STRING ÅÄÖ!", ( (NbtString)node ).Value );
 
-            Assert.IsInstanceOf<NbtFloat>( root[3] );
             Assert.IsInstanceOf<NbtFloat>( root["floatTest"] );
-            node = root[3];
+            node = root["floatTest"];
             Assert.AreEqual( "floatTest", node.Name );
             Assert.AreEqual( 0.49823147f, ( (NbtFloat)node ).Value );
 
-            Assert.IsInstanceOf<NbtInt>( root[4] );
             Assert.IsInstanceOf<NbtInt>( root["intTest"] );
-            node = root[4];
+            node = root["intTest"];
             Assert.AreEqual( "intTest", node.Name );
             Assert.AreEqual( 2147483647, ( (NbtInt)node ).Value );
 
-            Assert.IsInstanceOf<NbtCompound>( root[5] );
             Assert.IsInstanceOf<NbtCompound>( root["nested compound test"] );
-            node = root[5];
+            node = root["nested compound test"];
             Assert.AreEqual( "nested compound test", node.Name );
             Assert.AreEqual( 2, ( (NbtCompound)node ).Tags.Count );
 
             // First nested test
-            NbtCompound subNode;
-            Assert.IsInstanceOf<NbtCompound>( ( (NbtCompound)node )[0] );
             Assert.IsInstanceOf<NbtCompound>( ( (NbtCompound)node )["ham"] );
-            subNode = (NbtCompound)( (NbtCompound)node )[0];
+            NbtCompound subNode = (NbtCompound)( (NbtCompound)node )["ham"];
             Assert.AreEqual( "ham", subNode.Name );
             Assert.AreEqual( 2, subNode.Tags.Count );
 
             // Checking sub node values
-            Assert.IsInstanceOf<NbtString>( subNode[0] );
             Assert.IsInstanceOf<NbtString>( subNode["name"] );
-            Assert.AreEqual( "name", subNode[0].Name );
-            Assert.AreEqual( "Hampus", ( (NbtString)subNode[0] ).Value );
+            Assert.AreEqual( "name", subNode["name"].Name );
+            Assert.AreEqual( "Hampus", ( (NbtString)subNode["name"] ).Value );
 
-            Assert.IsInstanceOf<NbtFloat>( subNode[1] );
             Assert.IsInstanceOf<NbtFloat>( subNode["value"] );
-            Assert.AreEqual( "value", subNode[1].Name );
-            Assert.AreEqual( 0.75, ( (NbtFloat)subNode[1] ).Value );
+            Assert.AreEqual( "value", subNode["value"].Name );
+            Assert.AreEqual( 0.75, ( (NbtFloat)subNode["value"] ).Value );
             // End sub node
 
             // Second nested test
-            Assert.IsInstanceOf<NbtCompound>( ( (NbtCompound)node )[1] );
             Assert.IsInstanceOf<NbtCompound>( ( (NbtCompound)node )["egg"] );
-            subNode = (NbtCompound)( (NbtCompound)node )[1];
+            subNode = (NbtCompound)( (NbtCompound)node )["egg"];
             Assert.AreEqual( "egg", subNode.Name );
             Assert.AreEqual( 2, subNode.Tags.Count );
 
             // Checking sub node values
-            Assert.IsInstanceOf<NbtString>( subNode[0] );
             Assert.IsInstanceOf<NbtString>( subNode["name"] );
-            Assert.AreEqual( "name", subNode[0].Name );
-            Assert.AreEqual( "Eggbert", ( (NbtString)subNode[0] ).Value );
+            Assert.AreEqual( "name", subNode["name"].Name );
+            Assert.AreEqual( "Eggbert", ( (NbtString)subNode["name"] ).Value );
 
-            Assert.IsInstanceOf<NbtFloat>( subNode[1] );
             Assert.IsInstanceOf<NbtFloat>( subNode["value"] );
-            Assert.AreEqual( "value", subNode[1].Name );
-            Assert.AreEqual( 0.5, ( (NbtFloat)subNode[1] ).Value );
+            Assert.AreEqual( "value", subNode["value"].Name );
+            Assert.AreEqual( 0.5, ( (NbtFloat)subNode["value"] ).Value );
             // End sub node
 
-            Assert.IsInstanceOf<NbtList>( root[6] );
             Assert.IsInstanceOf<NbtList>( root["listTest (long)"] );
-            node = root[6];
+            node = root["listTest (long)"];
             Assert.AreEqual( "listTest (long)", node.Name );
             Assert.AreEqual( 5, ( (NbtList)node ).Tags.Count );
 
@@ -179,9 +163,8 @@ namespace LibNbt.Test {
                 Assert.AreEqual( nodeIndex + 11, ( (NbtLong)( (NbtList)node )[nodeIndex] ).Value );
             }
 
-            Assert.IsInstanceOf<NbtList>( root[7] );
             Assert.IsInstanceOf<NbtList>( root["listTest (compound)"] );
-            node = root[7];
+            node = root["listTest (compound)"];
             Assert.AreEqual( "listTest (compound)", node.Name );
             Assert.AreEqual( 2, ( (NbtList)node ).Tags.Count );
 
@@ -190,45 +173,37 @@ namespace LibNbt.Test {
             subNode = (NbtCompound)( (NbtList)node )[0];
 
             // First node in sub node
-            Assert.IsInstanceOf<NbtString>( subNode[0] );
             Assert.IsInstanceOf<NbtString>( subNode["name"] );
-            Assert.AreEqual( "name", subNode[0].Name );
-            Assert.AreEqual( "Compound tag #0", ( (NbtString)subNode[0] ).Value );
+            Assert.AreEqual( "name", subNode["name"].Name );
+            Assert.AreEqual( "Compound tag #0", ( (NbtString)subNode["name"] ).Value );
 
             // Second node in sub node
-            Assert.IsInstanceOf<NbtLong>( subNode[1] );
             Assert.IsInstanceOf<NbtLong>( subNode["created-on"] );
-            Assert.AreEqual( "created-on", subNode[1].Name );
-            Assert.AreEqual( 1264099775885, ( (NbtLong)subNode[1] ).Value );
+            Assert.AreEqual( "created-on", subNode["created-on"].Name );
+            Assert.AreEqual( 1264099775885, ( (NbtLong)subNode["created-on"] ).Value );
 
             // Second Sub Node
             Assert.IsInstanceOf<NbtCompound>( ( (NbtList)node )[1] );
             subNode = (NbtCompound)( (NbtList)node )[1];
 
             // First node in sub node
-            Assert.IsInstanceOf<NbtString>( subNode[0] );
             Assert.IsInstanceOf<NbtString>( subNode["name"] );
-            Assert.AreEqual( "name", subNode[0].Name );
-            Assert.AreEqual( "Compound tag #1", ( (NbtString)subNode[0] ).Value );
+            Assert.AreEqual( "name", subNode["name"].Name );
+            Assert.AreEqual( "Compound tag #1", ( (NbtString)subNode["name"] ).Value );
 
             // Second node in sub node
-            Assert.IsInstanceOf<NbtLong>( subNode[1] );
             Assert.IsInstanceOf<NbtLong>( subNode["created-on"] );
-            Assert.AreEqual( "created-on", subNode[1].Name );
-            Assert.AreEqual( 1264099775885, ( (NbtLong)subNode[1] ).Value );
+            Assert.AreEqual( "created-on", subNode["created-on"].Name );
+            Assert.AreEqual( 1264099775885, ( (NbtLong)subNode["created-on"] ).Value );
 
-            Assert.IsInstanceOf<NbtByte>( root[8] );
             Assert.IsInstanceOf<NbtByte>( root["byteTest"] );
-            node = root[8];
+            node = root["byteTest"];
             Assert.AreEqual( "byteTest", node.Name );
             Assert.AreEqual( 127, ( (NbtByte)node ).Value );
 
-            Assert.IsInstanceOf<NbtByteArray>( root[9] );
             Assert.IsInstanceOf<NbtByteArray>(
-                root[
-                    "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))"
-                    ] );
-            node = root[9];
+                root[ "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))" ] );
+            node = root[ "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))" ];
             Assert.AreEqual(
                 "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))",
                 node.Name );
@@ -239,9 +214,8 @@ namespace LibNbt.Test {
                 Assert.AreEqual( ( n * n * 255 + n * 7 ) % 100, ( (NbtByteArray)node )[n] );
             }
 
-            Assert.IsInstanceOf<NbtDouble>( root[10] );
             Assert.IsInstanceOf<NbtDouble>( root["doubleTest"] );
-            node = root[10];
+            node = root["doubleTest"];
             Assert.AreEqual( "doubleTest", node.Name );
             Assert.AreEqual( 0.4931287132182315, ( (NbtDouble)node ).Value );
         }
@@ -285,10 +259,10 @@ namespace LibNbt.Test {
             var file = new NbtFile();
             file.RootTag = new NbtCompound( "ListTypeTest" );
 
-            NbtTagType mytype = NbtTagType.Compound;
+            const NbtTagType myType = NbtTagType.Compound;
 
-            NbtList list = new NbtList( "Entities", null, mytype );
-            file.RootTag.Tags.Add( list );
+            NbtList list = new NbtList( "Entities", null, myType );
+            file.RootTag.Add( list );
 
             file.SaveFile( "TestFiles/NbtListType.nbt", NbtCompression.GZip );
 
@@ -297,10 +271,10 @@ namespace LibNbt.Test {
             Assert.NotNull( read );
             Console.WriteLine( read.RootTag.ToString() );
 
-            NbtList readlist = (NbtList)read.RootTag.Tags.ToArray()[0];
+            NbtList readlist = (NbtList)read.RootTag.ToArray()[0];
             Assert.NotNull( readlist );
 
-            Assert.AreEqual( mytype, readlist.ListType );
+            Assert.AreEqual( myType, readlist.ListType );
         }
     }
 }

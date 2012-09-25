@@ -130,7 +130,7 @@ namespace LibNbt {
             // Make sure the first byte in this file is the tag for a TAG_Compound
             if( fileStream.ReadByte() == (int)NbtTagType.Compound ) {
                 var rootCompound = new NbtCompound();
-                rootCompound.ReadTag( fileStream );
+                rootCompound.ReadTag( new NbtReader( fileStream ) );
 
                 RootTag = rootCompound;
             } else {
@@ -170,11 +170,11 @@ namespace LibNbt {
                 using( var compressStream = new GZipStream( fileStream, CompressionMode.Compress ) ) {
                     // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
                     using( BufferedStream bs = new BufferedStream( compressStream, BufferSize ) ) {
-                        RootTag.WriteTag( bs );
+                        RootTag.WriteTag( new NbtWriter( bs ) );
                     }
                 }
             } else {
-                RootTag.WriteTag( fileStream );
+                RootTag.WriteTag( new NbtWriter( fileStream ) ); ;
             }
         }
 

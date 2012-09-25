@@ -19,7 +19,7 @@ namespace LibNbt.Tags {
 
         public NbtList() : this( "" ) {}
 
-        public NbtList( string tagName ) : this( tagName, new NbtTag[] { }, NbtTagType.Unknown ) {}
+        public NbtList( string tagName ) : this( tagName, new NbtTag[0], NbtTagType.Unknown ) {}
 
 
         public NbtList( string tagName, IEnumerable<NbtTag> tags, NbtTagType listType ) {
@@ -108,32 +108,31 @@ namespace LibNbt.Tags {
 
         #region Reading Tag
 
-        internal override void ReadTag( Stream readStream ) {
+        internal override void ReadTag( NbtReader readStream ) {
             ReadTag( readStream, true );
         }
 
 
-        internal override void ReadTag( Stream readStream, bool readName ) {
+        internal override void ReadTag( NbtReader readStream, bool readName ) {
             // First read the name of this tag
-            Name = "";
             if( readName ) {
-                var name = new NbtString();
-                name.ReadTag( readStream, false );
-
-                Name = name.Value;
+                Name = readStream.ReadString();
             }
 
-            var tagId = new NbtByte();
-            tagId.ReadTag( readStream, false );
-            Type = (NbtTagType)tagId.Value;
-            ListType = Type;
+            // read list type, and make sure it's defined
+            ListType = readStream.ReadTagType();
+            if( !Enum.IsDefined( typeof( NbtTagType ), ListType ) || ListType == NbtTagType.Unknown ) {
+                throw new Exception( String.Format( "Unrecognized TAG_List tag type: {0}", ListType ) );
+            }
 
-            var length = new NbtInt();
-            length.ReadTag( readStream, false );
+            int length = readStream.ReadInt32();
+            if( length < 0 ) {
+                throw new Exception( "Negative count given in TAG_List" );
+            }
 
             Tags.Clear();
-            for( int idx = 0; idx < length.Value; idx++ ) {
-                switch( (NbtTagType)tagId.Value ) {
+            for( int i = 0; i < length; i++ ) {
+                switch( ListType ) {
                     case NbtTagType.Byte:
                         var nextByte = new NbtByte();
                         nextByte.ReadTag( readStream, false );
@@ -193,43 +192,23 @@ namespace LibNbt.Tags {
 
         #region Write Tag
 
-        internal override void WriteTag( Stream writeStream ) {
+        internal override void WriteTag( NbtWriter writeStream ) {
             WriteTag( writeStream, true );
         }
 
 
-        internal override void WriteTag( Stream writeStream, bool writeName ) {
-            writeStream.WriteByte( (byte)NbtTagType.List );
+        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+            writeStream.Write( NbtTagType.List );
             if( writeName ) {
-                var name = new NbtString( "", Name );
-                name.WriteData( writeStream );
+                writeStream.Write( Name );
             }
-
             WriteData( writeStream );
         }
 
 
-        internal override void WriteData( Stream writeStream ) {
-            // Figure out the type of this list, then check
-            // to make sure all elements are that type.
-            if( Tags.Count > 0 ) {
-                NbtTagType listType = Tags[0].TagType;
-                foreach( NbtTag tag in Tags ) {
-                    if( tag.TagType != listType ) {
-                        throw new Exception( "All list items must be the same tag type." );
-                    }
-                }
-                Type = listType;
-            } else {
-                Type = ListType;
-            }
-
-            var tagType = new NbtByte( "", (byte)Type );
-            tagType.WriteData( writeStream );
-
-            var length = new NbtInt( "", Tags.Count );
-            length.WriteData( writeStream );
-
+        internal override void WriteData( NbtWriter writeStream ) {
+            writeStream.Write( ListType );
+            writeStream.Write( Tags.Count );
             foreach( NbtTag tag in Tags ) {
                 tag.WriteData( writeStream );
             }

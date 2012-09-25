@@ -19,48 +19,35 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void ReadTag( Stream readStream ) {
+        internal override void ReadTag( NbtReader readStream ) {
             ReadTag( readStream, true );
         }
 
 
-        internal override void ReadTag( Stream readStream, bool readName ) {
+        internal override void ReadTag( NbtReader readStream, bool readName ) {
             if( readName ) {
-                var name = new NbtString();
-                name.ReadTag( readStream, false );
-
-                Name = name.Value;
+                Name = readStream.ReadString();
             }
-
-
-            var buffer = new byte[8];
-            int totalRead = 0;
-            while( ( totalRead += readStream.Read( buffer, totalRead, 8 ) ) < 8 ) {}
-            if( BitConverter.IsLittleEndian ) Array.Reverse( buffer );
-            Value = BitConverter.ToInt64( buffer, 0 );
+            Value = readStream.ReadInt64();
         }
 
 
-        internal override void WriteTag( Stream writeStream ) {
+        internal override void WriteTag( NbtWriter writeStream ) {
             WriteTag( writeStream, true );
         }
 
 
-        internal override void WriteTag( Stream writeStream, bool writeName ) {
-            writeStream.WriteByte( (byte)NbtTagType.Long );
+        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+            writeStream.Write( NbtTagType.Long );
             if( writeName ) {
-                var name = new NbtString( "", Name );
-                name.WriteData( writeStream );
+                writeStream.Write( Name );
             }
-
-            WriteData( writeStream );
+            writeStream.Write( Value );
         }
 
 
-        internal override void WriteData( Stream writeStream ) {
-            byte[] data = BitConverter.GetBytes( Value );
-            if( BitConverter.IsLittleEndian ) Array.Reverse( data );
-            writeStream.Write( data, 0, data.Length );
+        internal override void WriteData( NbtWriter writeStream ) {
+            writeStream.Write( Value );
         }
 
 

@@ -45,6 +45,8 @@
   <ItemGroup>
     <Compile Include="JetBrains.Annotations.cs" />
     <Compile Include="NbtCompression.cs" />
+    <Compile Include="NbtReader.cs" />
+    <Compile Include="NbtWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Queries\NbtQueryException.cs" />
     <Compile Include="NbtFile.cs" />

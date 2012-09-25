@@ -19,44 +19,35 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void ReadTag( Stream readStream ) {
+        internal override void ReadTag( NbtReader readStream ) {
             ReadTag( readStream, true );
         }
 
 
-        internal override void ReadTag( Stream readStream, bool readName ) {
+        internal override void ReadTag( NbtReader readStream, bool readName ) {
             if( readName ) {
-                var name = new NbtString();
-                name.ReadTag( readStream, false );
-
-                Name = name.Value;
+                Name = readStream.ReadString();
             }
-
-            var buffer = new byte[1];
-            int totalRead = 0;
-            while( ( totalRead += readStream.Read( buffer, totalRead, 1 ) ) < 1 ) {}
-            Value = buffer[0];
+            Value = readStream.ReadByte();
         }
 
 
-        internal override void WriteTag( Stream writeStream ) {
+        internal override void WriteTag( NbtWriter writeStream ) {
             WriteTag( writeStream, true );
         }
 
 
-        internal override void WriteTag( Stream writeStream, bool writeName ) {
-            writeStream.WriteByte( (byte)NbtTagType.Byte );
+        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+            writeStream.Write( NbtTagType.Byte );
             if( writeName ) {
-                var name = new NbtString( "", Name );
-                name.WriteData( writeStream );
+                writeStream.Write( Name );
             }
-
-            WriteData( writeStream );
+            writeStream.Write( Value );
         }
 
 
-        internal override void WriteData( Stream writeStream ) {
-            writeStream.WriteByte( Value );
+        internal override void WriteData( NbtWriter writeStream ) {
+            writeStream.Write( Value );
         }
 
 

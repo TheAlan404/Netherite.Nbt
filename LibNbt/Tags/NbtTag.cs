@@ -57,17 +57,17 @@ namespace LibNbt.Tags {
         }
 
 
-        internal abstract void ReadTag( [NotNull] Stream readStream );
+        internal abstract void ReadTag( [NotNull] NbtReader readReader );
 
-        internal abstract void ReadTag( [NotNull] Stream readStream, bool readName );
+        internal abstract void ReadTag( [NotNull] NbtReader readReader, bool readName );
 
         // WriteTag writes the whole tag, including the ID byte
-        internal abstract void WriteTag( [NotNull] Stream writeStream );
+        internal abstract void WriteTag( [NotNull] NbtWriter writeReader );
 
-        internal abstract void WriteTag( [NotNull] Stream writeStream, bool writeName );
+        internal abstract void WriteTag( [NotNull] NbtWriter writeReader, bool writeName );
 
         // WriteData does not write the tag's ID byte or the name
-        internal abstract void WriteData( [NotNull] Stream writeStream );
+        internal abstract void WriteData( [NotNull] NbtWriter writeReader );
 
 
         internal virtual NbtTagType TagType {

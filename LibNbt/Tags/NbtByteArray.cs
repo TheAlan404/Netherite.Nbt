@@ -29,51 +29,42 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void ReadTag( Stream readStream ) {
+        internal override void ReadTag( NbtReader readStream ) {
             ReadTag( readStream, true );
         }
 
 
-        internal override void ReadTag( Stream readStream, bool readName ) {
+        internal override void ReadTag( NbtReader readStream, bool readName ) {
             // First read the name of this tag
-            Name = "";
             if( readName ) {
-                var name = new NbtString();
-                name.ReadTag( readStream, false );
-
-                Name = name.Value;
+                Name = readStream.ReadString();
             }
 
-            var length = new NbtInt();
-            length.ReadTag( readStream, false );
+            int length = readStream.ReadInt32();
+            if( length < 0 ) {
+                throw new Exception( "Negative length given in TAG_Byte_Array" );
+            }
 
-            var buffer = new byte[length.Value];
-            int totalRead = 0;
-            while( ( totalRead += readStream.Read( buffer, totalRead, length.Value - totalRead ) ) < length.Value ) {}
-            Value = buffer;
+            Value = readStream.ReadBytes( length );
         }
 
 
-        internal override void WriteTag( Stream writeStream ) {
+        internal override void WriteTag( NbtWriter writeStream ) {
             WriteTag( writeStream, true );
         }
 
 
-        internal override void WriteTag( Stream writeStream, bool writeName ) {
-            writeStream.WriteByte( (byte)NbtTagType.ByteArray );
+        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+            writeStream.Write( NbtTagType.ByteArray );
             if( writeName ) {
-                var name = new NbtString( "", Name );
-                name.WriteData( writeStream );
+                writeStream.Write( Name );
             }
-
             WriteData( writeStream );
         }
 
 
-        internal override void WriteData( Stream writeStream ) {
-            var length = new NbtInt( "", Value.Length );
-            length.WriteData( writeStream );
-
+        internal override void WriteData( NbtWriter writeStream ) {
+            writeStream.Write( Value.Length );
             writeStream.Write( Value, 0, Value.Length );
         }
 
