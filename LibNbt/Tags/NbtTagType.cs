@@ -1,5 +1,5 @@
 ﻿namespace LibNbt.Tags {
-    public enum NbtTagType : byte {
+    public enum NbtTagType {
         Unknown = 0xff,
         End = 0x00,
         Byte = 0x01,

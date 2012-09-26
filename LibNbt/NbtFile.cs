@@ -96,8 +96,8 @@ namespace LibNbt {
             switch( compression ) {
                 case NbtCompression.GZip:
                     using( var decStream = new GZipStream( fileStream, CompressionMode.Decompress, true ) ) {
-                        using( BufferedStream bs = new BufferedStream( decStream, BufferSize ) ) {
-                            LoadFileInternal( bs );
+                        using( BufferedStream bufferedStream = new BufferedStream( decStream, BufferSize ) ) {
+                            LoadFileInternal( bufferedStream );
                         }
                     }
                     break;
@@ -170,16 +170,16 @@ namespace LibNbt {
         }
 
 
-        public NbtTag Query( [NotNull] string query ) {
-            if( query == null ) throw new ArgumentNullException( "query" );
-            return Query<NbtTag>( query );
+        public NbtTag Query( [NotNull] string queryString ) {
+            if( queryString == null ) throw new ArgumentNullException( "queryString" );
+            return Query<NbtTag>( queryString );
         }
 
 
-        public T Query<T>( [NotNull] string query ) where T : NbtTag {
-            if( query == null ) throw new ArgumentNullException( "query" );
+        public T Query<T>( [NotNull] string queryString ) where T : NbtTag {
+            if( queryString == null ) throw new ArgumentNullException( "queryString" );
             if( RootTag == null ) return null;
-            var tagQuery = new TagQuery( query );
+            var tagQuery = new TagQuery( queryString );
             return RootTag.Query<T>( tagQuery );
         }
     }

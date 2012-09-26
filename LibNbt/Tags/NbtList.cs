@@ -10,6 +10,7 @@ namespace LibNbt.Tags {
             get { return NbtTagType.List; }
         }
 
+        [NotNull]
         public List<NbtTag> Tags { get; protected set; }
 
         public NbtTagType ListType { get; protected set; }
