@@ -95,15 +95,9 @@ namespace LibNbt {
 
             switch( compression ) {
                 case NbtCompression.GZip:
-                    using( var decStream = new GZipStream( fileStream, CompressionMode.Decompress ) ) {
-                        using( var memStream = new MemoryStream( (int)fileStream.Length ) ) {
-                            var buffer = new byte[4096];
-                            int bytesRead;
-                            while( ( bytesRead = decStream.Read( buffer, 0, buffer.Length ) ) != 0 ) {
-                                memStream.Write( buffer, 0, bytesRead );
-                            }
-
-                            LoadFileInternal( memStream );
+                    using( var decStream = new GZipStream( fileStream, CompressionMode.Decompress, true ) ) {
+                        using( BufferedStream bs = new BufferedStream( decStream, BufferSize ) ) {
+                            LoadFileInternal( bs );
                         }
                     }
                     break;
@@ -124,13 +118,10 @@ namespace LibNbt {
         protected void LoadFileInternal( [NotNull] Stream fileStream ) {
             if( fileStream == null ) throw new ArgumentNullException( "fileStream" );
 
-            // Make sure the stream is at the beginning
-            fileStream.Seek( 0, SeekOrigin.Begin );
-
             // Make sure the first byte in this file is the tag for a TAG_Compound
             if( fileStream.ReadByte() == (int)NbtTagType.Compound ) {
                 var rootCompound = new NbtCompound();
-                rootCompound.ReadTag( new NbtReader( fileStream ) );
+                rootCompound.ReadTag( new NbtReader( fileStream ), true );
 
                 RootTag = rootCompound;
             } else {
@@ -167,14 +158,14 @@ namespace LibNbt {
             if( RootTag == null ) return;
 
             if( compression == NbtCompression.GZip ) {
-                using( var compressStream = new GZipStream( fileStream, CompressionMode.Compress ) ) {
+                using( var compressStream = new GZipStream( fileStream, CompressionMode.Compress, true ) ) {
                     // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
                     using( BufferedStream bs = new BufferedStream( compressStream, BufferSize ) ) {
-                        RootTag.WriteTag( new NbtWriter( bs ) );
+                        RootTag.WriteTag( new NbtWriter( bs ), true );
                     }
                 }
             } else {
-                RootTag.WriteTag( new NbtWriter( fileStream ) ); ;
+                RootTag.WriteTag( new NbtWriter( fileStream ), true );
             }
         }
 

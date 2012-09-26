@@ -1,26 +1,26 @@
 ﻿using System;
-using System.IO;
 using System.Text;
 
 namespace LibNbt.Tags {
     public class NbtLong : NbtTag, INbtTagValue<long> {
+        internal override NbtTagType TagType {
+            get { return NbtTagType.Long; }
+        }
+
         public long Value { get; set; }
 
-        public NbtLong() : this( "" ) {}
+
+        public NbtLong()
+            : this( null ) { }
 
 
-        [Obsolete( "This constructor will be removed in favor of using NbtLong(string tagName, long value)" )]
-        public NbtLong( long value ) : this( "", value ) {}
+        public NbtLong( long value )
+            : this( null, value ) {}
 
 
         public NbtLong( string tagName, long value = 0 ) {
             Name = tagName;
             Value = value;
-        }
-
-
-        internal override void ReadTag( NbtReader readStream ) {
-            ReadTag( readStream, true );
         }
 
 
@@ -32,14 +32,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream ) {
-            WriteTag( writeStream, true );
-        }
-
-
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Long );
             if( writeName ) {
+                if( Name == null ) throw new NullReferenceException( "Name is null" );
                 writeStream.Write( Name );
             }
             writeStream.Write( Value );
@@ -51,15 +47,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override NbtTagType TagType {
-            get { return NbtTagType.Long; }
-        }
-
-
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Long" );
-            if( Name.Length > 0 ) {
+            if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
             sb.AppendFormat( ": {0}", Value );

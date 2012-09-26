@@ -1,22 +1,24 @@
-﻿using System.IO;
+﻿using System;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace LibNbt.Tags {
     public class NbtString : NbtTag, INbtTagValue<string> {
-        public string Value { get; set; }
-
-        public NbtString() : this( "" ) {}
-
-
-        public NbtString( string tagName, string value = "" ) {
-            Name = tagName;
-            Value = value;
+        internal override NbtTagType TagType {
+            get { return NbtTagType.String; }
         }
 
+        [CanBeNull]
+        public string Value { get; set; }
 
-        internal override void ReadTag( NbtReader readStream ) {
-            Name = readStream.ReadString();
-            Value = readStream.ReadString();
+
+        public NbtString()
+            : this( null ) {}
+
+
+        public NbtString( [CanBeNull] string tagName, [CanBeNull] string value = null ) {
+            Name = tagName;
+            Value = value;
         }
 
 
@@ -28,41 +30,25 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream ) {
-            WriteTag( writeStream, true );
-        }
-
-
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
-            writeStream.Write( (byte)NbtTagType.String );
+            writeStream.Write( NbtTagType.String );
             if( writeName ) {
-                var name = new NbtString( "", Name );
-                name.WriteData( writeStream );
+                if( Name == null ) throw new NullReferenceException( "Name is null" );
+                writeStream.Write( Name );
             }
-
             WriteData( writeStream );
         }
 
 
         internal override void WriteData( NbtWriter writeStream ) {
-            byte[] str = Encoding.UTF8.GetBytes( Value );
-
-            var length = new NbtShort( "", (short)str.Length );
-            length.WriteData( writeStream );
-
-            writeStream.Write( str, 0, str.Length );
-        }
-
-
-        internal override NbtTagType TagType {
-            get { return NbtTagType.String; }
+            writeStream.Write( Value ?? "" );
         }
 
 
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_String" );
-            if( Name.Length > 0 ) {
+            if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
             sb.AppendFormat( ": {0}", Value );

@@ -49,7 +49,7 @@ namespace LibNbt.Test {
 
             NbtCompound root = file.RootTag;
             Assert.AreEqual( "hello world", root.Name );
-            Assert.AreEqual( 1, root.Tags.Count );
+            Assert.AreEqual( 1, root.Count );
 
             Assert.IsInstanceOf<NbtString>( root["name"] );
 
@@ -87,7 +87,7 @@ namespace LibNbt.Test {
 
             NbtCompound root = file.RootTag;
             Assert.AreEqual( "Level", root.Name );
-            Assert.AreEqual( 11, root.Tags.Count );
+            Assert.AreEqual( 11, root.Count );
 
             Assert.IsInstanceOf<NbtLong>( root["longTest"] );
             NbtTag node = root["longTest"];
@@ -117,13 +117,13 @@ namespace LibNbt.Test {
             Assert.IsInstanceOf<NbtCompound>( root["nested compound test"] );
             node = root["nested compound test"];
             Assert.AreEqual( "nested compound test", node.Name );
-            Assert.AreEqual( 2, ( (NbtCompound)node ).Tags.Count );
+            Assert.AreEqual( 2, ( (NbtCompound)node ).Count );
 
             // First nested test
             Assert.IsInstanceOf<NbtCompound>( ( (NbtCompound)node )["ham"] );
             NbtCompound subNode = (NbtCompound)( (NbtCompound)node )["ham"];
             Assert.AreEqual( "ham", subNode.Name );
-            Assert.AreEqual( 2, subNode.Tags.Count );
+            Assert.AreEqual( 2, subNode.Count );
 
             // Checking sub node values
             Assert.IsInstanceOf<NbtString>( subNode["name"] );
@@ -139,7 +139,7 @@ namespace LibNbt.Test {
             Assert.IsInstanceOf<NbtCompound>( ( (NbtCompound)node )["egg"] );
             subNode = (NbtCompound)( (NbtCompound)node )["egg"];
             Assert.AreEqual( "egg", subNode.Name );
-            Assert.AreEqual( 2, subNode.Tags.Count );
+            Assert.AreEqual( 2, subNode.Count );
 
             // Checking sub node values
             Assert.IsInstanceOf<NbtString>( subNode["name"] );

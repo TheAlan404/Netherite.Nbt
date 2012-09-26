@@ -52,7 +52,7 @@
     <Compile Include="NbtFile.cs" />
     <Compile Include="Queries\TagQuery.cs" />
     <Compile Include="Queries\TagQueryToken.cs" />
-    <Compile Include="Tags\INbtTagList.cs" />
+    <Compile Include="Tags\NbtIntArray.cs" />
     <Compile Include="Tags\INbtTagValue.cs" />
     <Compile Include="Tags\NbtByte.cs" />
     <Compile Include="Tags\NbtByteArray.cs" />

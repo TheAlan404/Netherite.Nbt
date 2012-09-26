@@ -16,67 +16,16 @@
 
 using System;
 
+// ReSharper disable IntroduceOptionalParameters.Global
+// ReSharper disable UnusedParameter.Local
 namespace JetBrains.Annotations {
-    /// <summary>
-    /// Indicates that marked element should be localized or not.
-    /// </summary>
-    [AttributeUsage( AttributeTargets.All, AllowMultiple = false, Inherited = true )]
-    public sealed class LocalizationRequiredAttribute : Attribute {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LocalizationRequiredAttribute"/> class with
-        /// <see cref="Required"/> set to <see langword="true"/>.
-        /// </summary>
-        public LocalizationRequiredAttribute()
-            : this( true ) {}
-
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LocalizationRequiredAttribute"/> class.
-        /// </summary>
-        /// <param name="required"><c>true</c> if a element should be localized; otherwise, <c>false</c>.</param>
-        public LocalizationRequiredAttribute( bool required ) {
-            Required = required;
-        }
-
-
-        /// <summary>
-        /// Gets a value indicating whether a element should be localized.
-        /// <value><c>true</c> if a element should be localized; otherwise, <c>false</c>.</value>
-        /// </summary>
-        [UsedImplicitly]
-        public bool Required { get; private set; }
-
-
-        /// <summary>
-        /// Returns whether the value of the given object is equal to the current <see cref="LocalizationRequiredAttribute"/>.
-        /// </summary>
-        /// <param name="obj">The object to test the value equality of. </param>
-        /// <returns>
-        /// <c>true</c> if the value of the given object is equal to that of the current; otherwise, <c>false</c>.
-        /// </returns>
-        public override bool Equals( object obj ) {
-            var attribute = obj as LocalizationRequiredAttribute;
-            return attribute != null && attribute.Required == Required;
-        }
-
-
-        /// <summary>
-        /// Returns the hash code for this instance.
-        /// </summary>
-        /// <returns>A hash code for the current <see cref="LocalizationRequiredAttribute"/>.</returns>
-        public override int GetHashCode() {
-            return base.GetHashCode();
-        }
-    }
-
-
     /// <summary>
     /// Indicates that marked method builds string by format pattern and (optional) arguments. 
     /// Parameter, which contains format string, should be given in constructor.
     /// The format string should be in <see cref="string.Format(IFormatProvider,string,object[])"/> -like form
     /// </summary>
     [AttributeUsage( AttributeTargets.Constructor | AttributeTargets.Method, AllowMultiple = false, Inherited = true )]
-    public sealed class StringFormatMethodAttribute : Attribute {
+    sealed class StringFormatMethodAttribute : Attribute {
         /// <summary>
         /// Initializes new instance of StringFormatMethodAttribute
         /// </summary>
@@ -95,38 +44,12 @@ namespace JetBrains.Annotations {
 
 
     /// <summary>
-    /// Indicates that the function argument should be string literal and match one of the parameters of the caller function.
-    /// For example, <see cref="ArgumentNullException"/> has such parameter.
-    /// </summary>
-    [AttributeUsage( AttributeTargets.Parameter, AllowMultiple = false, Inherited = true )]
-    public sealed class InvokerParameterNameAttribute : Attribute {}
-
-
-    /// <summary>
-    /// Indicates that the function is used to notify class type property value is changed.
-    /// </summary>
-    [AttributeUsage( AttributeTargets.Method, AllowMultiple = false, Inherited = true )]
-    public sealed class NotifyPropertyChangedInvocatorAttribute : Attribute {
-        public NotifyPropertyChangedInvocatorAttribute() {}
-
-
-        public NotifyPropertyChangedInvocatorAttribute( string parameterName ) {
-            ParameterName = parameterName;
-        }
-
-
-        [UsedImplicitly]
-        public string ParameterName { get; private set; }
-    }
-
-
-    /// <summary>
     /// Indicates that the value of marked element could be <c>null</c> sometimes, so the check for <c>null</c> is necessary before its usage
     /// </summary>
     [AttributeUsage(
         AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Delegate |
         AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-    public sealed class CanBeNullAttribute : Attribute {}
+    sealed class CanBeNullAttribute : Attribute {}
 
 
     /// <summary>
@@ -135,7 +58,7 @@ namespace JetBrains.Annotations {
     [AttributeUsage(
         AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Delegate |
         AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-    public sealed class NotNullAttribute : Attribute {}
+    sealed class NotNullAttribute : Attribute {}
 
 
     /// <summary>
@@ -165,10 +88,9 @@ namespace JetBrains.Annotations {
     /// </list>
     /// </examples>
     [AttributeUsage( AttributeTargets.Method, AllowMultiple = true, Inherited = true )]
-    public sealed class ContractAnnotationAttribute : Attribute {
+    sealed class ContractAnnotationAttribute : Attribute {
         public ContractAnnotationAttribute( [NotNull] string fdt )
             : this( fdt, false ) {}
-
 
         public ContractAnnotationAttribute( [NotNull] string fdt, bool forceFullStates ) {
             FDT = fdt;
@@ -182,54 +104,11 @@ namespace JetBrains.Annotations {
 
 
     /// <summary>
-    /// Indicates that the value of marked type (or its derivatives) cannot be compared using '==' or '!=' operators.
-    /// There is only exception to compare with <c>null</c>, it is permitted
-    /// </summary>
-    [AttributeUsage( AttributeTargets.Interface | AttributeTargets.Class | AttributeTargets.Struct,
-        AllowMultiple = false, Inherited = true )]
-    public sealed class CannotApplyEqualityOperatorAttribute : Attribute {}
-
-
-    /// <summary>
-    /// When applied to target attribute, specifies a requirement for any type which is marked with 
-    /// target attribute to implement or inherit specific type or types
-    /// </summary>
-    /// <example>
-    /// <code>
-    /// [BaseTypeRequired(typeof(IComponent)] // Specify requirement
-    /// public class ComponentAttribute : Attribute 
-    /// {}
-    /// 
-    /// [Component] // ComponentAttribute requires implementing IComponent interface
-    /// public class MyComponent : IComponent
-    /// {}
-    /// </code>
-    /// </example>
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = true, Inherited = true )]
-    [BaseTypeRequired( typeof( Attribute ) )]
-    public sealed class BaseTypeRequiredAttribute : Attribute {
-        /// <summary>
-        /// Initializes new instance of BaseTypeRequiredAttribute
-        /// </summary>
-        /// <param name="baseType">Specifies which types are required</param>
-        public BaseTypeRequiredAttribute( Type baseType ) {
-            BaseTypes = new[] { baseType };
-        }
-
-
-        /// <summary>
-        /// Gets enumerations of specified base types
-        /// </summary>
-        public Type[] BaseTypes { get; private set; }
-    }
-
-
-    /// <summary>
     /// Indicates that the marked symbol is used implicitly (e.g. via reflection, in external library),
     /// so this symbol will not be marked as unused (as well as by other usage inspections)
     /// </summary>
     [AttributeUsage( AttributeTargets.All, AllowMultiple = false, Inherited = true )]
-    public sealed class UsedImplicitlyAttribute : Attribute {
+    sealed class UsedImplicitlyAttribute : Attribute {
         [UsedImplicitly]
         public UsedImplicitlyAttribute()
             : this( ImplicitUseKindFlags.Default, ImplicitUseTargetFlags.Default ) {}
@@ -267,7 +146,7 @@ namespace JetBrains.Annotations {
     /// Should be used on attributes and causes ReSharper to not mark symbols marked with such attributes as unused (as well as by other usage inspections)
     /// </summary>
     [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = true )]
-    public sealed class MeansImplicitUseAttribute : Attribute {
+    sealed class MeansImplicitUseAttribute : Attribute {
         [UsedImplicitly]
         public MeansImplicitUseAttribute()
             : this( ImplicitUseKindFlags.Default, ImplicitUseTargetFlags.Default ) {}
@@ -302,7 +181,7 @@ namespace JetBrains.Annotations {
 
 
     [Flags]
-    public enum ImplicitUseKindFlags {
+    enum ImplicitUseKindFlags {
         Default = Access | Assign | InstantiatedWithFixedConstructorSignature,
 
         /// <summary>
@@ -332,7 +211,7 @@ namespace JetBrains.Annotations {
     /// Specify what is considered used implicitly when marked with <see cref="MeansImplicitUseAttribute"/> or <see cref="UsedImplicitlyAttribute"/>
     /// </summary>
     [Flags]
-    public enum ImplicitUseTargetFlags {
+    enum ImplicitUseTargetFlags {
         Default = Itself,
 
         Itself = 1,
@@ -353,13 +232,10 @@ namespace JetBrains.Annotations {
     /// This attribute is intended to mark publicly available API which should not be removed and so is treated as used.
     /// </summary>
     [MeansImplicitUse]
-    public sealed class PublicAPIAttribute : Attribute {
+    sealed class PublicAPIAttribute : Attribute {
         public PublicAPIAttribute() {}
 
-        // ReSharper disable UnusedParameter.Local
         public PublicAPIAttribute( string comment ) {}
-
-        // ReSharper restore UnusedParameter.Local
     }
 
 
@@ -369,10 +245,10 @@ namespace JetBrains.Annotations {
     /// If the parameter is enumerable, indicates that it is enumerated while the method is executed.
     /// </summary>
     [AttributeUsage( AttributeTargets.Parameter, Inherited = true )]
-    public sealed class InstantHandleAttribute : Attribute {}
+    sealed class InstantHandleAttribute : Attribute {}
 
 
     /// <summary> Indicates that method doesn't contain observable side effects. </summary>
     [AttributeUsage( AttributeTargets.Method, Inherited = true )]
-    public sealed class PureAttribute : Attribute {}
+    sealed class PureAttribute : Attribute {}
 }

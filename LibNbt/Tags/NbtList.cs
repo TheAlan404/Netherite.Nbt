@@ -1,35 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt.Tags {
-    public class NbtList : NbtTag, INbtTagList {
+    public class NbtList : NbtTag {
+        internal override NbtTagType TagType {
+            get { return NbtTagType.List; }
+        }
+
         public List<NbtTag> Tags { get; protected set; }
-        public NbtTagType Type { get; protected set; }
+
         public NbtTagType ListType { get; protected set; }
 
 
-        public NbtTag this[ int tagIdx ] {
-            get { return Get<NbtTag>( tagIdx ); }
-            set { Tags[tagIdx] = value; }
-        }
+        public NbtList()
+            : this( null ) {}
 
 
-        public NbtList() : this( "" ) {}
+        public NbtList( [CanBeNull] string tagName )
+            : this( tagName, new NbtTag[0], NbtTagType.Unknown ) {}
 
-        public NbtList( string tagName ) : this( tagName, new NbtTag[0], NbtTagType.Unknown ) {}
 
-
-        public NbtList( string tagName, IEnumerable<NbtTag> tags, NbtTagType listType ) {
+        public NbtList( [CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags, NbtTagType listType ) {
             Name = tagName;
             Tags = new List<NbtTag>();
             ListType = listType;
 
-            if( tags != null ) {
-                Tags.AddRange( tags );
+            Tags.AddRange( tags );
+            if( Tags.Count > 0 ) {
+                if( ListType == NbtTagType.Unknown ) {
+                    ListType = Tags[0].TagType;
+                }
+                foreach( NbtTag tag in Tags ) {
+                    if( tag.TagType != ListType ) {
+                        throw new ArgumentException( String.Format( "All tags must be of type {0}", ListType ), "tags" );
+                    }
+                }
             }
+        }
+
+
+        public NbtTag this[ int tagIndex ] {
+            get { return Get<NbtTag>( tagIndex ); }
+            set { Tags[tagIndex] = value; }
         }
 
 
@@ -107,11 +122,6 @@ namespace LibNbt.Tags {
 
 
         #region Reading Tag
-
-        internal override void ReadTag( NbtReader readStream ) {
-            ReadTag( readStream, true );
-        }
-
 
         internal override void ReadTag( NbtReader readStream, bool readName ) {
             // First read the name of this tag
@@ -192,14 +202,10 @@ namespace LibNbt.Tags {
 
         #region Write Tag
 
-        internal override void WriteTag( NbtWriter writeStream ) {
-            WriteTag( writeStream, true );
-        }
-
-
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.List );
             if( writeName ) {
+                if( Name == null ) throw new NullReferenceException( "Name is null" );
                 writeStream.Write( Name );
             }
             WriteData( writeStream );
@@ -217,15 +223,10 @@ namespace LibNbt.Tags {
         #endregion
 
 
-        internal override NbtTagType TagType {
-            get { return NbtTagType.List; }
-        }
-
-
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_List" );
-            if( Name.Length > 0 ) {
+            if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
             sb.AppendFormat( ": {0} entries\n", Tags.Count );

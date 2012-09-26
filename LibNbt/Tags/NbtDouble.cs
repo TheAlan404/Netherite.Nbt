@@ -1,26 +1,27 @@
 ﻿using System;
-using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace LibNbt.Tags {
     public class NbtDouble : NbtTag, INbtTagValue<double> {
-        public double Value { get; set; }
-
-        public NbtDouble() : this( "" ) {}
-
-
-        [Obsolete( "This constructor will be removed in favor of using NbtDouble(string tagName, double value)" )]
-        public NbtDouble( double value ) : this( "", value ) {}
-
-
-        public NbtDouble( string tagName, double value = 0.00f ) {
-            Name = tagName;
-            Value = value;
+        internal override NbtTagType TagType {
+            get { return NbtTagType.Double; }
         }
 
+        public double Value { get; set; }
 
-        internal override void ReadTag( NbtReader readStream ) {
-            ReadTag( readStream, true );
+
+        public NbtDouble()
+            : this( null ) {}
+
+
+        public NbtDouble( double value )
+            : this( null, value ) {}
+
+
+        public NbtDouble( [CanBeNull] string tagName, double value = 0 ) {
+            Name = tagName;
+            Value = value;
         }
 
 
@@ -32,14 +33,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream ) {
-            WriteTag( writeStream, true );
-        }
-
-
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Double );
             if( writeName ) {
+                if( Name == null ) throw new NullReferenceException( "Name is null" );
                 writeStream.Write( Name );
             }
             writeStream.Write( Value );
@@ -51,15 +48,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override NbtTagType TagType {
-            get { return NbtTagType.Double; }
-        }
-
-
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Double" );
-            if( Name.Length > 0 ) {
+            if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
             sb.AppendFormat( ": {0}", Value );

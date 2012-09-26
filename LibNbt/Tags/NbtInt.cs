@@ -1,26 +1,27 @@
 ﻿using System;
-using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace LibNbt.Tags {
     public class NbtInt : NbtTag, INbtTagValue<int> {
-        public int Value { get; set; }
-
-        public NbtInt() : this( "" ) {}
-
-
-        [Obsolete( "This constructor will be removed in favor of using NbtInt(string tagName, int value)" )]
-        public NbtInt( int value ) : this( "", value ) {}
-
-
-        public NbtInt( string name, int value = 0 ) {
-            Name = name;
-            Value = value;
+        internal override NbtTagType TagType {
+            get { return NbtTagType.Int; }
         }
 
+        public int Value { get; set; }
 
-        internal override void ReadTag( NbtReader readStream ) {
-            ReadTag( readStream, true );
+
+        public NbtInt()
+            : this( null ) {}
+
+
+        public NbtInt( int value )
+            : this( null, value ) {}
+
+
+        public NbtInt( [CanBeNull] string tagName, int value = 0 ) {
+            Name = tagName;
+            Value = value;
         }
 
 
@@ -41,14 +42,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream ) {
-            WriteTag( writeStream, true );
-        }
-
-
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Int );
             if( writeName ) {
+                if( Name == null ) throw new NullReferenceException( "Name is null" );
                 writeStream.Write( Name );
             }
             writeStream.Write( Value );
@@ -60,15 +57,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override NbtTagType TagType {
-            get { return NbtTagType.Int; }
-        }
-
-
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Int" );
-            if( Name.Length > 0 ) {
+            if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
             sb.AppendFormat( ": {0}", Value );

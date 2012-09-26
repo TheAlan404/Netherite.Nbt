@@ -1,36 +1,27 @@
 ﻿using System;
-using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace LibNbt.Tags {
     public class NbtShort : NbtTag, INbtTagValue<short> {
+        internal override NbtTagType TagType {
+            get { return NbtTagType.Short; }
+        }
+
         public short Value { get; set; }
 
-        public NbtShort() : this( "" ) {}
+
+        public NbtShort()
+            : this( null ) {}
 
 
-        [Obsolete( "This constructor will be removed in favor of using NbtShort(string tagName, short value)" )]
-        public NbtShort( short value ) : this( "", value ) {}
+        public NbtShort( short value )
+            : this( null, value ) {}
 
 
-        public NbtShort( string tagName, short value = 0 ) {
+        public NbtShort( [CanBeNull] string tagName, short value = 0 ) {
             Name = tagName;
             Value = value;
-        }
-
-
-        internal static short ReadShort( Stream readStream ) {
-            var buffer = new byte[2];
-            int numRead = readStream.Read( buffer, 0, buffer.Length );
-            if( numRead != 2 ) throw new EndOfStreamException();
-            if( BitConverter.IsLittleEndian ) Array.Reverse( buffer );
-            return BitConverter.ToInt16( buffer, 0 );
-        }
-
-
-        internal override void ReadTag( NbtReader readStream ) {
-            Name = readStream.ReadString();
-            Value = readStream.ReadInt16();
         }
 
 
@@ -42,16 +33,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream ) {
-            writeStream.Write( NbtTagType.Short );
-            writeStream.Write( Name );
-            writeStream.Write( Value );
-        }
-
-
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Short );
             if( writeName ) {
+                if( Name == null ) throw new NullReferenceException( "Name is null" );
                 writeStream.Write( Name );
             }
             writeStream.Write( Value );
@@ -63,15 +48,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override NbtTagType TagType {
-            get { return NbtTagType.Short; }
-        }
-
-
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Short" );
-            if( Name.Length > 0 ) {
+            if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
             sb.AppendFormat( ": {0}", Value );

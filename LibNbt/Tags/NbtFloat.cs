@@ -1,26 +1,27 @@
 ﻿using System;
-using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace LibNbt.Tags {
     public class NbtFloat : NbtTag, INbtTagValue<float> {
-        public float Value { get; set; }
-
-        public NbtFloat() : this( "" ) {}
-
-
-        [Obsolete( "This constructor will be removed in favor of using NbtFloat(string tagName, float value)" )]
-        public NbtFloat( float value ) : this( "", value ) {}
-
-
-        public NbtFloat( string tagName, float value = 0f ) {
-            Name = tagName;
-            Value = value;
+        internal override NbtTagType TagType {
+            get { return NbtTagType.Float; }
         }
 
+        public float Value { get; set; }
 
-        internal override void ReadTag( NbtReader readStream ) {
-            ReadTag( readStream, true );
+
+        public NbtFloat()
+            : this( null ) {}
+
+
+        public NbtFloat( float value )
+            : this( null, value ) {}
+
+
+        public NbtFloat( [CanBeNull] string tagName, float value = 0f ) {
+            Name = tagName;
+            Value = value;
         }
 
 
@@ -32,14 +33,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream ) {
-            WriteTag( writeStream, true );
-        }
-
-
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Float );
             if( writeName ) {
+                if( Name == null ) throw new NullReferenceException( "Name is null" );
                 writeStream.Write( Name );
             }
             writeStream.Write( Value );
@@ -51,15 +48,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override NbtTagType TagType {
-            get { return NbtTagType.Float; }
-        }
-
-
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Float" );
-            if( Name.Length > 0 ) {
+            if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
             sb.AppendFormat( ": {0}", Value );

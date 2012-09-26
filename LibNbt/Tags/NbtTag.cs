@@ -1,12 +1,11 @@
 ﻿using System;
-using System.IO;
 using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt.Tags {
     public abstract class NbtTag {
-        protected NbtTag() {
-            Name = null;
+        internal virtual NbtTagType TagType {
+            get { return NbtTagType.Unknown; }
         }
 
 
@@ -56,22 +55,13 @@ namespace LibNbt.Tags {
             return null;
         }
 
-
-        internal abstract void ReadTag( [NotNull] NbtReader readReader );
-
         internal abstract void ReadTag( [NotNull] NbtReader readReader, bool readName );
 
-        // WriteTag writes the whole tag, including the ID byte
-        internal abstract void WriteTag( [NotNull] NbtWriter writeReader );
 
         internal abstract void WriteTag( [NotNull] NbtWriter writeReader, bool writeName );
 
+
         // WriteData does not write the tag's ID byte or the name
         internal abstract void WriteData( [NotNull] NbtWriter writeReader );
-
-
-        internal virtual NbtTagType TagType {
-            get { return NbtTagType.Unknown; }
-        }
     }
 }

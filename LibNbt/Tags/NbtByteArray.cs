@@ -1,36 +1,38 @@
 ﻿using System;
-using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace LibNbt.Tags {
     public class NbtByteArray : NbtTag, INbtTagValue<byte[]> {
+        internal override NbtTagType TagType {
+            get { return NbtTagType.ByteArray; }
+        }
+
         public byte[] Value { get; set; }
+
+
+        public NbtByteArray()
+            : this( null, new byte[0] ) { }
+
+
+        public NbtByteArray( [NotNull] byte[] value )
+            : this( null, value ) { }
+
+
+        public NbtByteArray( [CanBeNull] string tagName )
+            : this( tagName, new byte[0] ) {}
+
+
+        public NbtByteArray( [CanBeNull] string tagName, [NotNull] byte[] value ) {
+            if( value == null ) throw new ArgumentNullException( "value" );
+            Name = tagName;
+            Value = (byte[])value.Clone();
+        }
 
 
         public byte this[ int index ] {
             get { return Value[index]; }
             set { Value[index] = value; }
-        }
-
-
-        public NbtByteArray() : this( "" ) {}
-
-        public NbtByteArray( string tagName ) : this( tagName, new byte[] { } ) {}
-
-
-        [Obsolete( "This constructor will be removed in favor of using NbtByteArray(string tagName, byte[] value)" )]
-        public NbtByteArray( byte[] value ) : this( "", value ) {}
-
-
-        public NbtByteArray( string tagName, byte[] value ) {
-            Name = tagName;
-            Value = new byte[value.Length];
-            Buffer.BlockCopy( value, 0, Value, 0, value.Length );
-        }
-
-
-        internal override void ReadTag( NbtReader readStream ) {
-            ReadTag( readStream, true );
         }
 
 
@@ -49,14 +51,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream ) {
-            WriteTag( writeStream, true );
-        }
-
-
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.ByteArray );
             if( writeName ) {
+                if( Name == null ) throw new NullReferenceException( "Name is null" );
                 writeStream.Write( Name );
             }
             WriteData( writeStream );
@@ -69,15 +67,10 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override NbtTagType TagType {
-            get { return NbtTagType.ByteArray; }
-        }
-
-
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Byte_Array" );
-            if( Name.Length > 0 ) {
+            if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
             sb.AppendFormat( ": [{0} bytes]", Value.Length );
