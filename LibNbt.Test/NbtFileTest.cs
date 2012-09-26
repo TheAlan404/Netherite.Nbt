@@ -159,7 +159,7 @@ namespace LibNbt.Test {
             // The values should be: 11, 12, 13, 14, 15
             for( int nodeIndex = 0; nodeIndex < ( (NbtList)node ).Tags.Count; nodeIndex++ ) {
                 Assert.IsInstanceOf<NbtLong>( ( (NbtList)node )[nodeIndex] );
-                Assert.AreEqual( "", ( (NbtList)node )[nodeIndex].Name );
+                Assert.AreEqual( null, ( (NbtList)node )[nodeIndex].Name );
                 Assert.AreEqual( nodeIndex + 11, ( (NbtLong)( (NbtList)node )[nodeIndex] ).Value );
             }
 
@@ -201,12 +201,10 @@ namespace LibNbt.Test {
             Assert.AreEqual( "byteTest", node.Name );
             Assert.AreEqual( 127, ( (NbtByte)node ).Value );
 
-            Assert.IsInstanceOf<NbtByteArray>(
-                root[ "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))" ] );
-            node = root[ "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))" ];
-            Assert.AreEqual(
-                "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))",
-                node.Name );
+            const string byteArrayName = "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))";
+            Assert.IsInstanceOf<NbtByteArray>( root[byteArrayName] );
+            node = root[byteArrayName];
+            Assert.AreEqual( byteArrayName, node.Name );
             Assert.AreEqual( 1000, ( (NbtByteArray)node ).Value.Length );
 
             // Values are: the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...)

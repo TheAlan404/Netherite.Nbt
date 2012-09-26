@@ -7,6 +7,9 @@ using LibNbt.Tags;
 
 namespace LibNbt {
     class NbtReader : BinaryReader {
+        readonly byte[] floatBuffer = new byte[sizeof( float )],
+                        doubleBuffer = new byte[sizeof( double )];
+
         public NbtReader( [NotNull] Stream input )
             : base( input ) {}
 
@@ -33,9 +36,9 @@ namespace LibNbt {
 
         public override float ReadSingle() {
             if( BitConverter.IsLittleEndian ) {
-                byte[] bytes = base.ReadBytes( sizeof( float ) );
-                Array.Reverse( bytes );
-                return BitConverter.ToSingle( bytes, 0 );
+                BaseStream.Read( floatBuffer, 0, sizeof( float ) );
+                Array.Reverse( floatBuffer );
+                return BitConverter.ToSingle( floatBuffer, 0 );
             } else {
                 return base.ReadSingle();
             }
@@ -44,9 +47,9 @@ namespace LibNbt {
 
         public override double ReadDouble() {
             if( BitConverter.IsLittleEndian ) {
-                byte[] bytes = base.ReadBytes( sizeof( double ) );
-                Array.Reverse( bytes );
-                return BitConverter.ToDouble( bytes, 0 );
+                BaseStream.Read( doubleBuffer, 0, sizeof( double ) );
+                Array.Reverse( doubleBuffer );
+                return BitConverter.ToDouble( doubleBuffer, 0 );
             } else {
                 return base.ReadDouble();
             }

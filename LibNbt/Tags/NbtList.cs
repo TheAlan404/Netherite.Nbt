@@ -13,30 +13,40 @@ namespace LibNbt.Tags {
         [NotNull]
         public List<NbtTag> Tags { get; protected set; }
 
-        public NbtTagType ListType { get; protected set; }
+        public NbtTagType ListType {
+            get { return listType; }
+            set {
+                foreach( var tag in Tags ) {
+                    if( tag.TagType != value ) {
+                        throw new Exception( "All list items must be of specified tag type." );
+                    }
+                }
+                listType = value;
+            }
+        }
+        NbtTagType listType;
 
 
         public NbtList()
             : this( null ) {}
 
 
-        public NbtList( [CanBeNull] string tagName )
-            : this( tagName, new NbtTag[0], NbtTagType.Unknown ) {}
-
-
-        public NbtList( [CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags, NbtTagType listType ) {
+        public NbtList( [CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags = null, NbtTagType givenListType = NbtTagType.Unknown ) {
             Name = tagName;
             Tags = new List<NbtTag>();
-            ListType = listType;
+            listType = givenListType;
 
-            Tags.AddRange( tags );
-            if( Tags.Count > 0 ) {
-                if( ListType == NbtTagType.Unknown ) {
-                    ListType = Tags[0].TagType;
-                }
-                foreach( NbtTag tag in Tags ) {
-                    if( tag.TagType != ListType ) {
-                        throw new ArgumentException( String.Format( "All tags must be of type {0}", ListType ), "tags" );
+            if( tags != null ) {
+                Tags.AddRange( tags );
+                if( Tags.Count > 0 ) {
+                    if( ListType == NbtTagType.Unknown ) {
+                        listType = Tags[0].TagType;
+                    }
+                    foreach( NbtTag tag in Tags ) {
+                        if( tag.TagType != listType ) {
+                            throw new ArgumentException( String.Format( "All tags must be of type {0}", listType ),
+                                                         "tags" );
+                        }
                     }
                 }
             }
@@ -109,16 +119,6 @@ namespace LibNbt.Tags {
             }
 
             return (T)( (NbtTag)this );
-        }
-
-
-        public void SetListType( NbtTagType listType ) {
-            foreach( var tag in Tags ) {
-                if( tag.TagType != listType ) {
-                    throw new Exception( "All list items must be the specified tag type." );
-                }
-            }
-            ListType = listType;
         }
 
 
