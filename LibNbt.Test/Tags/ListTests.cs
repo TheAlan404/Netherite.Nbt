@@ -19,8 +19,8 @@ namespace LibNbt.Test.Tags {
             };
 
             // auto-detecting list type
-            Assert.DoesNotThrow( () => new NbtList( "Test1", sameTags, NbtTagType.Unknown ) );
-            Assert.AreEqual( new NbtList( "Test1", sameTags, NbtTagType.Unknown ).ListType, NbtTagType.Int );
+            Assert.DoesNotThrow( () => new NbtList( "Test1", sameTags ) );
+            Assert.AreEqual( new NbtList( "Test1", sameTags ).ListType, NbtTagType.Int );
 
             // correct explicitly-given list type
             Assert.DoesNotThrow( () => new NbtList( "Test2", sameTags, NbtTagType.Int ) );
@@ -28,8 +28,8 @@ namespace LibNbt.Test.Tags {
             // wrong explicitly-given list type
             Assert.Throws<ArgumentException>( () => new NbtList( "Test3", sameTags, NbtTagType.Float ) );
 
-            // mixed list given
-            Assert.Throws<ArgumentException>( () => new NbtList( "Test4", mixedTags, NbtTagType.Unknown ) );
+            // auto-detecting mixed list given
+            Assert.Throws<ArgumentException>( () => new NbtList( "Test4", mixedTags ) );
         }
 
 
@@ -40,9 +40,9 @@ namespace LibNbt.Test.Tags {
             // changing type of an empty list
             Assert.DoesNotThrow( () => list.ListType = NbtTagType.Unknown );
 
-            list.Tags.Add( new NbtInt() );
+            list.Add( new NbtInt() );
 
-            // changing list type to a correct type
+            // setting correct type for a non-empty list
             Assert.DoesNotThrow( () => list.ListType = NbtTagType.Int );
 
             // changing list type to an incorrect type

@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt.Tags {
-    public class NbtList : NbtTag {
+    public class NbtList : NbtTag, IList<NbtTag> {
         internal override NbtTagType TagType {
             get { return NbtTagType.List; }
         }
 
         [NotNull]
-        public List<NbtTag> Tags { get; protected set; }
+        List<NbtTag> Tags { get; set; }
 
         public NbtTagType ListType {
             get { return listType; }
@@ -24,6 +25,7 @@ namespace LibNbt.Tags {
                 listType = value;
             }
         }
+
         NbtTagType listType;
 
 
@@ -31,7 +33,8 @@ namespace LibNbt.Tags {
             : this( null ) {}
 
 
-        public NbtList( [CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags = null, NbtTagType givenListType = NbtTagType.Unknown ) {
+        public NbtList( [CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags = null,
+                        NbtTagType givenListType = NbtTagType.Unknown ) {
             Name = tagName;
             Tags = new List<NbtTag>();
             listType = givenListType;
@@ -53,14 +56,24 @@ namespace LibNbt.Tags {
         }
 
 
-        public NbtTag this[ int tagIndex ] {
-            get { return Get<NbtTag>( tagIndex ); }
-            set { Tags[tagIndex] = value; }
+        public int IndexOf( NbtTag item ) {
+            return Tags.IndexOf( item );
         }
 
 
-        public NbtTag Get( int tagIndex ) {
-            return Get<NbtTag>( tagIndex );
+        public void Insert( int index, NbtTag item ) {
+            Tags.Insert( index, item );
+        }
+
+
+        public void RemoveAt( int index ) {
+            Tags.RemoveAt( index );
+        }
+
+
+        public NbtTag this[ int tagIndex ] {
+            get { return Get<NbtTag>( tagIndex ); }
+            set { Tags[tagIndex] = value; }
         }
 
 
@@ -68,6 +81,8 @@ namespace LibNbt.Tags {
             return (T)Tags[tagIndex];
         }
 
+
+        #region Query
 
         public override NbtTag Query( string query ) {
             return Query<NbtTag>( query );
@@ -101,7 +116,7 @@ namespace LibNbt.Tags {
                                        Name ) );
                 }
 
-                var indexedTag = Get( tagIndex );
+                NbtTag indexedTag = Get<NbtTag>( tagIndex );
                 if( indexedTag == null ) {
                     return null;
                 }
@@ -121,8 +136,11 @@ namespace LibNbt.Tags {
             return (T)( (NbtTag)this );
         }
 
+        #endregion
 
-        #region Reading Tag
+
+
+        #region Reading / Writing
 
         internal override void ReadTag( NbtReader readStream, bool readName ) {
             // First read the name of this tag
@@ -198,10 +216,6 @@ namespace LibNbt.Tags {
             }
         }
 
-        #endregion
-
-
-        #region Write Tag
 
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.List );
@@ -239,5 +253,58 @@ namespace LibNbt.Tags {
             sb.Append( "}" );
             return sb.ToString();
         }
+
+
+        public IEnumerator<NbtTag> GetEnumerator() {
+            return Tags.GetEnumerator();
+        }
+
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return Tags.GetEnumerator();
+        }
+
+
+        #region Implementation of ICollection<NbtTag>
+
+        public void Add( NbtTag item ) {
+            if( listType == NbtTagType.Unknown ) {
+                listType = item.TagType;
+            } else if( item.TagType != listType ) {
+                throw new ArgumentException( "Items must be of type " + listType );
+            }
+            Tags.Add( item );
+        }
+
+
+        public void Clear() {
+            Tags.Clear();
+        }
+
+
+        public bool Contains( NbtTag item ) {
+            return Tags.Contains( item );
+        }
+
+
+        public void CopyTo( NbtTag[] array, int arrayIndex ) {
+            Tags.CopyTo( array, arrayIndex );
+        }
+
+
+        public bool Remove( NbtTag item ) {
+            return Tags.Remove( item );
+        }
+
+
+        public int Count {
+            get { return Tags.Count; }
+        }
+
+        public bool IsReadOnly {
+            get { return false; }
+        }
+
+        #endregion
     }
 }

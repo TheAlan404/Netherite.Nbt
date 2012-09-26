@@ -154,10 +154,10 @@ namespace LibNbt.Test {
             Assert.IsInstanceOf<NbtList>( root["listTest (long)"] );
             node = root["listTest (long)"];
             Assert.AreEqual( "listTest (long)", node.Name );
-            Assert.AreEqual( 5, ( (NbtList)node ).Tags.Count );
+            Assert.AreEqual( 5, ( (NbtList)node ).Count );
 
             // The values should be: 11, 12, 13, 14, 15
-            for( int nodeIndex = 0; nodeIndex < ( (NbtList)node ).Tags.Count; nodeIndex++ ) {
+            for( int nodeIndex = 0; nodeIndex < ( (NbtList)node ).Count; nodeIndex++ ) {
                 Assert.IsInstanceOf<NbtLong>( ( (NbtList)node )[nodeIndex] );
                 Assert.AreEqual( null, ( (NbtList)node )[nodeIndex].Name );
                 Assert.AreEqual( nodeIndex + 11, ( (NbtLong)( (NbtList)node )[nodeIndex] ).Value );
@@ -166,7 +166,7 @@ namespace LibNbt.Test {
             Assert.IsInstanceOf<NbtList>( root["listTest (compound)"] );
             node = root["listTest (compound)"];
             Assert.AreEqual( "listTest (compound)", node.Name );
-            Assert.AreEqual( 2, ( (NbtList)node ).Tags.Count );
+            Assert.AreEqual( 2, ( (NbtList)node ).Count );
 
             // First Sub Node
             Assert.IsInstanceOf<NbtCompound>( ( (NbtList)node )[0] );
