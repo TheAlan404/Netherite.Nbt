@@ -1,10 +1,19 @@
 ﻿using System;
+using System.IO;
 using LibNbt.Tags;
 using NUnit.Framework;
 
 namespace LibNbt.Test.Tags {
     [TestFixture]
     public class ListTests {
+        const string TempDir = "TestTemp";
+
+        [SetUp]
+        public void NbtFileTestSetup() {
+            Directory.CreateDirectory( TempDir );
+        }
+
+
         [Test]
         public void InitializingListFromCollection() {
             var sameTags = new NbtTag[] {
@@ -82,7 +91,7 @@ namespace LibNbt.Test.Tags {
         public void Serializing() {
             NbtFile writtenFile = new NbtFile();
             NbtFile readFile = new NbtFile();
-            const string fileName = "TestFiles/NbtListType.nbt";
+            string fileName = Path.Combine( TempDir, "NbtListType.nbt" );
             const NbtTagType expectedListType = NbtTagType.Int;
             const int elements = 10;
 
@@ -110,6 +119,17 @@ namespace LibNbt.Test.Tags {
             // check contents of loaded list
             for( int i = 0; i < elements; i++ ) {
                 Assert.AreEqual( readList.Get<NbtInt>( i ).Value, writtenList.Get<NbtInt>( i ).Value );
+            }
+        }
+
+
+        [TearDown]
+        public void NbtFileTestTearDown() {
+            if( Directory.Exists( TempDir ) ) {
+                foreach( var file in Directory.GetFiles( TempDir ) ) {
+                    File.Delete( file );
+                }
+                Directory.Delete( TempDir );
             }
         }
     }

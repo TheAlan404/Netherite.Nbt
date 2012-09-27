@@ -96,9 +96,7 @@ namespace LibNbt {
             switch( compression ) {
                 case NbtCompression.GZip:
                     using( var decStream = new GZipStream( fileStream, CompressionMode.Decompress, true ) ) {
-                        using( BufferedStream bufferedStream = new BufferedStream( decStream, BufferSize ) ) {
-                            LoadFileInternal( bufferedStream );
-                        }
+                        LoadFileInternal( new BufferedStream( decStream, BufferSize ) );
                     }
                     break;
 
@@ -160,9 +158,9 @@ namespace LibNbt {
             if( compression == NbtCompression.GZip ) {
                 using( var compressStream = new GZipStream( fileStream, CompressionMode.Compress, true ) ) {
                     // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
-                    using( BufferedStream bs = new BufferedStream( compressStream, BufferSize ) ) {
-                        RootTag.WriteTag( new NbtWriter( bs ), true );
-                    }
+                    BufferedStream bufferedStream = new BufferedStream( compressStream, BufferSize );
+                    RootTag.WriteTag( new NbtWriter( bufferedStream ), true );
+                    bufferedStream.Flush();
                 }
             } else {
                 RootTag.WriteTag( new NbtWriter( fileStream ), true );
