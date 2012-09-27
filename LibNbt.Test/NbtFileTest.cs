@@ -86,7 +86,7 @@ namespace LibNbt.Test {
 
             NbtCompound root = file.RootTag;
             Assert.AreEqual( "Level", root.Name );
-            Assert.AreEqual( 11, root.Count );
+            Assert.AreEqual( 12, root.Count );
 
             Assert.IsInstanceOf<NbtLong>( root["longTest"] );
             NbtTag node = root["longTest"];
@@ -200,7 +200,8 @@ namespace LibNbt.Test {
             Assert.AreEqual( "byteTest", node.Name );
             Assert.AreEqual( 127, ( (NbtByte)node ).Value );
 
-            const string byteArrayName = "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))";
+            const string byteArrayName =
+                "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))";
             Assert.IsInstanceOf<NbtByteArray>( root[byteArrayName] );
             node = root[byteArrayName];
             Assert.AreEqual( byteArrayName, node.Name );
@@ -215,6 +216,14 @@ namespace LibNbt.Test {
             node = root["doubleTest"];
             Assert.AreEqual( "doubleTest", node.Name );
             Assert.AreEqual( 0.4931287132182315, ( (NbtDouble)node ).Value );
+
+            Assert.IsInstanceOf<NbtIntArray>( root["intArrayTest"] );
+            NbtIntArray intArrayTag = root.Get<NbtIntArray>( "intArrayTest" );
+            Assert.IsNotNull( intArrayTag );
+            Random rand = new Random( 0 );
+            for( int i = 0; i < 10; i++ ) {
+                Assert.AreEqual( intArrayTag.Value[i], rand.Next() );
+            }
         }
 
         #endregion
@@ -248,6 +257,15 @@ namespace LibNbt.Test {
             FileStream testFileStream = File.OpenRead( "TestFiles/test.nbt" );
 
             FileAssert.AreEqual( testFileStream, nbtStream );
+        }
+
+
+        [Test]
+        public void ReloadingBigSavedFile() {
+            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.None );
+            loadedFile.LoadFromFile();
+            loadedFile.SaveToFile( "TestTemp/bigtest.nbt", NbtCompression.None );
+            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt", NbtCompression.None );
         }
     }
 }

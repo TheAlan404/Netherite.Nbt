@@ -81,66 +81,77 @@ namespace LibNbt {
                         var nextByte = new NbtByte();
                         nextByte.ReadTag( readStream, true );
                         Add( nextByte );
+                        //Console.WriteLine( nextByte.ToString() );
                         break;
 
                     case NbtTagType.Short:
                         var nextShort = new NbtShort();
                         nextShort.ReadTag( readStream, true );
                         Add( nextShort );
+                        //Console.WriteLine( nextShort.ToString() );
                         break;
 
                     case NbtTagType.Int:
                         var nextInt = new NbtInt();
                         nextInt.ReadTag( readStream, true );
                         Add( nextInt );
+                        //Console.WriteLine( nextInt.ToString() );
                         break;
 
                     case NbtTagType.Long:
                         var nextLong = new NbtLong();
                         nextLong.ReadTag( readStream, true );
                         Add( nextLong );
+                        //Console.WriteLine( nextLong.ToString() );
                         break;
 
                     case NbtTagType.Float:
                         var nextFloat = new NbtFloat();
                         nextFloat.ReadTag( readStream, true );
                         Add( nextFloat );
+                        //Console.WriteLine( nextFloat.ToString() );
                         break;
 
                     case NbtTagType.Double:
                         var nextDouble = new NbtDouble();
                         nextDouble.ReadTag( readStream, true );
                         Add( nextDouble );
+                        //Console.WriteLine( nextDouble.ToString() );
                         break;
 
                     case NbtTagType.ByteArray:
                         var nextByteArray = new NbtByteArray();
                         nextByteArray.ReadTag( readStream, true );
                         Add( nextByteArray );
+                        //Console.WriteLine( nextByteArray.ToString() );
                         break;
 
                     case NbtTagType.String:
                         var nextString = new NbtString();
                         nextString.ReadTag( readStream, true );
                         Add( nextString );
+                        //Console.WriteLine( nextString.ToString() );
                         break;
 
                     case NbtTagType.List:
                         var nextList = new NbtList();
                         nextList.ReadTag( readStream, true );
                         Add( nextList );
+                        //Console.WriteLine( nextList.ToString() );
                         break;
 
                     case NbtTagType.Compound:
                         var nextCompound = new NbtCompound();
                         nextCompound.ReadTag( readStream, true );
                         Add( nextCompound );
+                        //Console.WriteLine( nextCompound.ToString() );
                         break;
 
                     case NbtTagType.IntArray:
                         var nextIntArray = new NbtIntArray();
                         nextIntArray.ReadTag( readStream, true );
                         Add( nextIntArray );
+                        //Console.WriteLine( nextIntArray.ToString() );
                         break;
 
                     default:

@@ -48,8 +48,8 @@
   <ItemGroup>
     <Compile Include="NbtFileTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Queries\TagQueryTest.cs" />
-    <Compile Include="Tags\ListTests.cs" />
+    <Compile Include="TagQueryTest.cs" />
+    <Compile Include="ListTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="TestFiles\bigtest.nbt">
@@ -64,10 +64,6 @@
     <None Include="TestFiles\test.nbt.gz">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="TestFiles\bigtest.nbt.txt" />
-    <Content Include="TestFiles\test.nbt.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LibNbt\LibNbt.csproj">

@@ -52,7 +52,7 @@ namespace LibNbt {
 
 
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
-            writeStream.Write( NbtTagType.ByteArray );
+            writeStream.Write( NbtTagType.IntArray );
             if( writeName ) {
                 if( Name == null ) throw new NullReferenceException( "Name is null" );
                 writeStream.Write( Name );

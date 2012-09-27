@@ -53,8 +53,9 @@ namespace LibNbt {
 
 
         public override void Write( string value ) {
-            Write( (short)value.Length );
-            Write( Encoding.UTF8.GetBytes( value ) );
+            var bytes = Encoding.UTF8.GetBytes( value );
+            Write( (short)bytes.Length );
+            Write( bytes );
         }
     }
 }

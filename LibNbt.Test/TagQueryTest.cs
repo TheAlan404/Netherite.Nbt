@@ -1,7 +1,7 @@
 ﻿using LibNbt.Queries;
 using NUnit.Framework;
 
-namespace LibNbt.Test.Queries {
+namespace LibNbt.Test {
     [TestFixture]
     public class TagQueryTest {
         NbtFile file;
