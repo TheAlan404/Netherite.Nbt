@@ -6,12 +6,12 @@ using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt {
-    public class NbtCompound : NbtTag, ICollection<NbtTag> {
+    public class NbtCompound : NbtTag, ICollection<NbtTag>, ICollection {
         internal override NbtTagType TagType {
             get { return NbtTagType.Compound; }
         }
 
-        private Dictionary<string, NbtTag> Tags { get; set; }
+        private readonly Dictionary<string, NbtTag> tags;
 
 
         public NbtCompound()
@@ -28,12 +28,12 @@ namespace LibNbt {
 
         public NbtCompound( [CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags ) {
             Name = tagName;
-            Tags = new Dictionary<string, NbtTag>();
+            this.tags = new Dictionary<string, NbtTag>();
             foreach( NbtTag tag in tags ) {
                 if( tag.Name == null ) {
                     throw new ArgumentException( "All tags in a compound tag must be named." );
                 }
-                Tags.Add( tag.Name, tag );
+                this.tags.Add( tag.Name, tag );
             }
         }
 
@@ -44,7 +44,7 @@ namespace LibNbt {
             set {
                 if( tagName == null ) throw new ArgumentNullException( "tagName" );
                 if( value == null ) throw new ArgumentNullException( "value" );
-                Tags[tagName] = value;
+                tags[tagName] = value;
             }
         }
 
@@ -53,10 +53,57 @@ namespace LibNbt {
         public T Get<T>( [NotNull] string tagName ) where T : NbtTag {
             if( tagName == null ) throw new ArgumentNullException( "tagName" );
             NbtTag result;
-            if( Tags.TryGetValue( tagName, out result ) ) {
+            if( tags.TryGetValue( tagName, out result ) ) {
                 return (T)result;
             }
             return null;
+        }
+
+
+        [NotNull]
+        public NbtTag[] ToArray() {
+            NbtTag[] array = new NbtTag[tags.Count];
+            int i = 0;
+            foreach( NbtTag tag in tags.Values ) {
+                array[i++] = tag;
+            }
+            return array;
+        }
+
+
+        [NotNull]
+        public string[] ToNameArray() {
+            string[] array = new string[tags.Count];
+            int i = 0;
+            foreach( NbtTag tag in tags.Values ) {
+                array[i++] = tag.Name;
+            }
+            return array;
+        }
+
+
+        public void AddRange( [NotNull] IEnumerable<NbtTag> newTags ) {
+            if( newTags == null ) throw new ArgumentNullException( "newTags" );
+            foreach( NbtTag tag in newTags ) {
+                Add( tag );
+            }
+        }
+
+
+        public override string ToString() {
+            var sb = new StringBuilder();
+            sb.Append( "TAG_Compound" );
+            if( !String.IsNullOrEmpty( Name ) ) {
+                sb.AppendFormat( "(\"{0}\")", Name );
+            }
+            sb.AppendFormat( ": {0} entries\n", tags.Count );
+
+            sb.Append( "{\n" );
+            foreach( NbtTag tag in tags.Values ) {
+                sb.AppendFormat( "\t{0}\n", tag.ToString().Replace( "\n", "\n\t" ) );
+            }
+            sb.Append( "}" );
+            return sb.ToString();
         }
 
 
@@ -68,7 +115,7 @@ namespace LibNbt {
                 Name = readStream.ReadString();
             }
 
-            Tags.Clear();
+            tags.Clear();
             bool foundEnd = false;
             while( !foundEnd ) {
                 NbtTagType nextTag = readStream.ReadTagType();
@@ -173,7 +220,7 @@ namespace LibNbt {
 
 
         internal override void WriteData( NbtWriter writeStream ) {
-            foreach( NbtTag tag in Tags.Values ) {
+            foreach( NbtTag tag in tags.Values ) {
                 tag.WriteTag( writeStream, true );
             }
             writeStream.Write( NbtTagType.End );
@@ -221,32 +268,15 @@ namespace LibNbt {
         #endregion
 
 
-        public override string ToString() {
-            var sb = new StringBuilder();
-            sb.Append( "TAG_Compound" );
-            if( !String.IsNullOrEmpty( Name ) ) {
-                sb.AppendFormat( "(\"{0}\")", Name );
-            }
-            sb.AppendFormat( ": {0} entries\n", Tags.Count );
-
-            sb.Append( "{\n" );
-            foreach( NbtTag tag in Tags.Values ) {
-                sb.AppendFormat( "\t{0}\n", tag.ToString().Replace( "\n", "\n\t" ) );
-            }
-            sb.Append( "}" );
-            return sb.ToString();
-        }
-
-
         #region Implementation of IEnumerable<NbtTag>
 
         public IEnumerator<NbtTag> GetEnumerator() {
-            return Tags.Values.GetEnumerator();
+            return tags.Values.GetEnumerator();
         }
 
 
         IEnumerator IEnumerable.GetEnumerator() {
-            return Tags.Values.GetEnumerator();
+            return tags.Values.GetEnumerator();
         }
 
         #endregion
@@ -258,22 +288,22 @@ namespace LibNbt {
             if( item.Name == null ) {
                 throw new ArgumentException( "Only named tags are allowed in compound tags." );
             }
-            Tags.Add( item.Name, item );
+            tags.Add( item.Name, item );
         }
 
 
         public void Clear() {
-            Tags.Clear();
+            tags.Clear();
         }
 
 
         public bool Contains( NbtTag item ) {
-            return Tags.ContainsValue( item );
+            return tags.ContainsValue( item );
         }
 
 
         public void CopyTo( NbtTag[] array, int arrayIndex ) {
-            Tags.Values.CopyTo( array, arrayIndex );
+            tags.Values.CopyTo( array, arrayIndex );
         }
 
 
@@ -281,9 +311,9 @@ namespace LibNbt {
             if( item == null ) throw new ArgumentNullException( "item" );
             if( item.Name == null ) throw new ArgumentException( "Trying to remove an unnamed tag." );
             NbtTag maybeItem;
-            if( Tags.TryGetValue( item.Name, out maybeItem ) ) {
+            if( tags.TryGetValue( item.Name, out maybeItem ) ) {
                 if( maybeItem == item ) {
-                    return Tags.Remove( item.Name );
+                    return tags.Remove( item.Name );
                 }
             }
             return false;
@@ -291,7 +321,7 @@ namespace LibNbt {
 
 
         public int Count {
-            get { return Tags.Count; }
+            get { return tags.Count; }
         }
 
 
@@ -302,13 +332,22 @@ namespace LibNbt {
         #endregion
 
 
-        public NbtTag[] ToArray() {
-            NbtTag[] array = new NbtTag[Tags.Count];
-            int i = 0;
-            foreach( NbtTag tag in Tags.Values ) {
-                array[i++] = tag;
-            }
-            return array;
+        #region Implementation of ICollection
+
+        void ICollection.CopyTo( Array array, int index ) {
+            CopyTo( (NbtTag[])array, index );
         }
+
+
+        object ICollection.SyncRoot {
+            get { return ( tags as ICollection ).SyncRoot; }
+        }
+
+
+        bool ICollection.IsSynchronized {
+            get { return false; }
+        }
+
+        #endregion
     }
 }
