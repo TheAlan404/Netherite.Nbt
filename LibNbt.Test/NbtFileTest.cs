@@ -250,29 +250,5 @@ namespace LibNbt.Test {
 
             FileAssert.AreEqual( testFileStream, nbtStream );
         }
-
-
-        [Test]
-        public void TestNbtListType() {
-            var file = new NbtFile();
-            file.RootTag = new NbtCompound( "ListTypeTest" );
-
-            const NbtTagType myType = NbtTagType.Compound;
-
-            NbtList list = new NbtList( "Entities", null, myType );
-            file.RootTag.Add( list );
-
-            file.SaveFile( "TestFiles/NbtListType.nbt", NbtCompression.GZip );
-
-            NbtFile read = new NbtFile();
-            read.LoadFile( "TestFiles/NbtListType.nbt" );
-            Assert.NotNull( read );
-            Console.WriteLine( read.RootTag.ToString() );
-
-            NbtList readlist = (NbtList)read.RootTag.ToArray()[0];
-            Assert.NotNull( readlist );
-
-            Assert.AreEqual( myType, readlist.ListType );
-        }
     }
 }
