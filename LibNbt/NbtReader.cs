@@ -5,7 +5,7 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace LibNbt {
-    class NbtReader : BinaryReader {
+    sealed class NbtReader : BinaryReader {
         readonly byte[] floatBuffer = new byte[sizeof( float )],
                         doubleBuffer = new byte[sizeof( double )];
 
@@ -14,7 +14,7 @@ namespace LibNbt {
 
 
         public NbtTagType ReadTagType() {
-            return (NbtTagType)base.ReadByte();
+            return (NbtTagType)ReadByte();
         }
 
 

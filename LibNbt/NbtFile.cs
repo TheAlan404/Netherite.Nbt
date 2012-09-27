@@ -135,6 +135,9 @@ namespace LibNbt {
 
 
         public virtual void SaveToFile() {
+            if( FileName == null ) {
+                throw new NullReferenceException( "FileName is null" );
+            }
             SaveToFile( FileName, FileCompression );
         }
 
@@ -178,6 +181,7 @@ namespace LibNbt {
                     }
                     byte[] checksumBytes = BitConverter.GetBytes(checksum);
                     if( BitConverter.IsLittleEndian ) {
+                        // Adler32 checksum is big-endian
                         Array.Reverse( checksumBytes );
                     }
                     stream.Write( checksumBytes, 0, checksumBytes.Length );

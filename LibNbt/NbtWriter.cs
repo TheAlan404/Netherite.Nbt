@@ -5,13 +5,13 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace LibNbt {
-    class NbtWriter : BinaryWriter {
+    sealed class NbtWriter : BinaryWriter {
         public NbtWriter( [NotNull] Stream input )
             : base( input ) {}
 
 
         public void Write( NbtTagType value ) {
-            base.Write( (byte)value );
+            Write( (byte)value );
         }
 
 

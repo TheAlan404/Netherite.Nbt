@@ -6,13 +6,12 @@ using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt {
-    public class NbtList : NbtTag, IList<NbtTag> {
+    public class NbtList : NbtTag, IList<NbtTag>, IList {
         internal override NbtTagType TagType {
             get { return NbtTagType.List; }
         }
 
-        [NotNull]
-        List<NbtTag> tags;
+        [NotNull] readonly List<NbtTag> tags;
 
 
         public NbtTagType ListType {
@@ -80,29 +79,40 @@ namespace LibNbt {
         }
 
 
-        public int IndexOf( NbtTag item ) {
-            return tags.IndexOf( item );
-        }
-
-
-        public void Insert( int index, NbtTag item ) {
-            tags.Insert( index, item );
-        }
-
-
-        public void RemoveAt( int index ) {
-            tags.RemoveAt( index );
-        }
-
-
+        [NotNull]
         public NbtTag this[ int tagIndex ] {
-            get { return Get<NbtTag>( tagIndex ); }
-            set { tags[tagIndex] = value; }
+            get { return tags[tagIndex]; }
+            set {
+                if( value == null ) {
+                    throw new ArgumentNullException( "value" );
+                }
+                if( listType == NbtTagType.Unknown ) {
+                    listType = value.TagType;
+                } else if( value.TagType != listType ) {
+                    throw new ArgumentException( "Items must be of type " + listType );
+                }
+                tags[tagIndex] = value;
+            }
         }
 
 
+        [NotNull]
         public T Get<T>( int tagIndex ) where T : NbtTag {
             return (T)tags[tagIndex];
+        }
+
+
+        public void AddRange( [NotNull] IEnumerable<NbtTag> newTags ) {
+            if( newTags == null ) throw new ArgumentNullException( "newTags" );
+            foreach( NbtTag tag in newTags ) {
+                Add( tag );
+            }
+        }
+
+
+        [NotNull]
+        public NbtTag[] ToArray() {
+            return tags.ToArray();
         }
 
 
@@ -283,6 +293,8 @@ namespace LibNbt {
         }
 
 
+        #region Implementation of IEnumerable<NBtTag> and IEnumerable
+
         public IEnumerator<NbtTag> GetEnumerator() {
             return tags.GetEnumerator();
         }
@@ -292,8 +304,30 @@ namespace LibNbt {
             return tags.GetEnumerator();
         }
 
+        #endregion
 
-        #region Implementation of ICollection<NbtTag>
+
+        #region Implementation of IList<NbtTag> and ICollection<NbtTag>
+
+        public int IndexOf( NbtTag item ) {
+            return tags.IndexOf( item );
+        }
+
+
+        public void Insert( int index, NbtTag item ) {
+            if( listType == NbtTagType.Unknown ) {
+                listType = item.TagType;
+            } else if( item.TagType != listType ) {
+                throw new ArgumentException( "Items must be of type " + listType );
+            }
+            tags.Insert( index, item );
+        }
+
+
+        public void RemoveAt( int index ) {
+            tags.RemoveAt( index );
+        }
+
 
         public void Add( NbtTag item ) {
             if( listType == NbtTagType.Unknown ) {
@@ -329,7 +363,64 @@ namespace LibNbt {
             get { return tags.Count; }
         }
 
+
         public bool IsReadOnly {
+            get { return false; }
+        }
+
+        #endregion
+
+
+        #region Implementation of IList and ICollection
+
+        void IList.Remove( object value ) {
+            tags.Remove( (NbtTag)value );
+        }
+
+
+        object IList.this[int tagIndex] {
+            get { return tags[tagIndex]; }
+            set { this[tagIndex] = (NbtTag)value; }
+        }
+
+
+        int IList.Add( object value ) {
+            Add( (NbtTag)value );
+            return ( tags.Count - 1 );
+        }
+
+
+        bool IList.Contains( object value ) {
+            return tags.Contains( (NbtTag)value );
+        }
+
+
+        int IList.IndexOf( object value ) {
+            return tags.IndexOf( (NbtTag)value );
+        }
+
+
+        void IList.Insert( int index, object value ) {
+            Insert( index, (NbtTag)value );
+        }
+
+
+        bool IList.IsFixedSize {
+            get { return false; }
+        }
+
+
+        void ICollection.CopyTo( Array array, int index ) {
+            CopyTo( (NbtTag[])array, index );
+        }
+
+
+        object ICollection.SyncRoot {
+            get { return ( tags as ICollection ).SyncRoot; }
+        }
+
+
+        bool ICollection.IsSynchronized {
             get { return false; }
         }
 
