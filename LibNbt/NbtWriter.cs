@@ -53,6 +53,7 @@ namespace LibNbt {
 
 
         public override void Write( string value ) {
+            if( value == null ) throw new ArgumentNullException( "value" );
             var bytes = Encoding.UTF8.GetBytes( value );
             Write( (short)bytes.Length );
             Write( bytes );

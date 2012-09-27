@@ -74,6 +74,7 @@
     <Compile Include="Tags\NbtString.cs" />
     <Compile Include="Tags\NbtTag.cs" />
     <Compile Include="Tags\NbtTagType.cs" />
+    <Compile Include="ZLibStream.cs" />
   </ItemGroup>
   <ItemGroup />
 </Project>

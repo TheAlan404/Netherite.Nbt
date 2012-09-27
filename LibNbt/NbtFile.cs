@@ -7,7 +7,6 @@ using LibNbt.Queries;
 namespace LibNbt {
     public class NbtFile {
         const int BufferSize = 8192;
-        const string ZLibNotice = "ZLib compression is not currently supported by LibNbt.";
 
         [CanBeNull]
         protected string FileName { get; set; }
@@ -82,15 +81,13 @@ namespace LibNbt {
                         compression = NbtCompression.GZip;
                         break;
 
-                    default:
-                        // zlib does not have a "magic number" in its header,
-                        // but lower nibble of the first byte should be 0b1000 (8)
-                        if( ( firstByte & 0x0F ) == 8 ) {
-                            compression = NbtCompression.ZLib;
-                        } else {
-                            throw new InvalidDataException( "Could not auto-detect compression format." );
-                        }
+                    case 0x78:
+                        // zlib header
+                        compression = NbtCompression.ZLib;
                         break;
+                        
+                    default:
+                        throw new InvalidDataException( "Could not auto-detect compression format." );
                 }
                 stream.Seek( -1, SeekOrigin.Current );
             }
@@ -107,7 +104,14 @@ namespace LibNbt {
                     break;
 
                 case NbtCompression.ZLib:
-                    throw new NotImplementedException( ZLibNotice );
+                    if( stream.ReadByte() != 0x78 ) {
+                        throw new InvalidDataException( "Incorrect ZLib header. Expected 0x78 0x9C" );
+                    }
+                    stream.ReadByte();
+                    using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
+                        LoadFromStreamInternal( new BufferedStream( decStream, BufferSize ) );
+                    }
+                    break;
 
                 default:
                     throw new ArgumentOutOfRangeException( "compression" );
@@ -151,7 +155,6 @@ namespace LibNbt {
                 case NbtCompression.AutoDetect:
                     throw new ArgumentException( "AutoDetect is not a valid NbtCompression value for saving." );
                 case NbtCompression.ZLib:
-                    throw new NotImplementedException( ZLibNotice );
                 case NbtCompression.GZip:
                 case NbtCompression.None:
                     break;
@@ -162,15 +165,36 @@ namespace LibNbt {
             // do not write anything for empty tags
             if( RootTag == null ) return;
 
-            if( compression == NbtCompression.GZip ) {
-                using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
-                    // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
-                    BufferedStream bufferedStream = new BufferedStream( compressStream, BufferSize );
-                    RootTag.WriteTag( new NbtWriter( bufferedStream ), true );
-                    bufferedStream.Flush();
-                }
-            } else {
-                RootTag.WriteTag( new NbtWriter( stream ), true );
+            switch( compression ) {
+                case NbtCompression.ZLib:
+                    stream.WriteByte( 0x78 );
+                    stream.WriteByte( 0x01 );
+                    int checksum;
+                    using( var compressStream = new ZLibStream( stream, CompressionMode.Compress, true ) ) {
+                        BufferedStream bufferedStream = new BufferedStream( compressStream, BufferSize );
+                        RootTag.WriteTag( new NbtWriter( bufferedStream ), true );
+                        bufferedStream.Flush();
+                        checksum = compressStream.Checksum;
+                    }
+                    byte[] checksumBytes = BitConverter.GetBytes(checksum);
+                    if( BitConverter.IsLittleEndian ) {
+                        Array.Reverse( checksumBytes );
+                    }
+                    stream.Write( checksumBytes, 0, checksumBytes.Length );
+                    break;
+
+                case NbtCompression.GZip:
+                    using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
+                        // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
+                        BufferedStream bufferedStream = new BufferedStream( compressStream, BufferSize );
+                        RootTag.WriteTag( new NbtWriter( bufferedStream ), true );
+                        bufferedStream.Flush();
+                    }
+                    break;
+
+                case NbtCompression.None:
+                    RootTag.WriteTag( new NbtWriter( stream ), true );
+                    break;
             }
         }
 
@@ -191,6 +215,5 @@ namespace LibNbt {
         }
 
         #endregion
-
     }
 }

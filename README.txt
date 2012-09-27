@@ -1,7 +1,8 @@
 LibNbt2012 is an effort to rewrite Erik Davidson's (aphistic's) LibNbt library, for
 improved performance, ease of use, and reliability. Notable changes made so far include:
 
-- Fixed uncompressed file saving
+- Auto-detection of NBT file compression.
+- Loading and saving ZLib (RFC-1950) compresessed NBT files.
 - Reduced loading/saving CPU use by 15%, and memory use by 40%
 - NbtCompound now implements ICollection<NbtTag>, and NbtList implements IList<NbtTag>
 - Added full support for TAG_Int_Array

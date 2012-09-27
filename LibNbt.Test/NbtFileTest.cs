@@ -25,19 +25,25 @@ namespace LibNbt.Test {
         #region Loading Small Nbt Test File
 
         [Test]
-        public void TestNbtSmallFileLoading() {
+        public void TestNbtSmallFileLoadingUncompressed() {
             var file = new NbtFile();
-            file.LoadFromFile( "TestFiles/test.nbt.gz" );
-
+            file.LoadFromFile( "TestFiles/test.nbt" );
             AssertNbtSmallFile( file );
         }
 
 
         [Test]
-        public void TestNbtSmallFileLoadingUncompressed() {
+        public void LoadingSmallFileGZip() {
             var file = new NbtFile();
-            file.LoadFromFile( "TestFiles/test.nbt", NbtCompression.None );
+            file.LoadFromFile( "TestFiles/test.nbt.gz" );
+            AssertNbtSmallFile( file );
+        }
 
+
+        [Test]
+        public void LoadingSmallFileZLib() {
+            var file = new NbtFile();
+            file.LoadFromFile( "TestFiles/test.nbt.z" );
             AssertNbtSmallFile( file );
         }
 
@@ -63,7 +69,16 @@ namespace LibNbt.Test {
         #region Loading Big Nbt Test File
 
         [Test]
-        public void TestNbtBigFileLoading() {
+        public void LoadingBigFileUncompressed() {
+            var file = new NbtFile();
+            file.LoadFromFile( "TestFiles/bigtest.nbt" );
+
+            AssertNbtBigFile( file );
+        }
+
+
+        [Test]
+        public void LoadingBigFileGZip() {
             var file = new NbtFile();
             file.LoadFromFile( "TestFiles/bigtest.nbt.gz" );
 
@@ -72,9 +87,9 @@ namespace LibNbt.Test {
 
 
         [Test]
-        public void TestnbtBigFileLoadingUncompressed() {
+        public void LoadingBigFileZLib() {
             var file = new NbtFile();
-            file.LoadFromFile( "TestFiles/bigtest.nbt", NbtCompression.None );
+            file.LoadFromFile( "TestFiles/bigtest.nbt.z" );
 
             AssertNbtBigFile( file );
         }
@@ -262,10 +277,11 @@ namespace LibNbt.Test {
 
         [Test]
         public void ReloadingBigSavedFile() {
-            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.None );
+            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
             loadedFile.LoadFromFile();
-            loadedFile.SaveToFile( "TestTemp/bigtest.nbt", NbtCompression.None );
-            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt", NbtCompression.None );
+            loadedFile.SaveToFile( "bigtest.nbt.z", NbtCompression.ZLib );
+            loadedFile.LoadFromFile( "bigtest.nbt.z", NbtCompression.AutoDetect );
+            AssertNbtBigFile( loadedFile );
         }
     }
 }
