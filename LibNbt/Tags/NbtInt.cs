@@ -29,20 +29,11 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void ReadTag( NbtReader readStream, bool readName ) {
+        internal void ReadTag( NbtReader readStream, bool readName ) {
             if( readName ) {
-                var name = new NbtString();
-                name.ReadTag( readStream, false );
-
-                Name = name.Value;
+                Name = readStream.ReadString();
             }
-
-
-            var buffer = new byte[4];
-            int totalRead = 0;
-            while( ( totalRead += readStream.Read( buffer, totalRead, 4 ) ) < 4 ) {}
-            if( BitConverter.IsLittleEndian ) Array.Reverse( buffer );
-            Value = BitConverter.ToInt32( buffer, 0 );
+            Value = readStream.ReadInt32();
         }
 
 

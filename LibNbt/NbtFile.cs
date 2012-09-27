@@ -131,6 +131,11 @@ namespace LibNbt {
         }
 
 
+        public virtual void SaveToFile() {
+            SaveToFile( FileName, FileCompression );
+        }
+
+
         public virtual void SaveToFile( [NotNull] string fileName, NbtCompression compression ) {
             if( fileName == null ) throw new ArgumentNullException( "fileName" );
 

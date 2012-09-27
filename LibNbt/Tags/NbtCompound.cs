@@ -41,14 +41,11 @@ namespace LibNbt.Tags {
         public NbtTag this[ [NotNull] string tagName ] {
             [CanBeNull]
             get { return Get<NbtTag>( tagName ); }
-            set { Set( tagName, value ); }
-        }
-
-
-        [CanBeNull]
-        public NbtTag Get( [NotNull] string tagName ) {
-            if( tagName == null ) throw new ArgumentNullException( "tagName" );
-            return Get<NbtTag>( tagName );
+            set {
+                if( tagName == null ) throw new ArgumentNullException( "tagName" );
+                if( value == null ) throw new ArgumentNullException( "value" );
+                Tags[tagName] = value;
+            }
         }
 
 
@@ -63,16 +60,9 @@ namespace LibNbt.Tags {
         }
 
 
-        public void Set( [NotNull] string tagName, [NotNull] NbtTag tag ) {
-            if( tagName == null ) throw new ArgumentNullException( "tagName" );
-            if( tag == null ) throw new ArgumentNullException( "tag" );
-            Tags[tagName] = tag;
-        }
+        #region Reading / Writing
 
-
-        #region Reading Tag
-
-        internal override void ReadTag( NbtReader readStream, bool readName ) {
+        internal void ReadTag( NbtReader readStream, bool readName ) {
             // First read the name of this tag
             if( readName ) {
                 Name = readStream.ReadString();
@@ -147,16 +137,18 @@ namespace LibNbt.Tags {
                         Add( nextCompound );
                         break;
 
+                    case NbtTagType.IntArray:
+                        var nextIntArray = new NbtIntArray();
+                        nextIntArray.ReadTag( readStream, true );
+                        Add( nextIntArray );
+                        break;
+
                     default:
-                        throw new Exception( String.Format( "Unsupported tag type found in NBT_Compound: {0}", nextTag ) );
+                        throw new NbtParsingException( "Unsupported tag type found in NBT_Compound: " + nextTag );
                 }
             }
         }
 
-        #endregion
-
-
-        #region Writing Tag
 
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Compound );
@@ -204,7 +196,7 @@ namespace LibNbt.Tags {
 
             TagQueryToken nextToken = query.Peek();
             if( nextToken != null ) {
-                NbtTag nextTag = Get( nextToken.Name );
+                NbtTag nextTag = Get<NbtTag>( nextToken.Name );
                 if( nextTag == null ) {
                     return null;
                 }

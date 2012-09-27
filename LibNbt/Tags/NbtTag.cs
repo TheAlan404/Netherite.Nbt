@@ -13,18 +13,12 @@ namespace LibNbt.Tags {
         public string Name { get; protected set; }
 
 
-        #region Reading/Writing
-
-        internal abstract void ReadTag( [NotNull] NbtReader readReader, bool readName );
-
-
         internal abstract void WriteTag( [NotNull] NbtWriter writeReader, bool writeName );
 
 
         // WriteData does not write the tag's ID byte or the name
         internal abstract void WriteData( [NotNull] NbtWriter writeReader );
 
-        #endregion
 
 
         #region Query

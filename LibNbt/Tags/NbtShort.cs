@@ -29,7 +29,9 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void ReadTag( NbtReader readStream, bool readName ) {
+        #region Reading / Writing
+
+        internal void ReadTag( NbtReader readStream, bool readName ) {
             if( readName ) {
                 Name = readStream.ReadString();
             }
@@ -51,7 +53,9 @@ namespace LibNbt.Tags {
             writeStream.Write( Value );
         }
 
+        #endregion
 
+        
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Short" );

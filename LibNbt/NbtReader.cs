@@ -58,6 +58,9 @@ namespace LibNbt {
 
         public override string ReadString() {
             short length = ReadInt16();
+            if( length < 0 ) {
+                throw new NbtParsingException( "Negative string length given!" );
+            }
             byte[] stringData = ReadBytes( length );
             return Encoding.UTF8.GetString( stringData );
         }

@@ -29,7 +29,7 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void ReadTag( NbtReader readStream, bool readName ) {
+        internal void ReadTag( NbtReader readStream, bool readName ) {
             if( readName ) {
                 Name = readStream.ReadString();
             }

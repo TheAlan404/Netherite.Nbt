@@ -36,7 +36,7 @@ namespace LibNbt.Tags {
         }
 
 
-        internal override void ReadTag( NbtReader readStream, bool readName ) {
+        internal void ReadTag( NbtReader readStream, bool readName ) {
             // First read the name of this tag
             if( readName ) {
                 Name = readStream.ReadString();
@@ -44,7 +44,7 @@ namespace LibNbt.Tags {
 
             int length = readStream.ReadInt32();
             if( length < 0 ) {
-                throw new Exception( "Negative length given in TAG_Byte_Array" );
+                throw new NbtParsingException( "Negative length given in TAG_Byte_Array" );
             }
 
             Value = readStream.ReadBytes( length );

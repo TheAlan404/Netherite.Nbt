@@ -3,6 +3,7 @@
 namespace LibNbt.Queries {
     [Serializable]
     public class NbtQueryException : Exception {
-        public NbtQueryException( string message ) : base( message ) {}
+        public NbtQueryException( string message )
+            : base( message ) {}
     }
 }
