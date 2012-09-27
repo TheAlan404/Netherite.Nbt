@@ -1,4 +1,16 @@
-LibNbt v0.2.0
+LibNbt2012 is an effort to rewrite Erik Davidson's (aphistic's) LibNbt library, for
+improved performance, ease of use, and reliability. Notable changes made so far include:
+
+- Fixed uncompressed file saving
+- Reduced loading/saving CPU use by 15%, and memory use by 40%
+- NbtCompound now implements ICollection<NbtTag>, and NbtList implements IList<NbtTag>
+- Added full support for TAG_Int_Array
+- Added more constraint checks to tag loading, modification, and saving.
+- Replaced getter/setter methods with properties, wherever possible.
+- Expanded unit test coverage.
+
+
+README for LibNbt v0.2.0 preserved below:
 =============
 Website: http://www.github.com/aphistic/libnbt/
 
