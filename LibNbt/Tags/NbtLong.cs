@@ -18,7 +18,11 @@ namespace LibNbt.Tags {
             : this( null, value ) {}
 
 
-        public NbtLong( string tagName, long value = 0 ) {
+        public NbtLong( string tagName )
+            : this( tagName, 0 ) {}
+
+
+        public NbtLong( string tagName, long value ) {
             Name = tagName;
             Value = value;
         }

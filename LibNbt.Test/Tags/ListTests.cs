@@ -104,10 +104,10 @@ namespace LibNbt.Test.Tags {
             writtenFile.RootTag.Add( writtenList );
 
             // test saving
-            writtenFile.SaveFile( fileName, NbtCompression.GZip );
+            writtenFile.SaveToFile( fileName, NbtCompression.GZip );
 
             // test loading
-            readFile.LoadFile( fileName );
+            readFile.LoadFromFile( fileName );
 
             // check contents of loaded file
             Assert.NotNull( readFile.RootTag );

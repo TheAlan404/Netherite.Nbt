@@ -19,7 +19,11 @@ namespace LibNbt.Tags {
             : this( null, value ) {}
 
 
-        public NbtShort( [CanBeNull] string tagName, short value = 0 ) {
+        public NbtShort( [CanBeNull] string tagName )
+            : this( tagName, 0 ) {}
+
+
+        public NbtShort( [CanBeNull] string tagName, short value ) {
             Name = tagName;
             Value = value;
         }

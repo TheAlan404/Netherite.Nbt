@@ -31,21 +31,21 @@ namespace LibNbt {
         }
 
 
-        public virtual void LoadFile() {
+        public virtual void LoadFromFile() {
             if( FileName == null ) {
                 throw new NullReferenceException( "FileName is null." );
             }
-            LoadFile( FileName, FileCompression );
+            LoadFromFile( FileName, FileCompression );
         }
 
 
-        public virtual void LoadFile( [NotNull] string fileName ) {
+        public virtual void LoadFromFile( [NotNull] string fileName ) {
             if( fileName == null ) throw new ArgumentNullException( "fileName" );
-            LoadFile( fileName, NbtCompression.AutoDetect );
+            LoadFromFile( fileName, NbtCompression.AutoDetect );
         }
 
 
-        public virtual void LoadFile( [NotNull] string fileName, NbtCompression compression ) {
+        public virtual void LoadFromFile( [NotNull] string fileName, NbtCompression compression ) {
             if( fileName == null ) throw new ArgumentNullException( "fileName" );
             if( !File.Exists( fileName ) ) {
                 throw new FileNotFoundException( String.Format( "Could not find NBT file: {0}", fileName ),
@@ -56,17 +56,20 @@ namespace LibNbt {
             FileCompression = compression;
 
             using( FileStream readFileStream = File.OpenRead( fileName ) ) {
-                LoadFile( readFileStream, FileCompression );
+                LoadFromStream( readFileStream, FileCompression );
             }
         }
 
 
-        public virtual void LoadFile( [NotNull] Stream fileStream, NbtCompression compression ) {
-            if( fileStream == null ) throw new ArgumentNullException( "fileStream" );
+        public virtual void LoadFromStream( [NotNull] Stream stream, NbtCompression compression ) {
+            if( stream == null ) throw new ArgumentNullException( "stream" );
 
             // detect compression, based on the first byte
             if( compression == NbtCompression.AutoDetect ) {
-                int firstByte = fileStream.ReadByte();
+                if( !stream.CanSeek ) {
+                    throw new NotSupportedException( "Cannot auto-detect compression on a stream that's not seekable." );
+                }
+                int firstByte = stream.ReadByte();
                 switch( firstByte ) {
                     case -1:
                         throw new EndOfStreamException();
@@ -90,18 +93,18 @@ namespace LibNbt {
                         }
                         break;
                 }
-                fileStream.Seek( -1, SeekOrigin.Current );
+                stream.Seek( -1, SeekOrigin.Current );
             }
 
             switch( compression ) {
                 case NbtCompression.GZip:
-                    using( var decStream = new GZipStream( fileStream, CompressionMode.Decompress, true ) ) {
-                        LoadFileInternal( new BufferedStream( decStream, BufferSize ) );
+                    using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
+                        LoadFromStreamInternal( new BufferedStream( decStream, BufferSize ) );
                     }
                     break;
 
                 case NbtCompression.None:
-                    LoadFileInternal( fileStream );
+                    LoadFromStreamInternal( stream );
                     break;
 
                 case NbtCompression.ZLib:
@@ -113,7 +116,7 @@ namespace LibNbt {
         }
 
 
-        protected void LoadFileInternal( [NotNull] Stream fileStream ) {
+        protected void LoadFromStreamInternal( [NotNull] Stream fileStream ) {
             if( fileStream == null ) throw new ArgumentNullException( "fileStream" );
 
             // Make sure the first byte in this file is the tag for a TAG_Compound
@@ -128,17 +131,17 @@ namespace LibNbt {
         }
 
 
-        public virtual void SaveFile( [NotNull] string fileName, NbtCompression compression ) {
+        public virtual void SaveToFile( [NotNull] string fileName, NbtCompression compression ) {
             if( fileName == null ) throw new ArgumentNullException( "fileName" );
 
             using( FileStream saveFile = File.Create( fileName ) ) {
-                SaveFile( saveFile, compression );
+                SaveToStream( saveFile, compression );
             }
         }
 
 
-        public virtual void SaveFile( [NotNull] Stream fileStream, NbtCompression compression ) {
-            if( fileStream == null ) throw new ArgumentNullException( "fileStream" );
+        public virtual void SaveToStream( [NotNull] Stream stream, NbtCompression compression ) {
+            if( stream == null ) throw new ArgumentNullException( "stream" );
 
             switch( compression ) {
                 case NbtCompression.AutoDetect:
@@ -156,17 +159,19 @@ namespace LibNbt {
             if( RootTag == null ) return;
 
             if( compression == NbtCompression.GZip ) {
-                using( var compressStream = new GZipStream( fileStream, CompressionMode.Compress, true ) ) {
+                using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
                     // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
                     BufferedStream bufferedStream = new BufferedStream( compressStream, BufferSize );
                     RootTag.WriteTag( new NbtWriter( bufferedStream ), true );
                     bufferedStream.Flush();
                 }
             } else {
-                RootTag.WriteTag( new NbtWriter( fileStream ), true );
+                RootTag.WriteTag( new NbtWriter( stream ), true );
             }
         }
 
+
+        #region Query
 
         public NbtTag Query( [NotNull] string queryString ) {
             if( queryString == null ) throw new ArgumentNullException( "queryString" );
@@ -180,5 +185,8 @@ namespace LibNbt {
             var tagQuery = new TagQuery( queryString );
             return RootTag.Query<T>( tagQuery );
         }
+
+        #endregion
+
     }
 }

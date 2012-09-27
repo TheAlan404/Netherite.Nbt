@@ -22,6 +22,10 @@ namespace LibNbt.Tags {
             : this( tagName, new NbtTag[0] ) {}
 
 
+        public NbtCompound( [NotNull] IEnumerable<NbtTag> tags )
+            : this( null, tags ) {}
+
+
         public NbtCompound( [CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags ) {
             Name = tagName;
             Tags = new Dictionary<string, NbtTag>();

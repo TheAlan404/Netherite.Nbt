@@ -13,10 +13,14 @@ namespace LibNbt.Tags {
 
 
         public NbtString()
-            : this( null ) {}
+            : this( null, null ) {}
 
 
-        public NbtString( [CanBeNull] string tagName, [CanBeNull] string value = null ) {
+        public NbtString( [CanBeNull] string value )
+            : this( null, value ) {}
+
+
+        public NbtString( [CanBeNull] string tagName, [CanBeNull] string value ) {
             Name = tagName;
             Value = value;
         }

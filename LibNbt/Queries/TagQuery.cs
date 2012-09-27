@@ -36,14 +36,14 @@ namespace LibNbt.Queries {
             var escapingChar = false;
             TagQueryToken token = null;
             var sbToken = new StringBuilder();
-            for( var idx = 0; idx < query.Length; idx++ ) {
+            for( var i = 0; i < query.Length; i++ ) {
                 if( escapingChar ) {
-                    sbToken.Append( query[idx] );
+                    sbToken.Append( query[i] );
                     escapingChar = false;
                     continue;
                 }
 
-                if( query[idx] == '/' ) {
+                if( query[i] == '/' ) {
                     if( token != null ) {
                         token.Name = sbToken.ToString();
                         Tokens.Add( token );
@@ -54,12 +54,12 @@ namespace LibNbt.Queries {
                     continue;
                 }
 
-                if( query[idx] == '\\' ) {
+                if( query[i] == '\\' ) {
                     escapingChar = true;
                     continue;
                 }
 
-                sbToken.Append( query[idx] );
+                sbToken.Append( query[i] );
             }
             if( token != null ) {
                 token.Name = sbToken.ToString();

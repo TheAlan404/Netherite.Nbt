@@ -11,7 +11,7 @@ namespace LibNbt.Test.Queries {
         [TestFixtureSetUp]
         public void TagQueryTestSetUp() {
             _file = new NbtFile();
-            _file.LoadFile( "TestFiles/bigtest.nbt.gz" );
+            _file.LoadFromFile( "TestFiles/bigtest.nbt.gz" );
         }
 
 

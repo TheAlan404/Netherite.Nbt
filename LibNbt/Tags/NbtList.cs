@@ -30,11 +30,34 @@ namespace LibNbt.Tags {
 
 
         public NbtList()
-            : this( null ) {}
+            : this( null, null, NbtTagType.Unknown ) { }
 
 
-        public NbtList( [CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags = null,
-                        NbtTagType givenListType = NbtTagType.Unknown ) {
+        public NbtList( [CanBeNull] string tagName )
+            : this( tagName, null, NbtTagType.Unknown ) { }
+
+
+        public NbtList( [CanBeNull] IEnumerable<NbtTag> tags )
+            : this( null, tags, NbtTagType.Unknown ) { }
+
+
+        public NbtList( NbtTagType givenListType )
+            : this( null, null, givenListType ) { }
+
+
+        public NbtList( [CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags )
+            : this( tagName, tags, NbtTagType.Unknown ) { }
+
+
+        public NbtList( [CanBeNull] IEnumerable<NbtTag> tags, NbtTagType givenListType )
+            : this( null, tags, givenListType ) { }
+
+
+        public NbtList( [CanBeNull] string tagName, NbtTagType givenListType )
+            : this( tagName, null, givenListType ) { }
+
+
+        public NbtList( [CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags, NbtTagType givenListType ) {
             Name = tagName;
             Tags = new List<NbtTag>();
             listType = givenListType;

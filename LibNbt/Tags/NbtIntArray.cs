@@ -15,15 +15,15 @@ namespace LibNbt.Tags {
 
 
         public NbtIntArray()
-            : this( null, new int[0] ) { }
+            : this( null, new int[0] ) {}
+
+
+        public NbtIntArray( [NotNull] int[] value )
+            : this( null, value ) {}
 
 
         public NbtIntArray( [CanBeNull] string tagName )
-            : this( tagName, new int[0] ) { }
-
-
-        public NbtIntArray( int[] value )
-            : this( null, value ) { }
+            : this( tagName, new int[0] ) {}
 
 
         public NbtIntArray( [CanBeNull] string tagName, [NotNull] int[] value ) {
