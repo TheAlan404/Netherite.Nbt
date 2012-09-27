@@ -2,7 +2,7 @@
 using System.Text;
 using JetBrains.Annotations;
 
-namespace LibNbt.Tags {
+namespace LibNbt {
     public class NbtDouble : NbtTag, INbtTagValue<double> {
         internal override NbtTagType TagType {
             get { return NbtTagType.Double; }

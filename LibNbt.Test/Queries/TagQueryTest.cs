@@ -1,17 +1,16 @@
 ﻿using LibNbt.Queries;
-using LibNbt.Tags;
 using NUnit.Framework;
 
 namespace LibNbt.Test.Queries {
     [TestFixture]
     public class TagQueryTest {
-        NbtFile _file;
+        NbtFile file;
 
 
         [TestFixtureSetUp]
         public void TagQueryTestSetUp() {
-            _file = new NbtFile();
-            _file.LoadFromFile( "TestFiles/bigtest.nbt.gz" );
+            file = new NbtFile();
+            file.LoadFromFile( "TestFiles/bigtest.nbt.gz" );
         }
 
 
@@ -150,57 +149,57 @@ namespace LibNbt.Test.Queries {
             NbtTag tag;
 
             // Try to get the root node
-            tag = _file.Query( "/Level" );
+            tag = file.Query( "/Level" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtCompound>( tag );
             Assert.AreEqual( "Level", tag.Name );
 
-            tag = _file.Query( "/Level/longTest" );
+            tag = file.Query( "/Level/longTest" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtLong>( tag );
             Assert.AreEqual( "longTest", tag.Name );
 
-            tag = _file.Query( "/Level/shortTest" );
+            tag = file.Query( "/Level/shortTest" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtShort>( tag );
             Assert.AreEqual( "shortTest", tag.Name );
 
-            tag = _file.Query( "/Level/stringTest" );
+            tag = file.Query( "/Level/stringTest" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtString>( tag );
             Assert.AreEqual( "stringTest", tag.Name );
 
-            tag = _file.Query( "/Level/floatTest" );
+            tag = file.Query( "/Level/floatTest" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtFloat>( tag );
             Assert.AreEqual( "floatTest", tag.Name );
 
-            tag = _file.Query( "/Level/intTest" );
+            tag = file.Query( "/Level/intTest" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtInt>( tag );
             Assert.AreEqual( "intTest", tag.Name );
 
-            tag = _file.Query( "/Level/nested compound test" );
+            tag = file.Query( "/Level/nested compound test" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtCompound>( tag );
             Assert.AreEqual( "nested compound test", tag.Name );
 
-            tag = _file.Query( "/Level/nested compound test/ham/name" );
+            tag = file.Query( "/Level/nested compound test/ham/name" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtString>( tag );
             Assert.AreEqual( "name", tag.Name );
 
-            tag = _file.Query( "/Level/nested compound test/egg/name" );
+            tag = file.Query( "/Level/nested compound test/egg/name" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtString>( tag );
             Assert.AreEqual( "name", tag.Name );
 
-            tag = _file.Query( "/Level/listTest (long)/2" );
+            tag = file.Query( "/Level/listTest (long)/2" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtLong>( tag );
             Assert.AreEqual( 13, ( (NbtLong)tag ).Value );
 
-            tag = _file.Query( "/Level/listTest (compound)/1/name" );
+            tag = file.Query( "/Level/listTest (compound)/1/name" );
             Assert.IsNotNull( tag );
             Assert.IsInstanceOf<NbtString>( tag );
             Assert.AreEqual( "Compound tag #1", ( (NbtString)tag ).Value );

@@ -3,7 +3,6 @@ using System.IO;
 using System.IO.Compression;
 using JetBrains.Annotations;
 using LibNbt.Queries;
-using LibNbt.Tags;
 
 namespace LibNbt {
     public class NbtFile {

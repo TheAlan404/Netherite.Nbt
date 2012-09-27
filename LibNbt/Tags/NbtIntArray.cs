@@ -2,7 +2,7 @@
 using System.Text;
 using JetBrains.Annotations;
 
-namespace LibNbt.Tags {
+namespace LibNbt {
     public class NbtIntArray : NbtTag, INbtTagValue<int[]> {
         [NotNull]
         public int[] Value { get; set; }

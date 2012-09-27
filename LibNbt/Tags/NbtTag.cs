@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using LibNbt.Queries;
 
-namespace LibNbt.Tags {
+namespace LibNbt {
     public abstract class NbtTag {
         internal virtual NbtTagType TagType {
             get { return NbtTagType.Unknown; }

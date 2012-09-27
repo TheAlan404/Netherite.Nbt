@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace LibNbt.Tags {
+namespace LibNbt {
     public class NbtLong : NbtTag, INbtTagValue<long> {
         internal override NbtTagType TagType {
             get { return NbtTagType.Long; }

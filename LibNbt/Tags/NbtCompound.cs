@@ -5,7 +5,7 @@ using System.Text;
 using JetBrains.Annotations;
 using LibNbt.Queries;
 
-namespace LibNbt.Tags {
+namespace LibNbt {
     public class NbtCompound : NbtTag, ICollection<NbtTag> {
         internal override NbtTagType TagType {
             get { return NbtTagType.Compound; }

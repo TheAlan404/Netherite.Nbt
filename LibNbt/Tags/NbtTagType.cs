@@ -1,4 +1,4 @@
-﻿namespace LibNbt.Tags {
+﻿namespace LibNbt {
     public enum NbtTagType {
         Unknown = 0xff,
         End = 0x00,

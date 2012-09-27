@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using JetBrains.Annotations;
-using LibNbt.Tags;
 
 namespace LibNbt {
     class NbtReader : BinaryReader {

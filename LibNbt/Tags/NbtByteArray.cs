@@ -2,7 +2,7 @@
 using System.Text;
 using JetBrains.Annotations;
 
-namespace LibNbt.Tags {
+namespace LibNbt {
     public class NbtByteArray : NbtTag, INbtTagValue<byte[]> {
         internal override NbtTagType TagType {
             get { return NbtTagType.ByteArray; }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using LibNbt.Tags;
 using NUnit.Framework;
 
 namespace LibNbt.Test.Tags {
