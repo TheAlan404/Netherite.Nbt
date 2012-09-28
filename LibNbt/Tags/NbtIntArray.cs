@@ -3,7 +3,7 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace LibNbt {
-    public class NbtIntArray : NbtTag, INbtTagValue<int[]> {
+    public sealed class NbtIntArray : NbtTag, INbtTagValue<int[]> {
         [NotNull]
         public int[] Value { get; set; }
 

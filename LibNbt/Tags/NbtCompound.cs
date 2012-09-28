@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt {
-    public class NbtCompound : NbtTag, ICollection<NbtTag>, ICollection {
+    public sealed class NbtCompound : NbtTag, ICollection<NbtTag>, ICollection {
         internal override NbtTagType TagType {
             get { return NbtTagType.Compound; }
         }

@@ -2,7 +2,7 @@
 using System.Text;
 
 namespace LibNbt {
-    public class NbtLong : NbtTag, INbtTagValue<long> {
+    public sealed class NbtLong : NbtTag, INbtTagValue<long> {
         internal override NbtTagType TagType {
             get { return NbtTagType.Long; }
         }

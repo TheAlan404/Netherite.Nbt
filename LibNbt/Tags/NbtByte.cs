@@ -3,7 +3,7 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace LibNbt {
-    public class NbtByte : NbtTag, INbtTagValue<byte> {
+    public sealed class NbtByte : NbtTag, INbtTagValue<byte> {
         internal override NbtTagType TagType {
             get { return NbtTagType.Byte; }
         }

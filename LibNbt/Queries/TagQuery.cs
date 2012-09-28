@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace LibNbt.Queries {
-    public class TagQuery {
+    public sealed class TagQuery {
         public string Query { get; protected set; }
-        protected List<TagQueryToken> Tokens { get; set; }
-        protected int CurrentTokenIndex { get; set; }
+        readonly List<TagQueryToken> tokens;
+        int currentTokenIndex;
 
         public TagQuery() : this( "" ) {}
 
 
         public TagQuery( string query ) {
-            Tokens = new List<TagQueryToken>();
+            tokens = new List<TagQueryToken>();
 
             if( !string.IsNullOrEmpty( query ) ) {
                 SetQuery( query );
@@ -30,8 +30,8 @@ namespace LibNbt.Queries {
                 throw new ArgumentException( "The query must begin with a \"/\".", "query" );
             }
 
-            Tokens.Clear();
-            CurrentTokenIndex = -1;
+            tokens.Clear();
+            currentTokenIndex = -1;
 
             var escapingChar = false;
             TagQueryToken token = null;
@@ -46,7 +46,7 @@ namespace LibNbt.Queries {
                 if( query[i] == '/' ) {
                     if( token != null ) {
                         token.Name = sbToken.ToString();
-                        Tokens.Add( token );
+                        tokens.Add( token );
                     }
 
                     token = new TagQueryToken { Query = this };
@@ -63,7 +63,7 @@ namespace LibNbt.Queries {
             }
             if( token != null ) {
                 token.Name = sbToken.ToString();
-                Tokens.Add( token );
+                tokens.Add( token );
             }
         }
 
@@ -73,7 +73,7 @@ namespace LibNbt.Queries {
         /// </summary>
         /// <returns>The number of tokens</returns>
         public int Count() {
-            return Tokens.Count;
+            return tokens.Count;
         }
 
 
@@ -82,34 +82,34 @@ namespace LibNbt.Queries {
         /// </summary>
         /// <returns>The number of tokens</returns>
         public int TokensLeft() {
-            return Count() - ( CurrentTokenIndex + 1 );
+            return Count() - ( currentTokenIndex + 1 );
         }
 
 
         public void MoveFirst() {
-            CurrentTokenIndex = -1;
+            currentTokenIndex = -1;
         }
 
 
         public TagQueryToken Previous() {
-            if( CurrentTokenIndex >= 0 ) {
-                return Tokens[--CurrentTokenIndex];
+            if( currentTokenIndex >= 0 ) {
+                return tokens[--currentTokenIndex];
             }
             return null;
         }
 
 
         public TagQueryToken Next() {
-            if( CurrentTokenIndex + 1 < Count() ) {
-                return Tokens[++CurrentTokenIndex];
+            if( currentTokenIndex + 1 < Count() ) {
+                return tokens[++currentTokenIndex];
             }
             return null;
         }
 
 
         public TagQueryToken Peek() {
-            if( CurrentTokenIndex + 1 < Count() ) {
-                return Tokens[CurrentTokenIndex + 1];
+            if( currentTokenIndex + 1 < Count() ) {
+                return tokens[currentTokenIndex + 1];
             }
             return null;
         }

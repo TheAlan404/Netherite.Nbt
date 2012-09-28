@@ -3,7 +3,7 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace LibNbt {
-    public class NbtFloat : NbtTag, INbtTagValue<float> {
+    public sealed class NbtFloat : NbtTag, INbtTagValue<float> {
         internal override NbtTagType TagType {
             get { return NbtTagType.Float; }
         }

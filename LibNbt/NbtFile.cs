@@ -5,7 +5,8 @@ using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt {
-    public class NbtFile {
+    /// <summary> Represents a complete NBT file. </summary>
+    public sealed class NbtFile {
         // buffer used to avoid frequent reads from / writes to compressed streams
         const int BufferSize = 8192;
 

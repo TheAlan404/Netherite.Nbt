@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt {
-    public class NbtList : NbtTag, IList<NbtTag>, IList {
+    public sealed class NbtList : NbtTag, IList<NbtTag>, IList {
         internal override NbtTagType TagType {
             get { return NbtTagType.List; }
         }
@@ -151,9 +151,6 @@ namespace LibNbt {
                 }
 
                 NbtTag indexedTag = Get<NbtTag>( tagIndex );
-                if( indexedTag == null ) {
-                    return null;
-                }
 
                 if( query.TokensLeft() > 1 ) {
                     // Pop the index token so the current token is the next
