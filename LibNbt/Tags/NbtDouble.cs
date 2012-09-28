@@ -50,7 +50,7 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Double );
             if( writeName ) {
-                if( Name == null ) throw new NullReferenceException( "Name is null" );
+                if( Name == null ) throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
             writeStream.Write( Value );

@@ -5,28 +5,51 @@ using JetBrains.Annotations;
 namespace LibNbt {
     /// <summary> A tag containing an array of signed 32-bit integers. </summary>
     public sealed class NbtIntArray : NbtTag, INbtTagValue<int[]> {
-        [NotNull]
-        public int[] Value { get; set; }
-
-
-        public int this[ int index ] {
-            get { return Value[index]; }
-            set { Value[index] = value; }
+        /// <summary> Type of this tag (ByteArray). </summary>
+        public override NbtTagType TagType {
+            get { return NbtTagType.IntArray; }
         }
 
 
+        /// <summary> Value/payload of this tag (an array of signed 32-bit integers). May not be null. </summary>
+        /// <exception cref="ArgumentNullException"> If given value is null. </exception>
+        [NotNull]
+        public int[] Value {
+            get { return ints; }
+            set {
+                if( value == null ) {
+                    throw new ArgumentNullException( "value" );
+                }
+                ints = value;
+            }
+        }
+
+        [NotNull]
+        int[] ints;
+
+
+        /// <summary> Creates an unnamed NbtIntArray tag, containing an empty array of ints. </summary>
         public NbtIntArray()
             : this( null, new int[0] ) {}
 
 
+        /// <summary> Creates an unnamed NbtIntArray tag, containing the given array of ints. </summary>
+        /// <param name="value"> Int array to assign to this tag's Value. May not be null. </param>
+        /// <exception cref="ArgumentNullException"> If given value is null. </exception>
         public NbtIntArray( [NotNull] int[] value )
             : this( null, value ) {}
 
 
+        /// <summary> Creates an NbtIntArray tag with the given name, containing an empty array of ints. </summary>
+        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
         public NbtIntArray( [CanBeNull] string tagName )
             : this( tagName, new int[0] ) {}
 
 
+        /// <summary> Creates an NbtIntArray tag with the given name, containing the given array of ints. </summary>
+        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
+        /// <param name="value"> Int array to assign to this tag's Value. May not be null. </param>
+        /// <exception cref="ArgumentNullException"> If given value is null. </exception>
         public NbtIntArray( [CanBeNull] string tagName, [NotNull] int[] value ) {
             if( value == null ) throw new ArgumentNullException( "value" );
             Name = tagName;
@@ -34,15 +57,24 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Gets or sets an integer at the given index. </summary>
+        /// <param name="index"> The zero-based index of the element to get or set. </param>
+        /// <returns> The integer at the specified index. </returns>
+        /// <exception cref="IndexOutOfRangeException"> If given index was outside the array bounds. </exception>
+        public int this[int index] {
+            get { return Value[index]; }
+            set { Value[index] = value; }
+        }
+
+
         internal void ReadTag( NbtReader readStream, bool readName ) {
-            // First read the name of this tag
             if( readName ) {
                 Name = readStream.ReadString();
             }
 
             int length = readStream.ReadInt32();
             if( length < 0 ) {
-                throw new NbtParsingException( "Negative length given in TAG_Int_Array" );
+                throw new NbtFormatException( "Negative length given in TAG_Int_Array" );
             }
 
             Value = new int[length];
@@ -55,7 +87,7 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.IntArray );
             if( writeName ) {
-                if( Name == null ) throw new NullReferenceException( "Name is null" );
+                if( Name == null ) throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
             WriteData( writeStream );
@@ -70,11 +102,9 @@ namespace LibNbt {
         }
 
 
-        public override NbtTagType TagType {
-            get { return NbtTagType.IntArray; }
-        }
-
-
+        /// <summary> Returns a String that represents the current NbtIntArray object.
+        /// Format: TAG_Int_Array("Name"): [N ints] </summary>
+        /// <returns> A String that represents the current NbtIntArray object. </returns>
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Int_Array" );

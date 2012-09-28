@@ -24,6 +24,7 @@ namespace LibNbt {
             }
         }
 
+        [NotNull]
         byte[] bytes;
 
 
@@ -67,14 +68,13 @@ namespace LibNbt {
 
 
         internal void ReadTag( NbtReader readStream, bool readName ) {
-            // First read the name of this tag
             if( readName ) {
                 Name = readStream.ReadString();
             }
 
             int length = readStream.ReadInt32();
             if( length < 0 ) {
-                throw new NbtParsingException( "Negative length given in TAG_Byte_Array" );
+                throw new NbtFormatException( "Negative length given in TAG_Byte_Array" );
             }
 
             Value = readStream.ReadBytes( length );
@@ -84,7 +84,7 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.ByteArray );
             if( writeName ) {
-                if( Name == null ) throw new NullReferenceException( "Name is null" );
+                if( Name == null ) throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
             WriteData( writeStream );

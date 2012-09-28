@@ -5,23 +5,44 @@ using JetBrains.Annotations;
 namespace LibNbt {
     /// <summary> A tag containing a single string. String is stored in UTF-8 encoding. </summary>
     public sealed class NbtString : NbtTag, INbtTagValue<string> {
+        /// <summary> Type of this tag (String). </summary>
         public override NbtTagType TagType {
             get { return NbtTagType.String; }
         }
 
-        [CanBeNull]
-        public string Value { get; set; }
+        /// <summary> Value/payload of this tag (a single string). May not be null. </summary>
+        [NotNull]
+        public string Value {
+            get { return stringVal; }
+            set {
+                if( value == null ) {
+                    throw new ArgumentNullException( "value" );
+                }
+                stringVal = value;
+            }
+        }
+
+        [NotNull]
+        string stringVal;
 
 
-        public NbtString()
-            : this( null, null ) {}
+        /// <summary> Creates an unnamed NbtString tag with the default value (empty string). </summary>
+        public NbtString() {}
 
 
-        public NbtString( [CanBeNull] string value )
+        /// <summary> Creates an unnamed NbtString tag with the given value. </summary>
+        /// <param name="value"> String value to assign to this tag. May not be null. </param>
+        /// <exception cref="ArgumentNullException"> If value is null. </exception>
+        public NbtString( [NotNull] string value )
             : this( null, value ) {}
 
 
-        public NbtString( [CanBeNull] string tagName, [CanBeNull] string value ) {
+        /// <summary> Creates an NbtString tag with the given name and value. </summary>
+        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
+        /// <param name="value"> String value to assign to this tag. May not be null. </param>
+        /// <exception cref="ArgumentNullException"> If value is null. </exception>
+        public NbtString( [CanBeNull] string tagName, [NotNull] string value ) {
+            if( value == null ) throw new ArgumentNullException( "value" );
             Name = tagName;
             Value = value;
         }
@@ -40,20 +61,23 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.String );
             if( writeName ) {
-                if( Name == null ) throw new NullReferenceException( "Name is null" );
+                if( Name == null ) throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
-            WriteData( writeStream );
+            writeStream.Write( Value );
         }
 
 
         internal override void WriteData( NbtWriter writeStream ) {
-            writeStream.Write( Value ?? "" );
+            writeStream.Write( Value );
         }
 
         #endregion
 
 
+        /// <summary> Returns a String that represents the current NbtString object.
+        /// Format: TAG_String("Name"): Value </summary>
+        /// <returns> A String that represents the current NbtString object. </returns>
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_String" );

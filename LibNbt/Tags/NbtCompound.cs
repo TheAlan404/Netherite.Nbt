@@ -239,7 +239,7 @@ namespace LibNbt {
                         break;
 
                     default:
-                        throw new NbtParsingException( "Unsupported tag type found in NBT_Compound: " + nextTag );
+                        throw new NbtFormatException( "Unsupported tag type found in NBT_Compound: " + nextTag );
                 }
             }
         }
@@ -248,7 +248,7 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Compound );
             if( writeName ) {
-                if( Name == null ) throw new NullReferenceException( "Name is null" );
+                if( Name == null ) throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
 

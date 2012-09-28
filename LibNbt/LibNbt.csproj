@@ -52,7 +52,7 @@
   <ItemGroup>
     <Compile Include="JetBrains.Annotations.cs" />
     <Compile Include="NbtCompression.cs" />
-    <Compile Include="NbtParsingException.cs" />
+    <Compile Include="NbtFormatException.cs" />
     <Compile Include="NbtReader.cs" />
     <Compile Include="NbtWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
