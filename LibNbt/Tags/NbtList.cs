@@ -8,6 +8,7 @@ using LibNbt.Queries;
 namespace LibNbt {
     /// <summary> A tag containing a list of unnamed tags, all of the same kind. </summary>
     public sealed class NbtList : NbtTag, IList<NbtTag>, IList {
+        /// <summary> Type of this tag (List). </summary>
         public override NbtTagType TagType {
             get { return NbtTagType.List; }
         }
@@ -137,6 +138,12 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Gets or sets the tag at the specified index. </summary>
+        /// <returns> The tag at the specified index. </returns>
+        /// <param name="tagIndex"> The zero-based index of the tag to get or set. </param>
+        /// <exception cref="ArgumentOutOfRangeException"> tagIndex is not a valid index in the NbtList. </exception>
+        /// <exception cref="ArgumentNullException"> Given tag is null. </exception>
+        /// <exception cref="ArgumentException"> Given tag's type does not match ListType. </exception>
         [NotNull]
         public NbtTag this[ int tagIndex ] {
             get { return tags[tagIndex]; }
@@ -154,12 +161,23 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Gets or sets the tag with the specified name. </summary>
+        /// <param name="tagIndex"> The zero-based index of the tag to get or set. </param>
+        /// <typeparam name="T"> Type to cast the result to. Must derive from NbtTag. </typeparam>
+        /// <returns> The tag with the specified key. </returns>
+        /// <exception cref="ArgumentNullException"> If tagName is null. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> tagIndex is not a valid index in the NbtList. </exception>
+        /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
         [NotNull]
         public T Get<T>( int tagIndex ) where T : NbtTag {
             return (T)tags[tagIndex];
         }
 
 
+        /// <summary> Adds all tags from the specified collection to the end of this NbtList. </summary>
+        /// <param name="newTags"> The collection whose elements should be added to this NbtList. </param>
+        /// <exception cref="ArgumentNullException"> If newTags is null. </exception>
+        /// <exception cref="ArgumentException"> If one of the given tags was . </exception>
         public void AddRange( [NotNull] IEnumerable<NbtTag> newTags ) {
             if( newTags == null ) throw new ArgumentNullException( "newTags" );
             foreach( NbtTag tag in newTags ) {
@@ -168,6 +186,8 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Copies all tags in this NbtList to an array. </summary>
+        /// <returns> Array of NbtTags. </returns>
         [NotNull]
         public NbtTag[] ToArray() {
             return tags.ToArray();
@@ -336,6 +356,8 @@ namespace LibNbt {
 
         #region Implementation of IEnumerable<NBtTag> and IEnumerable
 
+        /// <summary> Returns an enumerator that iterates through all tags in this NbtList. </summary>
+        /// <returns> An IEnumerator&gt;NbtTag&lt; that can be used to iterate through the list. </returns>
         public IEnumerator<NbtTag> GetEnumerator() {
             return tags.GetEnumerator();
         }
@@ -350,62 +372,100 @@ namespace LibNbt {
 
         #region Implementation of IList<NbtTag> and ICollection<NbtTag>
 
-        public int IndexOf( NbtTag item ) {
-            return tags.IndexOf( item );
+        /// <summary> Determines the index of a specific tag in this NbtList </summary>
+        /// <returns> The index of tag if found in the list; otherwise, -1. </returns>
+        /// <param name="tag"> The tag to locate in this NbtList. </param>
+        public int IndexOf( NbtTag tag ) {
+            return tags.IndexOf( tag );
         }
 
 
-        public void Insert( int index, NbtTag item ) {
+        /// <summary> Inserts an item to this NbtList at the specified index. </summary>
+        /// <param name="index"> The zero-based index at which newTag should be inserted. </param>
+        /// <param name="newTag"> The tag to insert into this NbtList. </param>
+        /// <exception cref="ArgumentOutOfRangeException"> index is not a valid index in this NbtList. </exception>
+        public void Insert( int index, NbtTag newTag ) {
             if( listType == NbtTagType.Unknown ) {
-                listType = item.TagType;
-            } else if( item.TagType != listType ) {
+                listType = newTag.TagType;
+            } else if( newTag.TagType != listType ) {
                 throw new ArgumentException( "Items must be of type " + listType );
             }
-            tags.Insert( index, item );
+            tags.Insert( index, newTag );
         }
 
 
+        /// <summary> Removes a tag at the specified index from this NbtList. </summary>
+        /// <param name="index"> The zero-based index of the item to remove. </param>
+        /// <exception cref="ArgumentOutOfRangeException"> Given index is not a valid index in the NbtList. </exception>
         public void RemoveAt( int index ) {
             tags.RemoveAt( index );
         }
 
 
-        public void Add( NbtTag item ) {
+        /// <summary> Adds an tag to this NbtList. </summary>
+        /// <param name="newTag"> The tag to add to this NbtList. </param>
+        /// <exception cref="ArgumentNullException"> If newTag is null. </exception>
+        /// <exception cref="ArgumentException"> If newTag does not match ListType. </exception>
+        public void Add( [NotNull] NbtTag newTag ) {
+            if( newTag == null ) throw new ArgumentNullException( "newTag" );
             if( listType == NbtTagType.Unknown ) {
-                listType = item.TagType;
-            } else if( item.TagType != listType ) {
+                listType = newTag.TagType;
+            } else if( newTag.TagType != listType ) {
                 throw new ArgumentException( "Items must be of type " + listType );
             }
-            tags.Add( item );
+            tags.Add( newTag );
         }
 
 
+        /// <summary> Removes all tags from this NbtList. </summary>
         public void Clear() {
             tags.Clear();
         }
 
 
-        public bool Contains( NbtTag item ) {
+        /// <summary> Determines whether this NbtList contains a specific tag. </summary>
+        /// <returns> true if given tag is found in this NbtList; otherwise, false. </returns>
+        /// <param name="item"> The tag to locate in this NbtList. </param>
+        public bool Contains( [NotNull] NbtTag item ) {
+            if( item == null ) throw new ArgumentNullException( "item" );
             return tags.Contains( item );
         }
 
 
+        /// <summary> Copies the tags of this NbtList to an array, starting at a particular array index. </summary>
+        /// <param name="array"> The one-dimensional array that is the destination of the tag copied from NbtList.
+        /// The array must have zero-based indexing. </param>
+        /// <param name="arrayIndex"> The zero-based index in array at which copying begins. </param>
+        /// <exception cref="ArgumentNullException"> If array is null. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> arrayIndex is less than 0. </exception>
+        /// <exception cref="ArgumentException"> Given array is multidimensional; arrayIndex is equal to or greater than the length of array;
+        /// the number of tags in this NbtList is greater than the available space from arrayIndex to the end of the destination array;
+        /// or type NbtTag cannot be cast automatically to the type of the destination array. </exception>
         public void CopyTo( NbtTag[] array, int arrayIndex ) {
             tags.CopyTo( array, arrayIndex );
         }
 
 
-        public bool Remove( NbtTag item ) {
-            return tags.Remove( item );
+        /// <summary> Removes the first occurrence of a specific NbtTag from the NbtCompound.
+        /// Looks for exact object matches, not name matches. </summary>
+        /// <returns> true if tag was successfully removed from this NbtList; otherwise, false.
+        /// This method also returns false if tag is not found. </returns>
+        /// <param name="tag"> The tag to remove from this NbtList. </param>
+        /// <exception cref="ArgumentNullException"> If tag is null. </exception>
+        public bool Remove( [NotNull] NbtTag tag ) {
+            if( tag == null ) throw new ArgumentNullException( "tag" );
+            return tags.Remove( tag );
         }
 
 
+        /// <summary> Gets the number of tags contained in the NbtList. </summary>
+        /// <returns> The number of tags contained in the NbtList. </returns>
         public int Count {
             get { return tags.Count; }
         }
 
 
-        public bool IsReadOnly {
+        bool ICollection<NbtTag>.IsReadOnly {
             get { return false; }
         }
 
@@ -465,9 +525,17 @@ namespace LibNbt {
             get { return false; }
         }
 
+
+        bool IList.IsReadOnly {
+            get { return false; }
+        }
+
         #endregion
 
 
+        /// <summary> Returns a String that represents the current NbtList object and its contents.
+        /// Format: TAG_List("Name"): { ...contents... } </summary>
+        /// <returns> A String that represents the current NbtList object and its contents. </returns>
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_List" );

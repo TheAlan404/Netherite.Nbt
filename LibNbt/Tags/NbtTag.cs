@@ -11,6 +11,7 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Name of this tag. Immutable, and set by the constructor. May be null. </summary>
         [CanBeNull]
         public string Name { get; protected set; }
 
@@ -69,6 +70,12 @@ namespace LibNbt {
         #endregion
 
 
+        /// <summary> Returns a canonical (Notchy) name for the given NbtTagType,
+        /// e.g. "TAG_Byte_Array" for NbtTagType.ByteArray </summary>
+        /// <param name="type"> NbtTagType to name. </param>
+        /// <returns> String representing the canonical name of a tag,
+        /// or null of given TagType does not have a canonical name (e.g. Unknown). </returns>
+        [CanBeNull]
         public static string GetCanonicalTagName( NbtTagType type ) {
             switch( type ) {
                 case NbtTagType.Byte:

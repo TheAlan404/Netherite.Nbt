@@ -73,6 +73,8 @@ namespace LibNbt {
         /// <typeparam name="T"> Type to cast the result to. Must derive from NbtTag. </typeparam>
         /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
         /// <exception cref="ArgumentNullException"> If tagName is null. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> If tagName is null. </exception>
+        /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
         [CanBeNull]
         public T Get<T>( [NotNull] string tagName ) where T : NbtTag {
             if( tagName == null ) throw new ArgumentNullException( "tagName" );
@@ -422,7 +424,7 @@ namespace LibNbt {
 
 
         /// <summary> Returns a String that represents the current NbtCompound object and its contents.
-        /// Format: TAG_Compound("Name"): { ...inner tags... } </summary>
+        /// Format: TAG_Compound("Name"): { ...contents... } </summary>
         /// <returns> A String that represents the current NbtCompound object and its contents. </returns>
         public override string ToString() {
             var sb = new StringBuilder();
