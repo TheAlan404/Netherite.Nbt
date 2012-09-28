@@ -3,8 +3,10 @@ using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt {
+    /// <summary> Base class for different kinds of named binary tags. </summary>
     public abstract class NbtTag {
-        internal virtual NbtTagType TagType {
+        /// <summary> Type of this tag. </summary>
+        public virtual NbtTagType TagType {
             get { return NbtTagType.Unknown; }
         }
 
@@ -18,7 +20,6 @@ namespace LibNbt {
 
         // WriteData does not write the tag's ID byte or the name
         internal abstract void WriteData( [NotNull] NbtWriter writeReader );
-
 
 
         #region Query

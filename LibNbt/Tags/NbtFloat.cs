@@ -3,8 +3,9 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace LibNbt {
+    /// <summary> A tag containing a single single-precision floating point number. </summary>
     public sealed class NbtFloat : NbtTag, INbtTagValue<float> {
-        internal override NbtTagType TagType {
+        public override NbtTagType TagType {
             get { return NbtTagType.Float; }
         }
 

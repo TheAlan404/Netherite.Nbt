@@ -6,8 +6,9 @@ using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt {
+    /// <summary> A tag containing a set of other named tags. Order is not guaranteed. </summary>
     public sealed class NbtCompound : NbtTag, ICollection<NbtTag>, ICollection {
-        internal override NbtTagType TagType {
+        public override NbtTagType TagType {
             get { return NbtTagType.Compound; }
         }
 

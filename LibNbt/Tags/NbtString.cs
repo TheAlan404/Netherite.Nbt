@@ -3,8 +3,9 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace LibNbt {
+    /// <summary> A tag containing a single string. String is stored in UTF-8 encoding. </summary>
     public sealed class NbtString : NbtTag, INbtTagValue<string> {
-        internal override NbtTagType TagType {
+        public override NbtTagType TagType {
             get { return NbtTagType.String; }
         }
 

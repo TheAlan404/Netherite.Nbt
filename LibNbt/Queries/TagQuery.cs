@@ -4,11 +4,12 @@ using System.Text;
 
 namespace LibNbt.Queries {
     public sealed class TagQuery {
-        public string Query { get; protected set; }
+        public string Query { get; private set; }
         readonly List<TagQueryToken> tokens;
         int currentTokenIndex;
 
-        public TagQuery() : this( "" ) {}
+        public TagQuery()
+            : this( "" ) {}
 
 
         public TagQuery( string query ) {

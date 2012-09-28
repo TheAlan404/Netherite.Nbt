@@ -3,8 +3,9 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace LibNbt {
+    /// <summary> A tag containing a single signed 32-bit integer. </summary>
     public sealed class NbtInt : NbtTag, INbtTagValue<int> {
-        internal override NbtTagType TagType {
+        public override NbtTagType TagType {
             get { return NbtTagType.Int; }
         }
 

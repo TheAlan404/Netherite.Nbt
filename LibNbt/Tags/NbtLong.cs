@@ -2,8 +2,9 @@
 using System.Text;
 
 namespace LibNbt {
+    /// <summary> A tag containing a single signed 64-bit integer. </summary>
     public sealed class NbtLong : NbtTag, INbtTagValue<long> {
-        internal override NbtTagType TagType {
+        public override NbtTagType TagType {
             get { return NbtTagType.Long; }
         }
 

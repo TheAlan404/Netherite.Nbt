@@ -6,8 +6,9 @@ using JetBrains.Annotations;
 using LibNbt.Queries;
 
 namespace LibNbt {
+    /// <summary> A tag containing a list of unnamed tags, all of the same kind. </summary>
     public sealed class NbtList : NbtTag, IList<NbtTag>, IList {
-        internal override NbtTagType TagType {
+        public override NbtTagType TagType {
             get { return NbtTagType.List; }
         }
 
