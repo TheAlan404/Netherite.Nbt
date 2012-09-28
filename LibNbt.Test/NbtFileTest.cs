@@ -26,24 +26,21 @@ namespace LibNbt.Test {
 
         [Test]
         public void TestNbtSmallFileLoadingUncompressed() {
-            var file = new NbtFile();
-            file.LoadFromFile( "TestFiles/test.nbt" );
+            var file = new NbtFile( "TestFiles/test.nbt" );
             AssertNbtSmallFile( file );
         }
 
 
         [Test]
         public void LoadingSmallFileGZip() {
-            var file = new NbtFile();
-            file.LoadFromFile( "TestFiles/test.nbt.gz" );
+            var file = new NbtFile( "TestFiles/test.nbt.gz" );
             AssertNbtSmallFile( file );
         }
 
 
         [Test]
         public void LoadingSmallFileZLib() {
-            var file = new NbtFile();
-            file.LoadFromFile( "TestFiles/test.nbt.z" );
+            var file = new NbtFile( "TestFiles/test.nbt.z" );
             AssertNbtSmallFile( file );
         }
 
@@ -70,27 +67,21 @@ namespace LibNbt.Test {
 
         [Test]
         public void LoadingBigFileUncompressed() {
-            var file = new NbtFile();
-            file.LoadFromFile( "TestFiles/bigtest.nbt" );
-
+            var file = new NbtFile( "TestFiles/bigtest.nbt" );
             AssertNbtBigFile( file );
         }
 
 
         [Test]
         public void LoadingBigFileGZip() {
-            var file = new NbtFile();
-            file.LoadFromFile( "TestFiles/bigtest.nbt.gz" );
-
+            var file = new NbtFile( "TestFiles/bigtest.nbt.gz" );
             AssertNbtBigFile( file );
         }
 
 
         [Test]
         public void LoadingBigFileZLib() {
-            var file = new NbtFile();
-            file.LoadFromFile( "TestFiles/bigtest.nbt.z" );
-
+            var file = new NbtFile( "TestFiles/bigtest.nbt.z" );
             AssertNbtBigFile( file );
         }
 
@@ -246,11 +237,11 @@ namespace LibNbt.Test {
 
         [Test]
         public void TestNbtSmallFileSavingUncompressed() {
-            var file = new NbtFile {
-                RootTag = new NbtCompound( "hello world", new NbtTag[] {
+            var file = new NbtFile(
+                new NbtCompound( "hello world", new NbtTag[] {
                     new NbtString( "name", "Bananrama" )
                 } )
-            };
+            );
 
             file.SaveToFile( "TestTemp/test.nbt", NbtCompression.None );
 
@@ -260,11 +251,11 @@ namespace LibNbt.Test {
 
         [Test]
         public void TestNbtSmallFileSavingUncompressedStream() {
-            var file = new NbtFile {
-                RootTag = new NbtCompound( "hello world", new NbtTag[] {
+            var file = new NbtFile (
+                new NbtCompound( "hello world", new NbtTag[] {
                     new NbtString( "name", "Bananrama" )
                 } )
-            };
+            );
 
             var nbtStream = new MemoryStream();
             file.SaveToStream( nbtStream, NbtCompression.None );
@@ -278,7 +269,6 @@ namespace LibNbt.Test {
         [Test]
         public void ReloadingBigSavedFile() {
             NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
-            loadedFile.LoadFromFile();
             loadedFile.SaveToFile( "bigtest.nbt.z", NbtCompression.ZLib );
             loadedFile.LoadFromFile( "bigtest.nbt.z", NbtCompression.AutoDetect );
             AssertNbtBigFile( loadedFile );

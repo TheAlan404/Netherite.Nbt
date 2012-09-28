@@ -1,15 +1,16 @@
 ﻿namespace LibNbt {
+    /// <summary> Compression method used for loading/saving NBT files. </summary>
     public enum NbtCompression {
-        /// <summary> Automatically detect file compression. </summary>
+        /// <summary> Automatically detect file compression. Not a valid format for saving. </summary>
         AutoDetect,
 
         /// <summary> No compression. </summary>
         None,
 
-        /// <summary> GZip compression (default). </summary>
+        /// <summary> Compressed, with GZip header (default). </summary>
         GZip,
 
-        /// <summary> ZLib compression (not implemented). </summary>
+        /// <summary> Compressed, with ZLib header (RFC-1950). </summary>
         ZLib
     }
 }

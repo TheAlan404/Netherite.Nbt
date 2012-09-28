@@ -9,8 +9,7 @@ namespace LibNbt.Test {
 
         [TestFixtureSetUp]
         public void TagQueryTestSetUp() {
-            file = new NbtFile();
-            file.LoadFromFile( "TestFiles/bigtest.nbt.gz" );
+            file = new NbtFile( "TestFiles/bigtest.nbt.gz" );
         }
 
 

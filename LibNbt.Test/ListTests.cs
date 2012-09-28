@@ -88,14 +88,12 @@ namespace LibNbt.Test {
 
         [Test]
         public void Serializing() {
-            NbtFile writtenFile = new NbtFile();
-            NbtFile readFile = new NbtFile();
             string fileName = Path.Combine( TempDir, "NbtListType.nbt" );
             const NbtTagType expectedListType = NbtTagType.Int;
             const int elements = 10;
 
             // construct nbt file
-            writtenFile.RootTag = new NbtCompound( "ListTypeTest" );
+            NbtFile writtenFile = new NbtFile( new NbtCompound( "ListTypeTest" ) );
             NbtList writtenList = new NbtList( "Entities", null, expectedListType );
             for( int i = 0; i < elements; i++ ) {
                 writtenList.Add( new NbtInt( i ) );
@@ -106,7 +104,7 @@ namespace LibNbt.Test {
             writtenFile.SaveToFile( fileName, NbtCompression.GZip );
 
             // test loading
-            readFile.LoadFromFile( fileName );
+            NbtFile readFile = new NbtFile( fileName );
 
             // check contents of loaded file
             Assert.NotNull( readFile.RootTag );
