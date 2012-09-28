@@ -3,27 +3,36 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace LibNbt {
-    /// <summary> A tag containing a single single-precision floating point number. </summary>
+    /// <summary> A tag containing a single-precision floating point number. </summary>
     public sealed class NbtFloat : NbtTag, INbtTagValue<float> {
+        /// <summary> Type of this tag (Float). </summary>
         public override NbtTagType TagType {
             get { return NbtTagType.Float; }
         }
 
+        /// <summary> Value/payload of this tag (a single-precision floating point number). </summary>
         public float Value { get; set; }
 
 
-        public NbtFloat()
-            : this( null ) {}
+        /// <summary> Creates an unnamed NbtFloat tag with the default value of 0f. </summary>
+        public NbtFloat() {}
 
 
+        /// <summary> Creates an unnamed NbtFloat tag with the given value. </summary>
+        /// <param name="value"> Value to assign to this tag. </param>
         public NbtFloat( float value )
             : this( null, value ) {}
 
 
+        /// <summary> Creates an NbtFloat tag with the given name and the default value of 0f. </summary>
+        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
         public NbtFloat( [CanBeNull] string tagName )
             : this( tagName, 0 ) {}
 
 
+        /// <summary> Creates an NbtFloat tag with the given name and value. </summary>
+        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
+        /// <param name="value"> Value to assign to this tag. </param>
         public NbtFloat( [CanBeNull] string tagName, float value ) {
             Name = tagName;
             Value = value;
@@ -53,6 +62,9 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Returns a String that represents the current NbtFloat object.
+        /// Format: TAG_Float("Name"): Value </summary>
+        /// <returns> A String that represents the current NbtFloat object. </returns>
         public override string ToString() {
             var sb = new StringBuilder();
             sb.Append( "TAG_Float" );

@@ -228,6 +228,7 @@ namespace LibNbt {
         /// <exception cref="InvalidDataException"> If given stream does not support writing. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while creating the file. </exception>
         /// <exception cref="UnauthorizedAccessException"> Specified file is read-only, or a permission issue occurred. </exception>
+        /// <exception cref="NullReferenceException"> If one of the NbtCompound tags contained unnamed tags. </exception>
         public void SaveToFile( [NotNull] string fileName, NbtCompression compression ) {
             if( fileName == null ) throw new ArgumentNullException( "fileName" );
 
@@ -244,6 +245,7 @@ namespace LibNbt {
         /// <exception cref="ArgumentException"> If AutoDetect was given as the compression mode. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="InvalidDataException"> If given stream does not support writing. </exception>
+        /// <exception cref="NullReferenceException"> If one of the NbtCompound tags contained unnamed tags. </exception>
         public void SaveToStream( [NotNull] Stream stream, NbtCompression compression ) {
             if( stream == null ) throw new ArgumentNullException( "stream" );
 

@@ -53,7 +53,7 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Gets or sets the tag with the specified name. </summary>
+        /// <summary> Gets or sets the tag with the specified name. May return null. </summary>
         /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
         /// <param name="tagName"> The name of the tag to get or set. </param>
         /// <exception cref="ArgumentNullException"> If tagName is null, or if trying to assign null value. </exception>
@@ -68,6 +68,11 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Gets or sets the tag with the specified name. May return null. </summary>
+        /// <param name="tagName"> The name of the tag to get. </param>
+        /// <typeparam name="T"> Type to cast the result to. Must derive from NbtTag. </typeparam>
+        /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
+        /// <exception cref="ArgumentNullException"> If tagName is null. </exception>
         [CanBeNull]
         public T Get<T>( [NotNull] string tagName ) where T : NbtTag {
             if( tagName == null ) throw new ArgumentNullException( "tagName" );
