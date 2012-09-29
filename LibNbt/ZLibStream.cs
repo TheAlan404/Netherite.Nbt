@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 
@@ -20,7 +21,7 @@ namespace LibNbt {
             base( stream, mode, leaveOpen ) { }
 
 
-        void UpdateChecksum( byte[] data, int offset, int length ) {
+        void UpdateChecksum( IList<byte> data, int offset, int length ) {
             for( int counter = 0; counter < length; ++counter ) {
                 adler32A = ( adler32A + ( data[offset + counter] ) ) % ChecksumModulus;
                 adler32B = ( adler32B + adler32A ) % ChecksumModulus;

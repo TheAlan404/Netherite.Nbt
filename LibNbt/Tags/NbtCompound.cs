@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using JetBrains.Annotations;
-using LibNbt.Queries;
 
 namespace LibNbt {
     /// <summary> A tag containing a set of other named tags. Order is not guaranteed. </summary>
@@ -263,45 +262,6 @@ namespace LibNbt {
                 tag.WriteTag( writeStream, true );
             }
             writeStream.Write( NbtTagType.End );
-        }
-
-        #endregion
-
-
-        #region Query
-
-        public override NbtTag Query( string query ) {
-            return Query<NbtTag>( query );
-        }
-
-
-        public override T Query<T>( string query ) {
-            var tagQuery = new TagQuery( query );
-
-            return Query<T>( tagQuery );
-        }
-
-
-        internal override T Query<T>( TagQuery query, bool bypassCheck ) {
-            if( !bypassCheck ) {
-                TagQueryToken token = query.Next();
-
-                if( token != null && !token.Name.Equals( Name ) ) {
-                    return null;
-                }
-            }
-
-            TagQueryToken nextToken = query.Peek();
-            if( nextToken != null ) {
-                NbtTag nextTag = Get<NbtTag>( nextToken.Name );
-                if( nextTag == null ) {
-                    return null;
-                }
-
-                return nextTag.Query<T>( query );
-            }
-
-            return (T)( (NbtTag)this );
         }
 
         #endregion

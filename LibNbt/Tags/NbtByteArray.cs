@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace LibNbt {
     /// <summary> A tag containing an array of bytes. </summary>
-    public sealed class NbtByteArray : NbtTag, INbtTagValue<byte[]> {
+    public sealed class NbtByteArray : NbtTag {
         /// <summary> Type of this tag (ByteArray). </summary>
         public override NbtTagType TagType {
             get { return NbtTagType.ByteArray; }

@@ -48,7 +48,6 @@
   <ItemGroup>
     <Compile Include="NbtFileTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TagQueryTest.cs" />
     <Compile Include="ListTests.cs" />
   </ItemGroup>
   <ItemGroup>

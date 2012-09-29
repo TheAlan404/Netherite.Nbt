@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace LibNbt {
     /// <summary> A tag containing a single signed 32-bit integer. </summary>
-    public sealed class NbtInt : NbtTag, INbtTagValue<int> {
+    public sealed class NbtInt : NbtTag {
         /// <summary> Type of this tag (Int). </summary>
         public override NbtTagType TagType {
             get { return NbtTagType.Int; }

@@ -9,6 +9,9 @@ improved performance, ease of use, and reliability. Notable changes made so far 
 - Added more constraint checks to tag loading, modification, and saving.
 - Replaced getter/setter methods with properties, wherever possible.
 - Expanded unit test coverage.
+- Fully documented everything.
+
+Queries have been removed from the library.
 
 
 README for LibNbt v0.2.0 preserved below:
@@ -33,30 +36,3 @@ Upcoming
 - Implement an NAnt build process for easier multiplatform builds.
 - Write documentation.
 - Continue writing unit tests.
-
-Querying
-========
-Querying is implemented with a slash separated format.  Each part of the query is either
-a tag name or an index (in the case of NbtList). All queries must start with a slash.
-
-The query examples below use the bigtest.nbt test file tag hierarchy.  You can find the
-layout of this file in LibNbtTest/TestFiles/bigtest.nbt.txt.
-
-To get the "shortTest" tag you would use the query:
-/Level/shortTest
-
-To get the "ham" tag of the "nested compound test" tag, you would use the query:
-/Level/nested compound test/ham
-
-You can also use indexes to reference specific tags in NbtList tags. This query would
-return the NbtLong with the value 13 in bigtest. Note that indexes start at 0:
-/Level/listTest (long)/2
-
-Lastly, you can combine named tags and list tags into the same query. The following query
-would return the "name" NbtString of the 2nd compound in the "listTest (compound)" tag:
-/Level/listTest (compound)/1/name
-
-Queries are executed by calling the Query(string query) or Query<T>(string query) functions
-on a tag object.  The generic function Query<T>(string query) allows you to specify the type
-of the return object.  The non-generic version Query(string query) will return all results as
-an NbtTag.

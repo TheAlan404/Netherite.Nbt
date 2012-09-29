@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using JetBrains.Annotations;
-using LibNbt.Queries;
 
 namespace LibNbt {
     /// <summary> A tag containing a list of unnamed tags, all of the same kind. </summary>
@@ -295,60 +294,6 @@ namespace LibNbt {
             foreach( NbtTag tag in tags ) {
                 tag.WriteData( writeStream );
             }
-        }
-
-        #endregion
-
-
-        #region Query
-
-        public override NbtTag Query( string query ) {
-            return Query<NbtTag>( query );
-        }
-
-
-        public override T Query<T>( string query ) {
-            var tagQuery = new TagQuery( query );
-
-            return Query<T>( tagQuery );
-        }
-
-
-        internal override T Query<T>( TagQuery query, bool bypassCheck ) {
-            TagQueryToken token = query.Next();
-
-            if( !bypassCheck ) {
-                if( token != null && !token.Name.Equals( Name ) ) {
-                    return null;
-                }
-            }
-
-            var nextToken = query.Peek();
-            if( nextToken != null ) {
-                // Make sure this token is an integer because NbtLists don't have
-                // named tag items
-                int tagIndex;
-                if( !int.TryParse( nextToken.Name, out tagIndex ) ) {
-                    throw new NbtQueryException(
-                        string.Format( "Attempt to query by name on a list tag that doesn't support names. ({0})",
-                                       Name ) );
-                }
-
-                NbtTag indexedTag = Get<NbtTag>( tagIndex );
-
-                if( query.TokensLeft() > 1 ) {
-                    // Pop the index token so the current token is the next
-                    // named token to continue the query
-                    query.Next();
-
-                    // Bypass the name check because the tag won't have one
-                    return indexedTag.Query<T>( query, true );
-                }
-
-                return (T)indexedTag;
-            }
-
-            return (T)( (NbtTag)this );
         }
 
         #endregion

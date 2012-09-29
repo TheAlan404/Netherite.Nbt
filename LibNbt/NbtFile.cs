@@ -2,7 +2,6 @@
 using System.IO;
 using System.IO.Compression;
 using JetBrains.Annotations;
-using LibNbt.Queries;
 
 namespace LibNbt {
     /// <summary> Represents a complete NBT file. </summary>
@@ -298,23 +297,5 @@ namespace LibNbt {
                     break;
             }
         }
-
-
-        #region Query
-
-        public NbtTag Query( [NotNull] string queryString ) {
-            if( queryString == null ) throw new ArgumentNullException( "queryString" );
-            return Query<NbtTag>( queryString );
-        }
-
-
-        public T Query<T>( [NotNull] string queryString ) where T : NbtTag {
-            if( queryString == null ) throw new ArgumentNullException( "queryString" );
-            if( RootTag == null ) return null;
-            var tagQuery = new TagQuery( queryString );
-            return RootTag.Query<T>( tagQuery );
-        }
-
-        #endregion
     }
 }
