@@ -1,3 +1,5 @@
+Current released version is 0.3.0 (28 September 2012).
+
 LibNbt2012 is an effort to rewrite Erik Davidson's (aphistic's) LibNbt library, for
 improved performance, ease of use, and reliability. Notable changes made so far include:
 
@@ -11,7 +13,7 @@ improved performance, ease of use, and reliability. Notable changes made so far 
 - Expanded unit test coverage.
 - Fully documented everything.
 
-Queries have been removed from the library.
+Query API has been removed from the library.
 
 
 README for LibNbt v0.2.0 preserved below:
