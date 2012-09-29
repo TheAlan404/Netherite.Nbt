@@ -135,6 +135,10 @@ namespace LibNbt.Test {
             Assert.AreEqual( readList.ListType, writtenList.ListType );
             Assert.AreEqual( readList.Count, writtenList.Count );
 
+            // check .ToArray
+            CollectionAssert.AreEquivalent( readList, readList.ToArray() );
+            CollectionAssert.AreEquivalent( readList, readList.ToArray<NbtInt>() );
+
             // check contents of loaded list
             for( int i = 0; i < elements; i++ ) {
                 Assert.AreEqual( readList.Get<NbtInt>( i ).Value, writtenList.Get<NbtInt>( i ).Value );

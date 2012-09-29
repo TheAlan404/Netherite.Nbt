@@ -43,11 +43,11 @@ and reliability.
     foreach( NbtTag tag in myCompoundTag ){
         Console.WriteLine( tag.Name + " = " + tag.TagType );
     }
-    foreach( NbtTag listItem in myListTag ){
-        Console.WriteLine( listItem );
-    }
     for( int i=0; i<myListTag.Count; i++ ){
         Console.WriteLine( myListTag[i] );
+    }
+    foreach( NbtInt intListItem in myIntList.ToArray<NbtInt>() ){
+        Console.WriteLine( listIntItem.Value );
     }
 
 - Constructing a new document

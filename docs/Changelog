@@ -1,14 +1,19 @@
 0.3.1 (Matvei Stefarov)
-- Added indexers to NbtTag base class, to make nested compound/list tags easier to work with.
+- Added indexers to NbtTag base class, to make nested compound/list tags easier
+	to work with.
 - Added shortcut properties for getting tag values.
-- Improved .ToString() pretty-printing, now with consistent and configurable indentation.
+- Added a ToArray<T>() overload to NbtList, to automate casting to a specific
+	tag type.
+- Improved .ToString() pretty-printing, now with consistent and configurable
+	indentation.
 
 0.3.0 (Matvei Stefarov)
 - Auto-detection of NBT file compression.
 - Loading and saving of ZLib (RFC-1950) compresessed NBT files.
 - Reduced loading/saving CPU use by 15%, and memory use by 40%
-- NbtCompound now implements ICollection<NbtTag>, and NbtList implements IList<NbtTag>
 - Full support for TAG_Int_Array
+- NbtCompound now implements ICollection and ICollection<NbtTag>
+- NbtList now implements IList and IList<NbtTag>
 - More constraint checks to tag loading, modification, and saving.
 - Replaced getter/setter methods with properties, wherever possible.
 - Expanded unit test coverage.
@@ -19,7 +24,8 @@
 0.2.0 (Erik Davidson)
 - Implemented tag queries.
 - Created unit tests for the larger portions of the code.
-- Marked tag constructors that take only tag values as obsolete, use the constructor that has name and value instead.
+- Marked tag constructors that take only tag values as obsolete, use the
+	constructor that has name and value instead.
 
 0.1.2 (Erik Davidson)
 - Added a GetTagType() function to the tag classes.

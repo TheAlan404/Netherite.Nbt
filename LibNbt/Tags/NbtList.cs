@@ -182,6 +182,19 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Copies all tags in this NbtList to an array, and casts it to the desired type. </summary>
+        /// <typeparam name="T"> Type to cast every member of NbtList to. Must derive from NbtTag. </typeparam>
+        /// <returns> Array of NbtTags cast to the desired type. </returns>
+        /// <exception cref="InvalidCastException"> If contents of this list cannot be cast to the given type. </exception>
+        public T[] ToArray<T>() where T : NbtTag {
+            T[] result = new T[tags.Count];
+            for( int i = 0; i < result.Length; i++ ) {
+                result[i] = (T)tags[i];
+            }
+            return result;
+        }
+
+
         #region Reading / Writing
 
         internal void ReadTag( NbtReader readStream, bool readName ) {
