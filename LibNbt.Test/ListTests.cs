@@ -4,11 +4,11 @@ using NUnit.Framework;
 
 namespace LibNbt.Test {
     [TestFixture]
-    public class ListTests {
+    public sealed class ListTests {
         const string TempDir = "TestTemp";
 
         [SetUp]
-        public void NbtFileTestSetup() {
+        public void ListTestsSetup() {
             Directory.CreateDirectory( TempDir );
         }
 
@@ -51,11 +51,19 @@ namespace LibNbt.Test {
 
             NbtList list = new NbtList( "Test1", sameTags );
 
+            // testing enumerator
+            int j = 0;
+            foreach( NbtTag tag in list ) {
+                Assert.AreEqual( tag, sameTags[j++] );
+            }
+
             // adding an item of correct type
-            Assert.DoesNotThrow( () => list.Add( new NbtInt( 3 ) ) );
+            list.Add( new NbtInt( 3 ) );
+            list.Insert( 3, new NbtInt( 4 ) );
 
             // adding an item of wrong type
             Assert.Throws<ArgumentException>( () => list.Add( new NbtString() ) );
+            Assert.Throws<ArgumentException>( () => list.Insert( 3, new NbtString() ) );
 
             // testing array contents
             for( int i = 0; i < sameTags.Length; i++ ) {
@@ -66,6 +74,8 @@ namespace LibNbt.Test {
             // test removal
             Assert.IsFalse( list.Remove( new NbtInt( 5 ) ) );
             Assert.IsTrue( list.Remove( sameTags[0] ) );
+            list.RemoveAt( 0 );
+            Assert.Throws<ArgumentOutOfRangeException>( () => list.RemoveAt( 10 ) );
         }
 
 
@@ -82,7 +92,19 @@ namespace LibNbt.Test {
             Assert.DoesNotThrow( () => list.ListType = NbtTagType.Int );
 
             // changing list type to an incorrect type
-            Assert.Throws<Exception>( () => list.ListType = NbtTagType.Short );
+            Assert.Throws<ArgumentException>( () => list.ListType = NbtTagType.Short );
+        }
+
+
+        [Test]
+        public void SerializingWithoutListType() {
+            NbtCompound root = new NbtCompound( "root" ) { new NbtList( "list" ) };
+            NbtFile file = new NbtFile( root );
+
+            using( MemoryStream ms = new MemoryStream() ) {
+                // list should throw NbtFormatException, because its ListType is Unknown
+                Assert.Throws<NbtFormatException>( () => file.SaveToStream( ms, NbtCompression.None ) );
+            }
         }
 
 
@@ -121,7 +143,7 @@ namespace LibNbt.Test {
 
 
         [TearDown]
-        public void NbtFileTestTearDown() {
+        public void ListTestsTearDown() {
             if( Directory.Exists( TempDir ) ) {
                 foreach( var file in Directory.GetFiles( TempDir ) ) {
                     File.Delete( file );

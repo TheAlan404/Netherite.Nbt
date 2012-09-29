@@ -28,8 +28,8 @@ namespace LibNbt {
 
         /// <summary> Creates an unnamed NbtByte tag, containing the given tags. </summary>
         /// <param name="tags"> Collection of tags to assign to this tag's Value. May not be null </param>
-        /// <exception cref="ArgumentNullException"> If tags was null. </exception>
-        /// <exception cref="ArgumentException"> If some of the given tags were not named. </exception>
+        /// <exception cref="ArgumentNullException"> If tags is null, or one of the tags is null. </exception>
+        /// <exception cref="ArgumentException"> If some of the given tags were not named, or two tags with the same name were given. </exception>
         public NbtCompound( [NotNull] IEnumerable<NbtTag> tags )
             : this( null, tags ) {}
 
@@ -38,16 +38,13 @@ namespace LibNbt {
         /// <summary> Creates an NbtByte tag with the given name, containing the given tags. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be null. </param>
         /// <param name="tags"> Collection of tags to assign to this tag's Value. May not be null </param>
-        /// <exception cref="ArgumentNullException"> If tags is null. </exception>
-        /// <exception cref="ArgumentException"> If some of the given tags were not named. </exception>
+        /// <exception cref="ArgumentNullException"> If tags is null, or one of the tags is null. </exception>
+        /// <exception cref="ArgumentException"> If some of the given tags were not named, or two tags with the same name were given. </exception>
         public NbtCompound( [CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags ) {
             if( tags == null ) throw new ArgumentNullException( "tags" );
             Name = tagName;
             foreach( NbtTag tag in tags ) {
-                if( tag.Name == null ) {
-                    throw new ArgumentException( "All tags in a compound tag must be named." );
-                }
-                this.tags.Add( tag.Name, tag );
+                Add( tag );
             }
         }
 
@@ -113,7 +110,7 @@ namespace LibNbt {
 
         /// <summary> Adds all tags from the specified collection to this NbtCompound. </summary>
         /// <param name="newTags"> The collection whose elements should be added to this NbtCompound. </param>
-        /// <exception cref="ArgumentNullException"> If newTags is null. </exception>
+        /// <exception cref="ArgumentNullException"> If newTags is null, or one of the tags in newTags is null. </exception>
         /// <exception cref="ArgumentException"> If one of the given tags was unnamed,
         /// or if a tag with the given name already exists in this NbtCompound. </exception>
         public void AddRange( [NotNull] IEnumerable<NbtTag> newTags ) {
@@ -288,10 +285,11 @@ namespace LibNbt {
         /// <summary> Adds a tag to this NbtCompound. </summary>
         /// <param name="newTag"> The object to add to this NbtCompound. </param>
         /// <exception cref="ArgumentNullException"> If newTag is null. </exception>
-        /// <exception cref="ArgumentException"> If the given tag is unnamed,
+        /// <exception cref="ArgumentException"> If the given tag is unnamed;
         /// or if a tag with the given name already exists in this NbtCompound. </exception>
         public void Add( [NotNull] NbtTag newTag ) {
             if( newTag == null ) throw new ArgumentNullException( "newTag" );
+            if( newTag == this ) throw new ArgumentException( "Cannot add tag to self" );
             if( newTag.Name == null ) {
                 throw new ArgumentException( "Only named tags are allowed in compound tags." );
             }
