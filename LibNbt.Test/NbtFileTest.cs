@@ -273,5 +273,12 @@ namespace LibNbt.Test {
             loadedFile.LoadFromFile( "bigtest.nbt.z", NbtCompression.AutoDetect );
             AssertNbtBigFile( loadedFile );
         }
+
+
+        [Test]
+        public void PrettyPrint() {
+            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
+            Console.WriteLine( loadedFile.RootTag.ToString( "   " ) );
+        }
     }
 }

@@ -46,7 +46,7 @@ namespace LibNbt {
 
         /// <summary> Loads NBT data from a file. Compression will be auto-detected. </summary>
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
-        /// <exception cref="ArgumentNullException"> If fileName is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
@@ -62,7 +62,7 @@ namespace LibNbt {
         /// <summary> Loads NBT data from a file. </summary>
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
-        /// <exception cref="ArgumentNullException"> If fileName is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
@@ -78,7 +78,7 @@ namespace LibNbt {
         /// <summary> Loads NBT data from a stream. </summary>
         /// <param name="stream"> Stream from which data will be loaded. If compression is set to AutoDetect, this stream must support seeking. </param>
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
-        /// <exception cref="ArgumentNullException"> If fileName is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="NotSupportedException"> If compression is set to AutoDetect, but the stream is not seekable. </exception>
@@ -93,7 +93,7 @@ namespace LibNbt {
 
         /// <summary> Loads NBT data from a file. Existing RootTag will be replaced. Compression will be auto-detected. </summary>
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
-        /// <exception cref="ArgumentNullException"> If fileName is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
@@ -109,7 +109,7 @@ namespace LibNbt {
         /// <summary> Loads NBT data from a file. Existing RootTag will be replaced. </summary>
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
-        /// <exception cref="ArgumentNullException"> If fileName is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
@@ -133,7 +133,7 @@ namespace LibNbt {
         /// <summary> Loads NBT data from a stream. Existing RootTag will be replaced </summary>
         /// <param name="stream"> Stream from which data will be loaded. If compression is set to AutoDetect, this stream must support seeking. </param>
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
-        /// <exception cref="ArgumentNullException"> If fileName is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="NotSupportedException"> If compression is set to AutoDetect, but the stream is not seekable. </exception>
@@ -221,7 +221,7 @@ namespace LibNbt {
         /// <summary> Saves this NBT file to a stream. Nothing is written to stream if RootTag is null. </summary>
         /// <param name="fileName"> File to write data to. May not be null. </param>
         /// <param name="compression"> Compression mode to use for saving. May not be AutoDetect. </param>
-        /// <exception cref="ArgumentNullException"> If stream is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
         /// <exception cref="ArgumentException"> If AutoDetect was given as the compression mode. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="InvalidDataException"> If given stream does not support writing. </exception>
@@ -241,7 +241,7 @@ namespace LibNbt {
         /// <summary> Saves this NBT file to a stream. Nothing is written to stream if RootTag is null. </summary>
         /// <param name="stream"> Stream to write data to. May not be null. </param>
         /// <param name="compression"> Compression mode to use for saving. May not be AutoDetect. </param>
-        /// <exception cref="ArgumentNullException"> If stream is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is null. </exception>
         /// <exception cref="ArgumentException"> If AutoDetect was given as the compression mode. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="InvalidDataException"> If given stream does not support writing. </exception>

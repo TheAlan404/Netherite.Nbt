@@ -67,12 +67,21 @@ namespace LibNbt {
         /// <returns> A String that represents the current NbtInt object. </returns>
         public override string ToString() {
             var sb = new StringBuilder();
+            PrettyPrint( sb, null, 0 );
+            return sb.ToString();
+        }
+
+
+        internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
+            for( int i = 0; i < indentLevel; i++ ) {
+                sb.Append( indentString );
+            }
             sb.Append( "TAG_Int" );
             if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
-            sb.AppendFormat( ": {0}", Value );
-            return sb.ToString();
+            sb.Append( ": " );
+            sb.Append( Value );
         }
     }
 }

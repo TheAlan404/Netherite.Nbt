@@ -32,7 +32,7 @@ namespace LibNbt {
 
         /// <summary> Creates an unnamed NbtString tag with the given value. </summary>
         /// <param name="value"> String value to assign to this tag. May not be null. </param>
-        /// <exception cref="ArgumentNullException"> If value is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
         public NbtString( [NotNull] string value )
             : this( null, value ) {}
 
@@ -40,7 +40,7 @@ namespace LibNbt {
         /// <summary> Creates an NbtString tag with the given name and value. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be null. </param>
         /// <param name="value"> String value to assign to this tag. May not be null. </param>
-        /// <exception cref="ArgumentNullException"> If value is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
         public NbtString( [CanBeNull] string tagName, [NotNull] string value ) {
             if( value == null ) throw new ArgumentNullException( "value" );
             Name = tagName;
@@ -80,12 +80,22 @@ namespace LibNbt {
         /// <returns> A String that represents the current NbtString object. </returns>
         public override string ToString() {
             var sb = new StringBuilder();
+            PrettyPrint( sb, null, 0 );
+            return sb.ToString();
+        }
+
+
+        internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
+            for( int i = 0; i < indentLevel; i++ ) {
+                sb.Append( indentString );
+            }
             sb.Append( "TAG_String" );
             if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
-            sb.AppendFormat( ": {0}", Value );
-            return sb.ToString();
+            sb.Append( ": \"" );
+            sb.Append( Value );
+            sb.Append( '"' );
         }
     }
 }

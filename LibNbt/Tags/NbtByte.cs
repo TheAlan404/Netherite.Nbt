@@ -15,8 +15,7 @@ namespace LibNbt {
 
 
         /// <summary> Creates an unnamed NbtByte tag with the default value of 0. </summary>
-        public NbtByte()
-            : this( null, 0 ) {}
+        public NbtByte() {}
 
 
         /// <summary> Creates an unnamed NbtByte tag with the given value. </summary>
@@ -69,12 +68,21 @@ namespace LibNbt {
         /// <returns> A String that represents the current NbtByte object. </returns>
         public override string ToString() {
             var sb = new StringBuilder();
+            PrettyPrint( sb, null, 0 );
+            return sb.ToString();
+        }
+
+
+        internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
+            for( int i = 0; i < indentLevel; i++ ) {
+                sb.Append( indentString );
+            }
             sb.Append( "TAG_Byte" );
             if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
-            sb.AppendFormat( ": {0}", Value );
-            return sb.ToString();
+            sb.Append( ": " );
+            sb.Append( Value );
         }
     }
 }

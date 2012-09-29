@@ -12,7 +12,7 @@ namespace LibNbt {
 
 
         /// <summary> Value/payload of this tag (an array of signed 32-bit integers). May not be null. </summary>
-        /// <exception cref="ArgumentNullException"> If given value is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
         [NotNull]
         public int[] Value {
             get { return ints; }
@@ -35,7 +35,7 @@ namespace LibNbt {
 
         /// <summary> Creates an unnamed NbtIntArray tag, containing the given array of ints. </summary>
         /// <param name="value"> Int array to assign to this tag's Value. May not be null. </param>
-        /// <exception cref="ArgumentNullException"> If given value is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
         public NbtIntArray( [NotNull] int[] value )
             : this( null, value ) {}
 
@@ -49,7 +49,7 @@ namespace LibNbt {
         /// <summary> Creates an NbtIntArray tag with the given name, containing the given array of ints. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be null. </param>
         /// <param name="value"> Int array to assign to this tag's Value. May not be null. </param>
-        /// <exception cref="ArgumentNullException"> If given value is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
         public NbtIntArray( [CanBeNull] string tagName, [NotNull] int[] value ) {
             if( value == null ) throw new ArgumentNullException( "value" );
             Name = tagName;
@@ -61,7 +61,7 @@ namespace LibNbt {
         /// <param name="index"> The zero-based index of the element to get or set. </param>
         /// <returns> The integer at the specified index. </returns>
         /// <exception cref="IndexOutOfRangeException"> If given index was outside the array bounds. </exception>
-        public int this[int index] {
+        public new int this[int index] {
             get { return Value[index]; }
             set { Value[index] = value; }
         }
@@ -107,12 +107,20 @@ namespace LibNbt {
         /// <returns> A String that represents the current NbtIntArray object. </returns>
         public override string ToString() {
             var sb = new StringBuilder();
+            PrettyPrint( sb, null, 0 );
+            return sb.ToString();
+        }
+
+
+        internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
+            for( int i = 0; i < indentLevel; i++ ) {
+                sb.Append( indentString );
+            }
             sb.Append( "TAG_Int_Array" );
             if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
             }
-            sb.AppendFormat( ": [{0} ints]", Value.Length );
-            return sb.ToString();
+            sb.AppendFormat( ": [{0} ints]", ints.Length );
         }
     }
 }

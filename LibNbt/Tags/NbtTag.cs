@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using System.Text;
+using JetBrains.Annotations;
 
 namespace LibNbt {
     /// <summary> Base class for different kinds of named binary tags. </summary>
@@ -6,6 +8,33 @@ namespace LibNbt {
         /// <summary> Type of this tag. </summary>
         public virtual NbtTagType TagType {
             get { return NbtTagType.Unknown; }
+        }
+
+
+        /// <summary> Gets or sets the tag with the specified name. May return null. </summary>
+        /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
+        /// <param name="tagName"> The name of the tag to get or set. Must match tag's actual name. </param>
+        /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtCompound. </exception>
+        /// <remarks> ONLY APPLICABLE TO NntCompound OBJECTS!
+        /// Included in NbtTag base class for programmers' convenience, to avoid extra type casts. </remarks>
+        public virtual NbtTag this[string tagName] {
+            get { throw new InvalidOperationException( "String indexers only work on NbtCompound tags." ); }
+            set { throw new InvalidOperationException( "String indexers only work on NbtCompound tags." ); }
+        }
+
+
+        /// <summary> Gets or sets the tag at the specified index. </summary>
+        /// <returns> The tag at the specified index. </returns>
+        /// <param name="tagIndex"> The zero-based index of the tag to get or set. </param>
+        /// <exception cref="ArgumentOutOfRangeException"> tagIndex is not a valid index in the NbtList. </exception>
+        /// <exception cref="ArgumentNullException"> Given tag is null. </exception>
+        /// <exception cref="ArgumentException"> Given tag's type does not match ListType. </exception>
+        /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtList. </exception>
+        /// <remarks> ONLY APPLICABLE TO NbtList OBJECTS!
+        /// Included in NbtTag base class for programmers' convenience, to avoid extra type casts. </remarks>
+        public virtual NbtTag this[ int tagIndex ] {
+            get { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
+            set { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
         }
 
 
@@ -57,5 +86,22 @@ namespace LibNbt {
                     return null;
             }
         }
+
+        
+        /// <summary> Prints contents of this tag, and any child tags, to a string.
+        /// Indents the string using multiples of the given indentation string. </summary>
+        /// <param name="indentString"> String to be used for indentation. </param>
+        /// <returns> A string representing contants of this tag, and all child tags (if any). </returns>
+        /// <exception cref="ArgumentNullException"> identString is null. </exception>
+        [NotNull]
+        public string ToString( [NotNull] string indentString ) {
+            if( indentString == null ) throw new ArgumentNullException( "indentString" );
+            StringBuilder sb = new StringBuilder();
+            PrettyPrint( sb, indentString, 0 );
+            return sb.ToString();
+        }
+
+
+        internal abstract void PrettyPrint( StringBuilder sb, string indentString, int indentLevel );
     }
 }
