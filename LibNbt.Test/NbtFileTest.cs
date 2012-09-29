@@ -11,17 +11,6 @@ namespace LibNbt.Test {
         }
 
 
-        [TearDown]
-        public void NbtFileTestTearDown() {
-            if( Directory.Exists( "TestTemp" ) ) {
-                foreach( var file in Directory.GetFiles( "TestTemp" ) ) {
-                    File.Delete( file );
-                }
-                Directory.Delete( "TestTemp" );
-            }
-        }
-
-
         #region Loading Small Nbt Test File
 
         [Test]
@@ -279,6 +268,17 @@ namespace LibNbt.Test {
         public void PrettyPrint() {
             NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
             Console.WriteLine( loadedFile.RootTag.ToString( "   " ) );
+        }
+
+
+        [TearDown]
+        public void NbtFileTestTearDown() {
+            if( Directory.Exists( "TestTemp" ) ) {
+                foreach( var file in Directory.GetFiles( "TestTemp" ) ) {
+                    File.Delete( file );
+                }
+                Directory.Delete( "TestTemp" );
+            }
         }
     }
 }

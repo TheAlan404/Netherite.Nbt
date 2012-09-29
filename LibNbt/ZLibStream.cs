@@ -14,9 +14,6 @@ namespace LibNbt {
         }
 
 
-        public ZLibStream( Stream stream, CompressionMode mode ) :
-            base( stream, mode ) { }
-
         public ZLibStream( Stream stream, CompressionMode mode, bool leaveOpen ) :
             base( stream, mode, leaveOpen ) { }
 

@@ -5,7 +5,6 @@ using NUnit.Framework;
 namespace LibNbt.Test {
     [TestFixture]
     public sealed class CompoundTests {
-
         const string TempDir = "TestTemp";
 
 
@@ -172,7 +171,6 @@ namespace LibNbt.Test {
             test.Clear();
             Assert.AreEqual( test.Count, 0 );
         }
-
 
 
         [Test]

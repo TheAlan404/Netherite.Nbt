@@ -207,14 +207,13 @@ namespace LibNbt {
             if( fileStream == null ) throw new ArgumentNullException( "fileStream" );
 
             // Make sure the first byte in this file is the tag for a TAG_Compound
-            if( fileStream.ReadByte() == (int)NbtTagType.Compound ) {
-                var rootCompound = new NbtCompound();
-                rootCompound.ReadTag( new NbtReader( fileStream ), true );
-
-                RootTag = rootCompound;
-            } else {
+            if( fileStream.ReadByte() != (int)NbtTagType.Compound ) {
                 throw new NbtFormatException( "File format does not start with a TAG_Compound" );
             }
+
+            var rootCompound = new NbtCompound();
+            rootCompound.ReadTag( new NbtReader( fileStream ), true );
+            RootTag = rootCompound;
         }
 
 

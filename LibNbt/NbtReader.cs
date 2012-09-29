@@ -38,9 +38,8 @@ namespace LibNbt {
                 BaseStream.Read( floatBuffer, 0, sizeof( float ) );
                 Array.Reverse( floatBuffer );
                 return BitConverter.ToSingle( floatBuffer, 0 );
-            } else {
-                return base.ReadSingle();
             }
+            return base.ReadSingle();
         }
 
 
@@ -49,9 +48,8 @@ namespace LibNbt {
                 BaseStream.Read( doubleBuffer, 0, sizeof( double ) );
                 Array.Reverse( doubleBuffer );
                 return BitConverter.ToDouble( doubleBuffer, 0 );
-            } else {
-                return base.ReadDouble();
             }
+            return base.ReadDouble();
         }
 
 
