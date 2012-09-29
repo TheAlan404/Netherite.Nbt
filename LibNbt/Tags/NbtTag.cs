@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 using JetBrains.Annotations;
 
@@ -10,6 +11,20 @@ namespace LibNbt {
             get { return NbtTagType.Unknown; }
         }
 
+
+        /// <summary> Name of this tag. Immutable, and set by the constructor. May be null. </summary>
+        [CanBeNull]
+        public string Name { get; protected set; }
+
+
+        internal abstract void WriteTag( [NotNull] NbtWriter writeReader, bool writeName );
+
+
+        // WriteData does not write the tag's ID byte or the name
+        internal abstract void WriteData( [NotNull] NbtWriter writeReader );
+
+
+        #region Shortcuts
 
         /// <summary> Gets or sets the tag with the specified name. May return null. </summary>
         /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
@@ -32,22 +47,189 @@ namespace LibNbt {
         /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtList. </exception>
         /// <remarks> ONLY APPLICABLE TO NbtList OBJECTS!
         /// Included in NbtTag base class for programmers' convenience, to avoid extra type casts. </remarks>
-        public virtual NbtTag this[ int tagIndex ] {
+        public virtual NbtTag this[int tagIndex] {
             get { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
             set { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
         }
 
 
-        /// <summary> Name of this tag. Immutable, and set by the constructor. May be null. </summary>
-        [CanBeNull]
-        public string Name { get; protected set; }
+        /// <summary> Returns the value of this tag, cast as a byte.
+        /// Only supported by NbtByte tags. </summary>
+        /// <exception cref="InvalidCastException"> When used on a tag other than NbtByte. </exception>
+        public byte ByteValue {
+            get {
+                if( TagType == NbtTagType.Byte ) {
+                    return ( (NbtByte)this ).Value;
+                } else {
+                    throw new InvalidCastException( "Cannot get ByteValue from " + GetCanonicalTagName( TagType ) );
+                }
+            }
+        }
 
 
-        internal abstract void WriteTag( [NotNull] NbtWriter writeReader, bool writeName );
+        /// <summary> Returns the value of this tag, cast as a short (16-bit signed integer).
+        /// Only supported by NbtByte and NbtShort. </summary>
+        /// <exception cref="InvalidCastException"> When used on an unsupported tag. </exception>
+        public short ShortValue {
+            get {
+                switch( TagType ) {
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get ShortValue from " + GetCanonicalTagName( TagType ) );
+                }
+            }
+        }
 
 
-        // WriteData does not write the tag's ID byte or the name
-        internal abstract void WriteData( [NotNull] NbtWriter writeReader );
+        /// <summary> Returns the value of this tag, cast as an int (32-bit signed integer).
+        /// Only supported by NbtByte, NbtShort, and NbtInt. </summary>
+        /// <exception cref="InvalidCastException"> When used on an unsupported tag. </exception>
+        public int IntValue {
+            get {
+                switch( TagType ) {
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get IntValue from " + GetCanonicalTagName( TagType ) );
+                }
+            }
+        }
+
+
+        /// <summary> Returns the value of this tag, cast as a long (64-bit signed integer).
+        /// Only supported by NbtByte, NbtShort, NbtInt, and NbtLong. </summary>
+        /// <exception cref="InvalidCastException"> When used on an unsupported tag. </exception>
+        public long LongValue {
+            get {
+                switch( TagType ) {
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value;
+                    case NbtTagType.Long:
+                        return ( (NbtLong)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get LongValue from " + GetCanonicalTagName( TagType ) );
+                }
+            }
+        }
+
+
+        /// <summary> Returns the value of this tag, cast as a long (64-bit signed integer).
+        /// Only supported by NbtFloat and, with loss of precision, by NbtDouble, NbtByte, NbtShort, NbtInt, and NbtLong. </summary>
+        /// <exception cref="InvalidCastException"> When used on an unsupported tag. </exception>
+        public float FloatValue {
+            get {
+                switch( TagType ) {
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value;
+                    case NbtTagType.Long:
+                        return ( (NbtLong)this ).Value;
+                    case NbtTagType.Float:
+                        return ( (NbtFloat)this ).Value;
+                    case NbtTagType.Double:
+                        return (float)( (NbtDouble)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get FloatValue from " + GetCanonicalTagName( TagType ) );
+                }
+            }
+        }
+
+
+        /// <summary> Returns the value of this tag, cast as a long (64-bit signed integer).
+        /// Only supported by NbtFloat, NbtDouble, and, with loss of precision, by NbtByte, NbtShort, NbtInt, and NbtLong. </summary>
+        /// <exception cref="InvalidCastException"> When used on an unsupported tag. </exception>
+        public double DoubleValue {
+            get {
+                switch( TagType ) {
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value;
+                    case NbtTagType.Long:
+                        return ( (NbtLong)this ).Value;
+                    case NbtTagType.Float:
+                        return ( (NbtFloat)this ).Value;
+                    case NbtTagType.Double:
+                        return ( (NbtDouble)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get DoubleValue from " + GetCanonicalTagName( TagType ) );
+                }
+            }
+        }
+
+
+        /// <summary> Returns the value of this tag, cast as a byte array.
+        /// Only supported by NbtByteArray tags. </summary>
+        /// <exception cref="InvalidCastException"> When used on a tag other than NbtByteArray. </exception>
+        public byte[] ByteArrayValue {
+            get {
+                if( TagType == NbtTagType.ByteArray ) {
+                    return ( (NbtByteArray)this ).Value;
+                } else {
+                    throw new InvalidCastException( "Cannot get ByteArrayValue from " + GetCanonicalTagName( TagType ) );
+                }
+            }
+        }
+
+
+        /// <summary> Returns the value of this tag, cast as an int array.
+        /// Only supported by NbtIntArray tags. </summary>
+        /// <exception cref="InvalidCastException"> When used on a tag other than NbtIntArray. </exception>
+        public int[] IntArrayValue {
+            get {
+                if( TagType == NbtTagType.IntArray ) {
+                    return ( (NbtIntArray)this ).Value;
+                } else {
+                    throw new InvalidCastException( "Cannot get IntArrayValue from " + GetCanonicalTagName( TagType ) );
+                }
+            }
+        }
+
+
+        /// <summary> Returns the value of this tag, cast as a string.
+        /// Returns exact value for NbtString, and stringified (using InvariantCulture) value for NbtByte, NbtDouble, NbtFloat, NbtInt, NbtLong, and NbtShort.
+        /// Not supported by NbtCompound, NbtList, NbtByteArray, or NbtIntArray. </summary>
+        /// <exception cref="InvalidCastException"> When used on an unsupported tag. </exception>
+        public string StringValue {
+            get {
+                switch( TagType ) {
+                    case NbtTagType.String:
+                        return ( (NbtString)this ).Value;
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Double:
+                        return ( (NbtDouble)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Float:
+                        return ( (NbtFloat)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Long:
+                        return ( (NbtLong)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    default:
+                        throw new InvalidCastException( "Cannot get StringValue from " + GetCanonicalTagName( TagType ) );
+                }
+            }
+        }
+
+        #endregion
 
 
         /// <summary> Returns a canonical (Notchy) name for the given NbtTagType,
