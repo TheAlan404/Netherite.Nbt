@@ -1,34 +1,63 @@
-Current released version is 0.3.0 (28 September 2012).
+Current released version is 0.3.1 (29 September 2012).
 
-LibNbt2012 is an effort to rewrite Erik Davidson's (aphistic's) LibNbt library, for
-improved performance, ease of use, and reliability. Notable changes made so far include:
+Named Binary Tag (NBT) is a structured binary file format used by Minecraft.
+LibNbt2012 is a small library, written in C# for .NET 2.0+. It provides
+functionality to create, load, traverse, modify, and save NBT files and
+streams.
 
-- Auto-detection of NBT file compression.
-- Loading and saving ZLib (RFC-1950) compresessed NBT files.
-- Reduced loading/saving CPU use by 15%, and memory use by 40%
-- NbtCompound now implements ICollection<NbtTag>, and NbtList implements IList<NbtTag>
-- Added full support for TAG_Int_Array
-- Added more constraint checks to tag loading, modification, and saving.
-- Replaced getter/setter methods with properties, wherever possible.
-- Expanded unit test coverage.
-- Fully documented everything.
-
-Query API has been removed from the library.
+LibNbt2012 is based on Erik Davidson's (aphistic's) original LibNbt library,
+rewritten by Matvei Stefarov (fragmer) for improved performance, ease of use,
+and reliability.
 
 
-README for LibNbt v0.2.0 preserved below:
-=============
-Website: http://www.github.com/aphistic/libnbt/
+==== FEATURES =================================================================
+- Can load and save uncompressed, GZip-, and ZLib-compressed files/streams.
+- Can easy create, traverse, and modify NBT documents.
+- Simple indexer-based syntax for accessing compound, list, and nested tags.
+- Shortcut properties to access tags' values without unnecessary type casts.
+- Compound tags implement ICollection<T> and List tags implement IList<T>,
+    for easy traversal and LINQ integration.
+- Good performance and low memory overhead.
+- Built-in pretty printing of individual tags or whole files.
+- Every class and method are fully documented and unit-tested.
 
-LibNbt is a library to read and write the Named Binary Tag (NBT) file format created by
-Markus Persson (a.k.a. Notch, http://notch.tumblr.com/) for saving Minecraft level data.
 
-The documentation is currently lacking but at the bottom of this document are a few examples
-to get you up and running.
+==== EXAMPLES =================================================================
+- Loading a gzipped file:
+    NbtFile myFile = new NbtFile("somefile.nbt.gz");
+    NbtTag myCompoundTag = myFile.RootTag;
 
-If you do use this library I would really appreciate it if you acknowledge the work I've
-put into it by giving me some kind of credit in your documentation or application but it's
-not required.  Even better would be to let me know the projects you're using it in!
+- Accessing tags (long/strongly-typed style):
+    int intVal = myCompoundTag.Get<NbtInt>("intTagsName").Value;
+    string listItem = myStringList.Get<NbtString>(0).Value;
+    byte nestedVal = myCompTag.Get<NbtCompound>("nestedTag")
+                              .Get<NbtByte>("someByteTag")
+                              .Value;
 
-If you run into any issues or features you'd like to see PLEASE let me know!  You can access
-the issue tracker on the project homepage at: http://github.com/aphistic/libnbt/issues
+- Accessing tags (shortcut style):
+    int intVal = myCompoundTag["intTagsName"].IntValue;
+    string listItem = myStringList[0].StringValue;
+    byte nestedVal = myCompTag["nestedTag"]["someByteTag"].ByteValue;
+
+- Iterating over all tags in a compound/list:
+    foreach( NbtTag tag in myCompoundTag ){
+        Console.WriteLine( tag.Name + " = " + tag.TagType );
+    }
+    foreach( NbtTag listItem in myListTag ){
+        Console.WriteLine( listItem );
+    }
+    for( int i=0; i<myListTag.Count; i++ ){
+        Console.WriteLine( myListTag[i] );
+    }
+
+- Constructing a new document
+    NbtCompound serverInfo = new NbtCompound("Server");
+    serverInfo.Add( new NbtString("Name","BestServerEver") );
+    serverInfo.Add( new NbtInt("Players",15) );
+    serverInfo.Add( new NbtInt("MaxPlayers",20) );
+    NbtFile serverFile = new NbtFile(serverInfo);
+    serverFile.SaveToFile( "server.nbt", NbtCompression.None );
+
+
+==== LICENSING ================================================================
+LibNbt2012 keeps LibNbt's original license (LGPLv3).
