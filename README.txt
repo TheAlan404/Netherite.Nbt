@@ -30,9 +30,3 @@ not required.  Even better would be to let me know the projects you're using it 
 
 If you run into any issues or features you'd like to see PLEASE let me know!  You can access
 the issue tracker on the project homepage at: http://github.com/aphistic/libnbt/issues
-
-Upcoming
-========
-- Implement an NAnt build process for easier multiplatform builds.
-- Write documentation.
-- Continue writing unit tests.
