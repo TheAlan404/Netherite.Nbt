@@ -26,9 +26,8 @@ namespace LibNbt {
         public NbtCompound RootTag {
             get { return rootTag; }
             set {
-                if( value != null && value.Name == null ) {
-                    throw new ArgumentException( "Root tag must be named." );
-                }
+                if( value == null ) throw new ArgumentNullException( "value" );
+                if( value.Name == null ) throw new ArgumentException( "Root tag must be named." );
                 rootTag = value;
             }
         }
@@ -265,9 +264,6 @@ namespace LibNbt {
                     throw new ArgumentOutOfRangeException( "compression" );
             }
 
-            // do not write anything for empty tags
-            if( RootTag == null ) return;
-
             switch( compression ) {
                 case NbtCompression.ZLib:
                     stream.WriteByte( 0x78 );
@@ -279,7 +275,7 @@ namespace LibNbt {
                         bufferedStream.Flush();
                         checksum = compressStream.Checksum;
                     }
-                    byte[] checksumBytes = BitConverter.GetBytes(checksum);
+                    byte[] checksumBytes = BitConverter.GetBytes( checksum );
                     if( BitConverter.IsLittleEndian ) {
                         // Adler32 checksum is big-endian
                         Array.Reverse( checksumBytes );

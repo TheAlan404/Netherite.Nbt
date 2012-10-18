@@ -51,17 +51,24 @@ namespace LibNbt {
         /// <summary> Gets or sets the tag with the specified name. May return null. </summary>
         /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
         /// <param name="tagName"> The name of the tag to get or set. Must match tag's actual name. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is null, or if trying to assign null value. </exception>
-        /// <exception cref="ArgumentException"> <paramref name="tagName"/> does not match the given tag's actual name. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is null; or if trying to assign null value. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="tagName"/> does not match the given tag's actual name;
+        /// or given tag already has a Parent. </exception>
         public override NbtTag this[ [NotNull] string tagName ] {
             [CanBeNull]
             get { return Get<NbtTag>( tagName ); }
             set {
-                if( tagName == null ) throw new ArgumentNullException( "tagName" );
-                if( value == null ) throw new ArgumentNullException( "value" );
-                if( value.Name != tagName )
+                if( tagName == null ) {
+                    throw new ArgumentNullException( "tagName" );
+                } else if( value == null ) {
+                    throw new ArgumentNullException( "value" );
+                } else if( value.Name != tagName ) {
                     throw new ArgumentException( "Given tag name must match tag's actual name." );
+                } else if( value.Parent != null ) {
+                    throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
+                }
                 tags[tagName] = value;
+                value.Parent = this;
             }
         }
 
@@ -139,7 +146,29 @@ namespace LibNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is null. </exception>
         public bool Remove( [NotNull] string tagName ) {
             if( tagName == null ) throw new ArgumentNullException( "tagName" );
-            return tags.Remove( tagName );
+            NbtTag tag;
+            if( tags.TryGetValue( tagName, out tag ) ) {
+                if( tags.Remove( tagName ) ) {
+                    tag.Parent = null;
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+
+        /// <summary> Gets a collection containing all tag names in this NbtCompound. </summary>
+        public IEnumerable<string> Names {
+            get { return tags.Keys; }
+        }
+
+
+        /// <summary> Gets a collection containing all tags in this NbtCompound. </summary>
+        public IEnumerable<NbtTag> Tags {
+            get { return tags.Values; }
         }
 
 
@@ -164,77 +193,66 @@ namespace LibNbt {
                         var nextByte = new NbtByte();
                         nextByte.ReadTag( readStream, true );
                         Add( nextByte );
-                        //Console.WriteLine( nextByte.ToString() );
                         break;
 
                     case NbtTagType.Short:
                         var nextShort = new NbtShort();
                         nextShort.ReadTag( readStream, true );
                         Add( nextShort );
-                        //Console.WriteLine( nextShort.ToString() );
                         break;
 
                     case NbtTagType.Int:
                         var nextInt = new NbtInt();
                         nextInt.ReadTag( readStream, true );
                         Add( nextInt );
-                        //Console.WriteLine( nextInt.ToString() );
                         break;
 
                     case NbtTagType.Long:
                         var nextLong = new NbtLong();
                         nextLong.ReadTag( readStream, true );
                         Add( nextLong );
-                        //Console.WriteLine( nextLong.ToString() );
                         break;
 
                     case NbtTagType.Float:
                         var nextFloat = new NbtFloat();
                         nextFloat.ReadTag( readStream, true );
                         Add( nextFloat );
-                        //Console.WriteLine( nextFloat.ToString() );
                         break;
 
                     case NbtTagType.Double:
                         var nextDouble = new NbtDouble();
                         nextDouble.ReadTag( readStream, true );
                         Add( nextDouble );
-                        //Console.WriteLine( nextDouble.ToString() );
                         break;
 
                     case NbtTagType.ByteArray:
                         var nextByteArray = new NbtByteArray();
                         nextByteArray.ReadTag( readStream, true );
                         Add( nextByteArray );
-                        //Console.WriteLine( nextByteArray.ToString() );
                         break;
 
                     case NbtTagType.String:
                         var nextString = new NbtString();
                         nextString.ReadTag( readStream, true );
                         Add( nextString );
-                        //Console.WriteLine( nextString.ToString() );
                         break;
 
                     case NbtTagType.List:
                         var nextList = new NbtList();
                         nextList.ReadTag( readStream, true );
                         Add( nextList );
-                        //Console.WriteLine( nextList.ToString() );
                         break;
 
                     case NbtTagType.Compound:
                         var nextCompound = new NbtCompound();
                         nextCompound.ReadTag( readStream, true );
                         Add( nextCompound );
-                        //Console.WriteLine( nextCompound.ToString() );
                         break;
 
                     case NbtTagType.IntArray:
                         var nextIntArray = new NbtIntArray();
                         nextIntArray.ReadTag( readStream, true );
                         Add( nextIntArray );
-                        //Console.WriteLine( nextIntArray.ToString() );
                         break;
 
                     default:
@@ -289,17 +307,25 @@ namespace LibNbt {
         /// <exception cref="ArgumentException"> If the given tag is unnamed;
         /// or if a tag with the given name already exists in this NbtCompound. </exception>
         public void Add( [NotNull] NbtTag newTag ) {
-            if( newTag == null ) throw new ArgumentNullException( "newTag" );
-            if( newTag == this ) throw new ArgumentException( "Cannot add tag to self" );
-            if( newTag.Name == null ) {
+            if( newTag == null ) {
+                throw new ArgumentNullException( "newTag" );
+            } else if( newTag == this ) {
+                throw new ArgumentException( "Cannot add tag to self" );
+            } else if( newTag.Name == null ) {
                 throw new ArgumentException( "Only named tags are allowed in compound tags." );
+            } else if( newTag.Parent != null ) {
+                throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
             }
             tags.Add( newTag.Name, newTag );
+            newTag.Parent = this;
         }
 
 
         /// <summary> Removes all tags from this NbtCompound. </summary>
         public void Clear() {
+            foreach( NbtTag tag in tags.Values ) {
+                tag.Parent = null;
+            }
             tags.Clear();
         }
 
@@ -341,8 +367,9 @@ namespace LibNbt {
             if( tag.Name == null ) throw new ArgumentException( "Trying to remove an unnamed tag." );
             NbtTag maybeItem;
             if( tags.TryGetValue( tag.Name, out maybeItem ) ) {
-                if( maybeItem == tag ) {
-                    return tags.Remove( tag.Name );
+                if( maybeItem == tag && tags.Remove( tag.Name ) ) {
+                    tag.Parent = null;
+                    return true;
                 }
             }
             return false;

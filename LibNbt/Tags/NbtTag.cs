@@ -6,6 +6,11 @@ using JetBrains.Annotations;
 namespace LibNbt {
     /// <summary> Base class for different kinds of named binary tags. </summary>
     public abstract class NbtTag {
+        /// <summary> Parent compound tag, either NbtList or NbtCompound, if any. </summary>
+        [CanBeNull]
+        public NbtTag Parent { get; internal set; }
+
+
         /// <summary> Type of this tag. </summary>
         public virtual NbtTagType TagType {
             get { return NbtTagType.Unknown; }

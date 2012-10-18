@@ -130,8 +130,8 @@ namespace LibNbt {
         /// <summary> Gets or sets the tag at the specified index. </summary>
         /// <returns> The tag at the specified index. </returns>
         /// <param name="tagIndex"> The zero-based index of the tag to get or set. </param>
-        /// <exception cref="ArgumentOutOfRangeException"> tagIndex is not a valid index in the NbtList. </exception>
-        /// <exception cref="ArgumentNullException"> Given tag is null. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="tagIndex"/> is not a valid index in the NbtList. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
         /// <exception cref="ArgumentException"> Given tag's type does not match ListType. </exception>
         [NotNull]
         public override NbtTag this[ int tagIndex ] {
@@ -139,6 +139,8 @@ namespace LibNbt {
             set {
                 if( value == null ) {
                     throw new ArgumentNullException( "value" );
+                } else if( value.Parent != null ) {
+                    throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
                 }
                 if( listType == NbtTagType.Unknown ) {
                     listType = value.TagType;
@@ -146,6 +148,7 @@ namespace LibNbt {
                     throw new ArgumentException( "Items must be of type " + listType );
                 }
                 tags[tagIndex] = value;
+                value.Parent = this;
             }
         }
 
@@ -221,56 +224,67 @@ namespace LibNbt {
                         var nextByte = new NbtByte();
                         nextByte.ReadTag( readStream, false );
                         tags.Add( nextByte );
+                        nextByte.Parent = this;
                         break;
                     case NbtTagType.Short:
                         var nextShort = new NbtShort();
                         nextShort.ReadTag( readStream, false );
                         tags.Add( nextShort );
+                        nextShort.Parent = this;
                         break;
                     case NbtTagType.Int:
                         var nextInt = new NbtInt();
                         nextInt.ReadTag( readStream, false );
                         tags.Add( nextInt );
+                        nextInt.Parent = this;
                         break;
                     case NbtTagType.Long:
                         var nextLong = new NbtLong();
                         nextLong.ReadTag( readStream, false );
                         tags.Add( nextLong );
+                        nextLong.Parent = this;
                         break;
                     case NbtTagType.Float:
                         var nextFloat = new NbtFloat();
                         nextFloat.ReadTag( readStream, false );
                         tags.Add( nextFloat );
+                        nextFloat.Parent = this;
                         break;
                     case NbtTagType.Double:
                         var nextDouble = new NbtDouble();
                         nextDouble.ReadTag( readStream, false );
                         tags.Add( nextDouble );
+                        nextDouble.Parent = this;
                         break;
                     case NbtTagType.ByteArray:
                         var nextByteArray = new NbtByteArray();
                         nextByteArray.ReadTag( readStream, false );
                         tags.Add( nextByteArray );
+                        nextByteArray.Parent = this;
                         break;
                     case NbtTagType.String:
                         var nextString = new NbtString();
                         nextString.ReadTag( readStream, false );
                         tags.Add( nextString );
+                        nextString.Parent = this;
                         break;
                     case NbtTagType.List:
                         var nextList = new NbtList();
                         nextList.ReadTag( readStream, false );
                         tags.Add( nextList );
+                        nextList.Parent = this;
                         break;
                     case NbtTagType.Compound:
                         var nextCompound = new NbtCompound();
                         nextCompound.ReadTag( readStream, false );
                         tags.Add( nextCompound );
+                        nextCompound.Parent = this;
                         break;
                     case NbtTagType.IntArray:
                         var nextIntArray = new NbtIntArray();
                         nextIntArray.ReadTag( readStream, false );
                         tags.Add( nextIntArray );
+                        nextIntArray.Parent = this;
                         break;
                 }
             }
@@ -336,8 +350,11 @@ namespace LibNbt {
                 listType = newTag.TagType;
             } else if( newTag.TagType != listType ) {
                 throw new ArgumentException( "Items must be of type " + listType );
+            } else if( newTag.Parent != null ) {
+                throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
             }
             tags.Insert( index, newTag );
+            newTag.Parent = this;
         }
 
 
@@ -345,7 +362,9 @@ namespace LibNbt {
         /// <param name="index"> The zero-based index of the item to remove. </param>
         /// <exception cref="ArgumentOutOfRangeException"> Given index is not a valid index in the NbtList. </exception>
         public void RemoveAt( int index ) {
+            NbtTag tag = this[index];
             tags.RemoveAt( index );
+            tag.Parent = null;
         }
 
 
@@ -359,13 +378,19 @@ namespace LibNbt {
                 listType = newTag.TagType;
             } else if( newTag.TagType != listType ) {
                 throw new ArgumentException( "Items must be of type " + listType );
+            } else if( newTag.Parent != null ) {
+                throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
             }
             tags.Add( newTag );
+            newTag.Parent = this;
         }
 
 
         /// <summary> Removes all tags from this NbtList. </summary>
         public void Clear() {
+            for( int i = 0; i < tags.Count; i++ ) {
+                tags[i].Parent = null;
+            }
             tags.Clear();
         }
 
@@ -401,7 +426,12 @@ namespace LibNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is null. </exception>
         public bool Remove( [NotNull] NbtTag tag ) {
             if( tag == null ) throw new ArgumentNullException( "tag" );
-            return tags.Remove( tag );
+            if( tags.Remove( tag ) ) {
+                tag.Parent = null;
+                return true;
+            } else {
+                return false;
+            }
         }
 
 
@@ -422,7 +452,10 @@ namespace LibNbt {
         #region Implementation of IList and ICollection
 
         void IList.Remove( object value ) {
-            tags.Remove( (NbtTag)value );
+            NbtTag val = (NbtTag)value;
+            if( tags.Remove( val ) ) {
+                val.Parent = null;
+            }
         }
 
 
