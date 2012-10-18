@@ -22,7 +22,7 @@ namespace LibNbt {
 
         /// <summary> Root tag of this file. Must be a named CompoundTag. Defaults to null. </summary>
         /// <exception cref="ArgumentException"> If given tag is unnamed. </exception>
-        [CanBeNull]
+        [NotNull]
         public NbtCompound RootTag {
             get { return rootTag; }
             set {
@@ -39,7 +39,8 @@ namespace LibNbt {
         /// <summary> Creates a new NBT file with the given root tag. </summary>
         /// <param name="rootTag"> Compound tag to set as the root tag. May be null. </param>
         /// <exception cref="ArgumentException"> If given rootTag is unnamed. </exception>
-        public NbtFile( NbtCompound rootTag ) {
+        public NbtFile( [NotNull] NbtCompound rootTag ) {
+            if( rootTag == null ) throw new ArgumentNullException( "rootTag" );
             RootTag = rootTag;
         }
 
@@ -86,7 +87,6 @@ namespace LibNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         public NbtFile( [NotNull] Stream stream, NbtCompression compression ) {
-            if( stream == null ) throw new ArgumentNullException( "stream" );
             LoadFromStream( stream, compression );
         }
 
@@ -101,7 +101,6 @@ namespace LibNbt {
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         public void LoadFromFile( [NotNull] string fileName ) {
-            if( fileName == null ) throw new ArgumentNullException( "fileName" );
             LoadFromFile( fileName, NbtCompression.AutoDetect );
         }
 
@@ -148,32 +147,7 @@ namespace LibNbt {
 
             // detect compression, based on the first byte
             if( compression == NbtCompression.AutoDetect ) {
-                if( !stream.CanSeek ) {
-                    throw new NotSupportedException( "Cannot auto-detect compression on a stream that's not seekable." );
-                }
-                int firstByte = stream.ReadByte();
-                switch( firstByte ) {
-                    case -1:
-                        throw new EndOfStreamException();
-
-                    case (byte)NbtTagType.Compound: // 0x0A
-                        compression = NbtCompression.None;
-                        break;
-
-                    case 0x1F:
-                        // gzip magic number
-                        compression = NbtCompression.GZip;
-                        break;
-
-                    case 0x78:
-                        // zlib header
-                        compression = NbtCompression.ZLib;
-                        break;
-                        
-                    default:
-                        throw new InvalidDataException( "Could not auto-detect compression format." );
-                }
-                stream.Seek( -1, SeekOrigin.Current );
+                compression = DetectCompression( stream );
             }
 
             switch( compression ) {
@@ -203,16 +177,48 @@ namespace LibNbt {
         }
 
 
-        void LoadFromStreamInternal( [NotNull] Stream fileStream ) {
-            if( fileStream == null ) throw new ArgumentNullException( "fileStream" );
+        static NbtCompression DetectCompression( Stream stream ) {
+            NbtCompression compression;
+            if( !stream.CanSeek ) {
+                throw new NotSupportedException( "Cannot auto-detect compression on a stream that's not seekable." );
+            }
+            int firstByte = stream.ReadByte();
+            switch( firstByte ) {
+                case -1:
+                    throw new EndOfStreamException();
+
+                case (byte)NbtTagType.Compound: // 0x0A
+                    compression = NbtCompression.None;
+                    break;
+
+                case 0x1F:
+                    // gzip magic number
+                    compression = NbtCompression.GZip;
+                    break;
+
+                case 0x78:
+                    // zlib header
+                    compression = NbtCompression.ZLib;
+                    break;
+
+                default:
+                    throw new InvalidDataException( "Could not auto-detect compression format." );
+            }
+            stream.Seek( -1, SeekOrigin.Current );
+            return compression;
+        }
+
+
+        void LoadFromStreamInternal( [NotNull] Stream stream ) {
+            if( stream == null ) throw new ArgumentNullException( "stream" );
 
             // Make sure the first byte in this file is the tag for a TAG_Compound
-            if( fileStream.ReadByte() != (int)NbtTagType.Compound ) {
+            if( stream.ReadByte() != (int)NbtTagType.Compound ) {
                 throw new NbtFormatException( "File format does not start with a TAG_Compound" );
             }
 
             var rootCompound = new NbtCompound();
-            rootCompound.ReadTag( new NbtReader( fileStream ), true );
+            rootCompound.ReadTag( new NbtReader( stream ), true );
             RootTag = rootCompound;
         }
 
@@ -295,6 +301,78 @@ namespace LibNbt {
                     RootTag.WriteTag( new NbtWriter( stream ), true );
                     break;
             }
+        }
+
+
+        [NotNull]
+        public static string GetRootName( [NotNull] string fileName ) {
+            return GetRootName( fileName, NbtCompression.AutoDetect );
+        }
+
+
+        [NotNull]
+        public static string GetRootName( [NotNull] string fileName, NbtCompression compression ) {
+            if( fileName == null ) throw new ArgumentNullException( "fileName" );
+            if( !File.Exists( fileName ) ) {
+                throw new FileNotFoundException( String.Format( "Could not find NBT file: {0}", fileName ),
+                                                 fileName );
+            }
+            using( FileStream readFileStream = File.OpenRead( fileName ) ) {
+                return GetRootName( readFileStream, compression );
+            }
+        }
+
+
+        [NotNull]
+        public static string GetRootName( [NotNull] Stream stream ) {
+            return GetRootName( stream, NbtCompression.AutoDetect );
+        }
+
+
+        [NotNull]
+        public static string GetRootName( [NotNull] Stream stream, NbtCompression compression ) {
+            if( stream == null ) throw new ArgumentNullException( "stream" );
+
+            // detect compression, based on the first byte
+            if( compression == NbtCompression.AutoDetect ) {
+                compression = DetectCompression( stream );
+            }
+
+            switch( compression ) {
+                case NbtCompression.GZip:
+                    using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
+                        return GetRootNameInternal( new BufferedStream( decStream, BufferSize ) );
+                    }
+
+                case NbtCompression.None:
+                    return GetRootNameInternal( stream );
+
+                case NbtCompression.ZLib:
+                    if( stream.ReadByte() != 0x78 ) {
+                        throw new InvalidDataException( "Incorrect ZLib header. Expected 0x78 0x9C" );
+                    }
+                    stream.ReadByte();
+                    using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
+                        return GetRootNameInternal( new BufferedStream( decStream, BufferSize ) );
+                    }
+
+                default:
+                    throw new ArgumentOutOfRangeException( "compression" );
+            }
+        }
+
+
+        [NotNull]
+        static string GetRootNameInternal( [NotNull] Stream stream ) {
+            if( stream == null ) throw new ArgumentNullException( "stream" );
+            NbtReader reader = new NbtReader( stream );
+
+            // Make sure the first byte in this file is the tag for a TAG_Compound
+            if( reader.ReadTagType() != NbtTagType.Compound ) {
+                throw new NbtFormatException( "File format does not start with a TAG_Compound" );
+            }
+
+            return reader.ReadString();
         }
     }
 }
