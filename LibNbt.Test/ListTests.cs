@@ -15,29 +15,39 @@ namespace LibNbt.Test {
 
         [Test]
         public void InitializingListFromCollection() {
-            var sameTags = new NbtTag[] {
+            // auto-detecting list type
+            Assert.DoesNotThrow( () => new NbtList( "Test1", new NbtTag[] {
                 new NbtInt( 1 ),
                 new NbtInt( 2 ),
                 new NbtInt( 3 )
-            };
-            var mixedTags = new NbtTag[] {
+            } ) );
+
+            Assert.AreEqual( new NbtList( "Test1", new NbtTag[] {
+                new NbtInt( 1 ),
+                new NbtInt( 2 ),
+                new NbtInt( 3 )
+            } ).ListType, NbtTagType.Int );
+
+            // correct explicitly-given list type
+            Assert.DoesNotThrow( () => new NbtList( "Test2", new NbtTag[] {
+                new NbtInt( 1 ),
+                new NbtInt( 2 ),
+                new NbtInt( 3 )
+            }, NbtTagType.Int ) );
+
+            // wrong explicitly-given list type
+            Assert.Throws<ArgumentException>( () => new NbtList( "Test3", new NbtTag[] {
+                new NbtInt( 1 ),
+                new NbtInt( 2 ),
+                new NbtInt( 3 )
+            }, NbtTagType.Float ) );
+
+            // auto-detecting mixed list given
+            Assert.Throws<ArgumentException>( () => new NbtList( "Test4", new NbtTag[] {
                 new NbtFloat( 1 ),
                 new NbtByte( 2 ),
                 new NbtInt( 3 )
-            };
-
-            // auto-detecting list type
-            Assert.DoesNotThrow( () => new NbtList( "Test1", sameTags ) );
-            Assert.AreEqual( new NbtList( "Test1", sameTags ).ListType, NbtTagType.Int );
-
-            // correct explicitly-given list type
-            Assert.DoesNotThrow( () => new NbtList( "Test2", sameTags, NbtTagType.Int ) );
-
-            // wrong explicitly-given list type
-            Assert.Throws<ArgumentException>( () => new NbtList( "Test3", sameTags, NbtTagType.Float ) );
-
-            // auto-detecting mixed list given
-            Assert.Throws<ArgumentException>( () => new NbtList( "Test4", mixedTags ) );
+            } ) );
         }
 
 

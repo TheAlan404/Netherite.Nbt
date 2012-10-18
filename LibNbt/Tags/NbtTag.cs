@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using JetBrains.Annotations;
@@ -20,6 +21,24 @@ namespace LibNbt {
         /// <summary> Name of this tag. Immutable, and set by the constructor. May be null. </summary>
         [CanBeNull]
         public string Name { get; protected set; }
+
+
+        /// <summary> Gets the full name of this tag, including all parent tag names, separated by dots. 
+        /// Unnamed tags show up as empty strings. </summary>
+        [NotNull]
+        public string Path {
+            get {
+                if( Parent == null ) {
+                    return Name ?? "";
+                }
+                NbtList parentAsList = Parent as NbtList;
+                if( parentAsList != null ) {
+                    return parentAsList.Path + '[' + parentAsList.IndexOf( this ) + ']';
+                } else {
+                    return Parent.Path + '.' + Name;
+                }
+            }
+        }
 
 
         internal abstract void WriteTag( [NotNull] NbtWriter writeReader, bool writeName );

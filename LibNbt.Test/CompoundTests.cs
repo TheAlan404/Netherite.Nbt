@@ -44,8 +44,9 @@ namespace LibNbt.Test {
             Assert.Throws<ArgumentNullException>( () => new NbtCompound( "nullTest", null ) );
 
             // proper initialization
-            Assert.DoesNotThrow( () => new NbtCompound( "allNamedTest", allNamed ) );
-            CollectionAssert.AreEquivalent( allNamed, new NbtCompound( "allNamedTest", allNamed ) );
+            NbtCompound allNamedTest = null;
+            Assert.DoesNotThrow( () => allNamedTest = new NbtCompound( "allNamedTest", allNamed ) );
+            CollectionAssert.AreEquivalent( allNamed, allNamedTest );
 
             // some tags are unnamed, should throw
             Assert.Throws<ArgumentException>( () => new NbtCompound( "someUnnamedTest", someUnnamed ) );
@@ -65,9 +66,9 @@ namespace LibNbt.Test {
             NbtCompound nestedChild = new NbtCompound( "NestedChild" );
             NbtList childList = new NbtList( "ChildList" );
             NbtList nestedChildList = new NbtList( "NestedChildList" );
-            NbtInt testInt = new NbtInt( 1 );
-            childList.Add( testInt );
-            nestedChildList.Add( testInt );
+            childList.Add( new NbtInt( 1 ) );
+            NbtInt nestedInt = new NbtInt( 1 );
+            nestedChildList.Add( nestedInt );
             parent.Add( child );
             parent.Add( childList );
             child.Add( nestedChild );
@@ -76,23 +77,23 @@ namespace LibNbt.Test {
             // Accessing nested compound tags using indexers
             Assert.AreEqual( parent["Child"]["NestedChild"], nestedChild );
             Assert.AreEqual( parent["Child"]["NestedChildList"], nestedChildList );
-            Assert.AreEqual( parent["Child"]["NestedChildList"][0], testInt );
+            Assert.AreEqual( parent["Child"]["NestedChildList"][0], nestedInt );
 
             // Accessing nested compound tags using Get<T>
             Assert.AreEqual( parent.Get<NbtCompound>( "Child" ).Get<NbtCompound>( "NestedChild" ), nestedChild );
             Assert.AreEqual( parent.Get<NbtCompound>( "Child" ).Get<NbtList>( "NestedChildList" ), nestedChildList );
-            Assert.AreEqual( parent.Get<NbtCompound>( "Child" ).Get<NbtList>( "NestedChildList" )[0], testInt );
+            Assert.AreEqual( parent.Get<NbtCompound>( "Child" ).Get<NbtList>( "NestedChildList" )[0], nestedInt );
 
             // Accessing with Get<T> and an invalid given type
             Assert.Throws<InvalidCastException>( () => parent.Get<NbtInt>( "Child" ) );
 
             // Trying to use integer indexers on non-NbtList tags
-            Assert.Throws<InvalidOperationException>( () => parent[0] = testInt );
-            Assert.Throws<InvalidOperationException>( () => testInt[0] = testInt );
+            Assert.Throws<InvalidOperationException>( () => parent[0] = nestedInt );
+            Assert.Throws<InvalidOperationException>( () => nestedInt[0] = nestedInt );
 
             // Trying to use string indexers on non-NbtCompound tags
-            Assert.Throws<InvalidOperationException>( () => childList["test"] = testInt );
-            Assert.Throws<InvalidOperationException>( () => testInt["test"] = testInt );
+            Assert.Throws<InvalidOperationException>( () => childList["test"] = nestedInt );
+            Assert.Throws<InvalidOperationException>( () => nestedInt["test"] = nestedInt );
 
             // Trying to get a non-existent element by name
             Assert.IsNull( parent.Get<NbtTag>( "NonExistentTag" ) );
@@ -100,15 +101,15 @@ namespace LibNbt.Test {
 
             // Null indices on NbtCompound
             Assert.Throws<ArgumentNullException>( () => parent.Get<NbtTag>( null ) );
-            Assert.Throws<ArgumentNullException>( () => parent[null] = testInt );
-            Assert.Throws<ArgumentNullException>( () => testInt = (NbtInt)parent[null] );
+            Assert.Throws<ArgumentNullException>( () => parent[null] = new NbtInt( 1 ) );
+            Assert.Throws<ArgumentNullException>( () => nestedInt = (NbtInt)parent[null] );
 
             // Out-of-range indices on NbtList
-            Assert.Throws<ArgumentOutOfRangeException>( () => testInt = (NbtInt)childList[-1] );
-            Assert.Throws<ArgumentOutOfRangeException>( () => childList[-1] = testInt );
-            Assert.Throws<ArgumentOutOfRangeException>( () => testInt = childList.Get<NbtInt>( -1 ) );
-            Assert.Throws<ArgumentOutOfRangeException>( () => testInt = (NbtInt)childList[childList.Count] );
-            Assert.Throws<ArgumentOutOfRangeException>( () => testInt = childList.Get<NbtInt>( childList.Count ) );
+            Assert.Throws<ArgumentOutOfRangeException>( () => nestedInt = (NbtInt)childList[-1] );
+            Assert.Throws<ArgumentOutOfRangeException>( () => childList[-1] = new NbtInt( 1 ) );
+            Assert.Throws<ArgumentOutOfRangeException>( () => nestedInt = childList.Get<NbtInt>( -1 ) );
+            Assert.Throws<ArgumentOutOfRangeException>( () => nestedInt = (NbtInt)childList[childList.Count] );
+            Assert.Throws<ArgumentOutOfRangeException>( () => nestedInt = childList.Get<NbtInt>( childList.Count ) );
         }
 
 
