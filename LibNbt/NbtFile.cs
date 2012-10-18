@@ -45,7 +45,7 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Loads NBT data from a file. Compression will be auto-detected. </summary>
+        /// <summary> Loads NBT data from a file. Automatically detects compression. </summary>
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
@@ -134,7 +134,6 @@ namespace LibNbt {
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
-        /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="NotSupportedException"> If compression is set to AutoDetect, but the stream is not seekable. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
@@ -214,7 +213,7 @@ namespace LibNbt {
 
             // Make sure the first byte in this file is the tag for a TAG_Compound
             if( stream.ReadByte() != (int)NbtTagType.Compound ) {
-                throw new NbtFormatException( "File format does not start with a TAG_Compound" );
+                throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
             }
 
             var rootCompound = new NbtCompound();
@@ -304,33 +303,55 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Reads the root name from the given NBT file. Automatically detects compression. </summary>
+        /// <param name="fileName"> Name of the file from which first tag will be read. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
+        /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
+        /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
+        /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
+        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         [NotNull]
-        public static string GetRootName( [NotNull] string fileName ) {
-            return GetRootName( fileName, NbtCompression.AutoDetect );
+        public static string ReadRootTagName( [NotNull] string fileName ) {
+            return ReadRootTagName( fileName, NbtCompression.AutoDetect );
         }
 
 
+        /// <summary> Reads the root name from the given NBT file. </summary>
+        /// <param name="fileName"> Name of the file from which data will be loaded. </param>
+        /// <param name="compression"> Format in which the given file is compressed. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
+        /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
+        /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
+        /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
+        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         [NotNull]
-        public static string GetRootName( [NotNull] string fileName, NbtCompression compression ) {
+        public static string ReadRootTagName( [NotNull] string fileName, NbtCompression compression ) {
             if( fileName == null ) throw new ArgumentNullException( "fileName" );
             if( !File.Exists( fileName ) ) {
-                throw new FileNotFoundException( String.Format( "Could not find NBT file: {0}", fileName ),
+                throw new FileNotFoundException( "Could not find the given NBT file.",
                                                  fileName );
             }
             using( FileStream readFileStream = File.OpenRead( fileName ) ) {
-                return GetRootName( readFileStream, compression );
+                return ReadRootTagName( readFileStream, compression );
             }
         }
 
 
+        /// <summary> Reads the root name from the given stream of NBT data. </summary>
+        /// <param name="stream"> Stream from which data will be loaded. If compression is set to AutoDetect, this stream must support seeking. </param>
+        /// <param name="compression"> Compression method to use for loading/saving this file. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is null. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
+        /// <exception cref="NotSupportedException"> If compression is set to AutoDetect, but the stream is not seekable. </exception>
+        /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
+        /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
+        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         [NotNull]
-        public static string GetRootName( [NotNull] Stream stream ) {
-            return GetRootName( stream, NbtCompression.AutoDetect );
-        }
-
-
-        [NotNull]
-        public static string GetRootName( [NotNull] Stream stream, NbtCompression compression ) {
+        public static string ReadRootTagName( [NotNull] Stream stream, NbtCompression compression ) {
             if( stream == null ) throw new ArgumentNullException( "stream" );
 
             // detect compression, based on the first byte
@@ -367,9 +388,8 @@ namespace LibNbt {
             if( stream == null ) throw new ArgumentNullException( "stream" );
             NbtReader reader = new NbtReader( stream );
 
-            // Make sure the first byte in this file is the tag for a TAG_Compound
             if( reader.ReadTagType() != NbtTagType.Compound ) {
-                throw new NbtFormatException( "File format does not start with a TAG_Compound" );
+                throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
             }
 
             return reader.ReadString();
