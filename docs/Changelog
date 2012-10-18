@@ -1,3 +1,9 @@
+0.3.2 (Matvei Stefarov)
+- Added a way to easily identify files, using static NbtFile.ReadRootTagName.
+- Added NbtTag.Parent (automatically set/reset by NbtList and NbtCompound).
+- Added NbtTag.Path (which includes parents' names, and list indices).
+- Added NbtCompound.Names and NbtCompound.Values enumerators.
+
 0.3.1 (Matvei Stefarov)
 - Added indexers to NbtTag base class, to make nested compound/list tags easier
 	to work with.

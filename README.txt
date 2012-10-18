@@ -1,4 +1,4 @@
-Current released version is 0.3.1 (29 September 2012).
+Current released version is 0.3.2 (18 October 2012).
 
 Named Binary Tag (NBT) is a structured binary file format used by Minecraft.
 LibNbt2012 is a small library, written in C# for .NET 2.0+. It provides
@@ -40,8 +40,11 @@ and reliability.
     byte nestedVal = myCompTag["nestedTag"]["someByteTag"].ByteValue;
 
 - Iterating over all tags in a compound/list:
-    foreach( NbtTag tag in myCompoundTag ){
+    foreach( NbtTag tag in myCompoundTag.Values ){
         Console.WriteLine( tag.Name + " = " + tag.TagType );
+    }
+    foreach( string tagName in myCompoundTag.Names ){
+        Console.WriteLine( tagName );
     }
     for( int i=0; i<myListTag.Count; i++ ){
         Console.WriteLine( myListTag[i] );
@@ -52,12 +55,20 @@ and reliability.
 
 - Constructing a new document
     NbtCompound serverInfo = new NbtCompound("Server");
-    serverInfo.Add( new NbtString("Name","BestServerEver") );
-    serverInfo.Add( new NbtInt("Players",15) );
-    serverInfo.Add( new NbtInt("MaxPlayers",20) );
+    serverInfo.Add( new NbtString("Name", "BestServerEver") );
+    serverInfo.Add( new NbtInt("Players", 15) );
+    serverInfo.Add( new NbtInt("MaxPlayers", 20) );
     NbtFile serverFile = new NbtFile(serverInfo);
     serverFile.SaveToFile( "server.nbt", NbtCompression.None );
 
+- Pretty-printing file structure
+    Console.WriteLine( myFile.RootTag.ToString("\t") );
+    Console.WriteLine( myRandomTag.ToString("    ") );
+
 
 ==== LICENSING ================================================================
-LibNbt2012 keeps LibNbt's original license (LGPLv3).
+LibNbt2012 keeps LibNbt's original license (LGPLv3). See ./docs/LICENSE
+
+
+==== VERSION HISTORY ==========================================================
+See ./docs/Changelog
