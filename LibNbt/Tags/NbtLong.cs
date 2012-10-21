@@ -40,11 +40,18 @@ namespace LibNbt {
 
         #region Reading / Writing
 
-        internal void ReadTag( NbtReader readStream, bool readName ) {
-            if( readName ) {
-                Name = readStream.ReadString();
+        internal override bool ReadTag( NbtReader readStream ) {
+            if( readStream.Selector != null && !readStream.Selector( this ) ) {
+                readStream.ReadInt64();
+                return false;
             }
             Value = readStream.ReadInt64();
+            return true;
+        }
+
+
+        internal override void SkipTag( NbtReader readStream ) {
+            readStream.ReadInt64();
         }
 
 

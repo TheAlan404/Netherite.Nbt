@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using JetBrains.Annotations;
@@ -20,7 +19,7 @@ namespace LibNbt {
 
         /// <summary> Name of this tag. Immutable, and set by the constructor. May be null. </summary>
         [CanBeNull]
-        public string Name { get; protected set; }
+        public string Name { get; internal set; }
 
 
         /// <summary> Gets the full name of this tag, including all parent tag names, separated by dots. 
@@ -39,6 +38,12 @@ namespace LibNbt {
                 }
             }
         }
+
+
+        internal abstract bool ReadTag( NbtReader readStream );
+
+
+        internal abstract void SkipTag( NbtReader readStream );
 
 
         internal abstract void WriteTag( [NotNull] NbtWriter writeReader, bool writeName );

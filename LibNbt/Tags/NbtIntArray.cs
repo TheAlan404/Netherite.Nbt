@@ -67,20 +67,31 @@ namespace LibNbt {
         }
 
 
-        internal void ReadTag( NbtReader readStream, bool readName ) {
-            if( readName ) {
-                Name = readStream.ReadString();
-            }
-
+        internal override bool ReadTag( NbtReader readStream ) {
             int length = readStream.ReadInt32();
             if( length < 0 ) {
                 throw new NbtFormatException( "Negative length given in TAG_Int_Array" );
+            }
+
+            if( readStream.Selector != null && !readStream.Selector( this ) ) {
+                readStream.Skip( length * sizeof( int ) );
+                return false;
             }
 
             Value = new int[length];
             for( int i = 0; i < length; i++ ) {
                 Value[i] = readStream.ReadInt32();
             }
+            return true;
+        }
+
+
+        internal override void SkipTag( NbtReader readStream ) {
+            int length = readStream.ReadInt32();
+            if( length < 0 ) {
+                throw new NbtFormatException( "Negative length given in TAG_Int_Array" );
+            }
+            readStream.Skip( length * sizeof( int ) );
         }
 
 

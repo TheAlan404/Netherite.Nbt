@@ -259,7 +259,7 @@ namespace LibNbt.Test {
         public void ReloadUncompressed() {
             NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
             loadedFile.SaveToFile( "TestTemp/bigtest.nbt", NbtCompression.None );
-            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt", NbtCompression.AutoDetect );
+            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt", NbtCompression.AutoDetect, null );
             AssertNbtBigFile( loadedFile );
         }
 
@@ -268,7 +268,7 @@ namespace LibNbt.Test {
         public void ReloadGZip() {
             NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
             loadedFile.SaveToFile( "TestTemp/bigtest.nbt.gz", NbtCompression.GZip );
-            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.gz", NbtCompression.AutoDetect );
+            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.gz", NbtCompression.AutoDetect, null );
             AssertNbtBigFile( loadedFile );
         }
 
@@ -277,7 +277,7 @@ namespace LibNbt.Test {
         public void ReloadZLib() {
             NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
             loadedFile.SaveToFile( "TestTemp/bigtest.nbt.z", NbtCompression.ZLib );
-            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.z", NbtCompression.AutoDetect );
+            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.z", NbtCompression.AutoDetect, null );
             AssertNbtBigFile( loadedFile );
         }
 

@@ -39,11 +39,18 @@ namespace LibNbt {
         }
 
 
-        internal void ReadTag( NbtReader readStream, bool readName ) {
-            if( readName ) {
-                Name = readStream.ReadString();
+        internal override bool ReadTag( NbtReader readStream ) {
+            if( readStream.Selector != null && !readStream.Selector( this ) ) {
+                readStream.ReadInt32();
+                return false;
             }
             Value = readStream.ReadInt32();
+            return true;
+        }
+
+
+        internal override void SkipTag( NbtReader readStream ) {
+            readStream.ReadInt32();
         }
 
 

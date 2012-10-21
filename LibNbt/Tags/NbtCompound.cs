@@ -147,16 +147,14 @@ namespace LibNbt {
         public bool Remove( [NotNull] string tagName ) {
             if( tagName == null ) throw new ArgumentNullException( "tagName" );
             NbtTag tag;
-            if( tags.TryGetValue( tagName, out tag ) ) {
-                if( tags.Remove( tagName ) ) {
-                    tag.Parent = null;
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
+            if( !tags.TryGetValue( tagName, out tag ) ) {
                 return false;
             }
+            if( !tags.Remove( tagName ) ) {
+                return false;
+            }
+            tag.Parent = null;
+            return true;
         }
 
 
@@ -174,90 +172,135 @@ namespace LibNbt {
 
         #region Reading / Writing
 
-        internal void ReadTag( NbtReader readStream, bool readName ) {
-            // First read the name of this tag
-            if( readName ) {
-                Name = readStream.ReadString();
+        internal override bool ReadTag( NbtReader readStream ) {
+            if( readStream.Selector != null && !readStream.Selector( this ) ) {
+                // TODO
+                return false;
             }
 
-            tags.Clear();
-            bool foundEnd = false;
-            while( !foundEnd ) {
+            while( true ) {
                 NbtTagType nextTag = readStream.ReadTagType();
+                NbtTag newTag;
                 switch( nextTag ) {
                     case NbtTagType.End:
-                        foundEnd = true;
-                        break;
+                        return true;
 
                     case NbtTagType.Byte:
-                        var nextByte = new NbtByte();
-                        nextByte.ReadTag( readStream, true );
-                        Add( nextByte );
+                        newTag = new NbtByte();
                         break;
 
                     case NbtTagType.Short:
-                        var nextShort = new NbtShort();
-                        nextShort.ReadTag( readStream, true );
-                        Add( nextShort );
+                        newTag = new NbtShort();
                         break;
 
                     case NbtTagType.Int:
-                        var nextInt = new NbtInt();
-                        nextInt.ReadTag( readStream, true );
-                        Add( nextInt );
+                        newTag = new NbtInt();
                         break;
 
                     case NbtTagType.Long:
-                        var nextLong = new NbtLong();
-                        nextLong.ReadTag( readStream, true );
-                        Add( nextLong );
+                        newTag = new NbtLong();
                         break;
 
                     case NbtTagType.Float:
-                        var nextFloat = new NbtFloat();
-                        nextFloat.ReadTag( readStream, true );
-                        Add( nextFloat );
+                        newTag = new NbtFloat();
                         break;
 
                     case NbtTagType.Double:
-                        var nextDouble = new NbtDouble();
-                        nextDouble.ReadTag( readStream, true );
-                        Add( nextDouble );
+                        newTag = new NbtDouble();
                         break;
 
                     case NbtTagType.ByteArray:
-                        var nextByteArray = new NbtByteArray();
-                        nextByteArray.ReadTag( readStream, true );
-                        Add( nextByteArray );
+                        newTag = new NbtByteArray();
                         break;
 
                     case NbtTagType.String:
-                        var nextString = new NbtString();
-                        nextString.ReadTag( readStream, true );
-                        Add( nextString );
+                        newTag = new NbtString();
                         break;
 
                     case NbtTagType.List:
-                        var nextList = new NbtList();
-                        nextList.ReadTag( readStream, true );
-                        Add( nextList );
+                        newTag = new NbtList();
                         break;
 
                     case NbtTagType.Compound:
-                        var nextCompound = new NbtCompound();
-                        nextCompound.ReadTag( readStream, true );
-                        Add( nextCompound );
+                        newTag = new NbtCompound();
                         break;
 
                     case NbtTagType.IntArray:
-                        var nextIntArray = new NbtIntArray();
-                        nextIntArray.ReadTag( readStream, true );
-                        Add( nextIntArray );
+                        newTag = new NbtIntArray();
                         break;
 
                     default:
                         throw new NbtFormatException( "Unsupported tag type found in NBT_Compound: " + nextTag );
                 }
+                newTag.Parent = this;
+                newTag.Name = readStream.ReadString();
+                if( newTag.ReadTag( readStream ) ) {
+                    // ReSharper disable AssignNullToNotNullAttribute
+                    // newTag.Name is never null
+                    tags.Add( newTag.Name, newTag );
+                    // ReSharper restore AssignNullToNotNullAttribute
+                }
+            }
+        }
+
+
+        internal override void SkipTag( NbtReader readStream ) {
+            while( true ) {
+                NbtTagType nextTag = readStream.ReadTagType();
+                NbtTag newTag;
+                switch( nextTag ) {
+                    case NbtTagType.End:
+                        return;
+
+                    case NbtTagType.Byte:
+                        newTag = new NbtByte();
+                        break;
+
+                    case NbtTagType.Short:
+                        newTag = new NbtShort();
+                        break;
+
+                    case NbtTagType.Int:
+                        newTag = new NbtInt();
+                        break;
+
+                    case NbtTagType.Long:
+                        newTag = new NbtLong();
+                        break;
+
+                    case NbtTagType.Float:
+                        newTag = new NbtFloat();
+                        break;
+
+                    case NbtTagType.Double:
+                        newTag = new NbtDouble();
+                        break;
+
+                    case NbtTagType.ByteArray:
+                        newTag = new NbtByteArray();
+                        break;
+
+                    case NbtTagType.String:
+                        newTag = new NbtString();
+                        break;
+
+                    case NbtTagType.List:
+                        newTag = new NbtList();
+                        break;
+
+                    case NbtTagType.Compound:
+                        newTag = new NbtCompound();
+                        break;
+
+                    case NbtTagType.IntArray:
+                        newTag = new NbtIntArray();
+                        break;
+
+                    default:
+                        throw new NbtFormatException( "Unsupported tag type found in NBT_Compound: " + nextTag );
+                }
+                readStream.SkipString();
+                newTag.SkipTag( readStream );
             }
         }
 

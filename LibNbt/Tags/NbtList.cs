@@ -200,12 +200,7 @@ namespace LibNbt {
 
         #region Reading / Writing
 
-        internal void ReadTag( NbtReader readStream, bool readName ) {
-            // First read the name of this tag
-            if( readName ) {
-                Name = readStream.ReadString();
-            }
-
+        internal override bool ReadTag( NbtReader readStream ) {
             // read list type, and make sure it's defined
             ListType = readStream.ReadTagType();
             if( !Enum.IsDefined( typeof( NbtTagType ), ListType ) || ListType == NbtTagType.Unknown ) {
@@ -217,76 +212,112 @@ namespace LibNbt {
                 throw new NbtFormatException( "Negative count given in TAG_List" );
             }
 
-            tags.Clear();
+            if( readStream.Selector != null && !readStream.Selector( this ) ) {
+                // TODO
+                return false;
+            }
+
             for( int i = 0; i < length; i++ ) {
+                NbtTag newTag;
                 switch( ListType ) {
                     case NbtTagType.Byte:
-                        var nextByte = new NbtByte();
-                        nextByte.ReadTag( readStream, false );
-                        tags.Add( nextByte );
-                        nextByte.Parent = this;
+                        newTag = new NbtByte();
                         break;
                     case NbtTagType.Short:
-                        var nextShort = new NbtShort();
-                        nextShort.ReadTag( readStream, false );
-                        tags.Add( nextShort );
-                        nextShort.Parent = this;
+                        newTag = new NbtShort();
                         break;
                     case NbtTagType.Int:
-                        var nextInt = new NbtInt();
-                        nextInt.ReadTag( readStream, false );
-                        tags.Add( nextInt );
-                        nextInt.Parent = this;
+                        newTag = new NbtInt();
                         break;
                     case NbtTagType.Long:
-                        var nextLong = new NbtLong();
-                        nextLong.ReadTag( readStream, false );
-                        tags.Add( nextLong );
-                        nextLong.Parent = this;
+                        newTag = new NbtLong();
                         break;
                     case NbtTagType.Float:
-                        var nextFloat = new NbtFloat();
-                        nextFloat.ReadTag( readStream, false );
-                        tags.Add( nextFloat );
-                        nextFloat.Parent = this;
+                        newTag = new NbtFloat();
                         break;
                     case NbtTagType.Double:
-                        var nextDouble = new NbtDouble();
-                        nextDouble.ReadTag( readStream, false );
-                        tags.Add( nextDouble );
-                        nextDouble.Parent = this;
+                        newTag = new NbtDouble();
                         break;
                     case NbtTagType.ByteArray:
-                        var nextByteArray = new NbtByteArray();
-                        nextByteArray.ReadTag( readStream, false );
-                        tags.Add( nextByteArray );
-                        nextByteArray.Parent = this;
+                        newTag = new NbtByteArray();
                         break;
                     case NbtTagType.String:
-                        var nextString = new NbtString();
-                        nextString.ReadTag( readStream, false );
-                        tags.Add( nextString );
-                        nextString.Parent = this;
+                        newTag = new NbtString();
                         break;
                     case NbtTagType.List:
-                        var nextList = new NbtList();
-                        nextList.ReadTag( readStream, false );
-                        tags.Add( nextList );
-                        nextList.Parent = this;
+                        newTag = new NbtList();
                         break;
                     case NbtTagType.Compound:
-                        var nextCompound = new NbtCompound();
-                        nextCompound.ReadTag( readStream, false );
-                        tags.Add( nextCompound );
-                        nextCompound.Parent = this;
+                        newTag = new NbtCompound();
                         break;
                     case NbtTagType.IntArray:
-                        var nextIntArray = new NbtIntArray();
-                        nextIntArray.ReadTag( readStream, false );
-                        tags.Add( nextIntArray );
-                        nextIntArray.Parent = this;
+                        newTag = new NbtIntArray();
                         break;
+                    default:
+                        // should never happen, since ListType is checked beforehand
+                        throw new NbtFormatException( "Unsupported tag type found in NBT_Compound" );
                 }
+                newTag.Parent = this;
+                if( newTag.ReadTag( readStream ) ) {
+                    tags.Add( newTag );
+                }
+            }
+            return true;
+        }
+
+
+        internal override void SkipTag( NbtReader readStream ) {
+            // read list type, and make sure it's defined
+            ListType = readStream.ReadTagType();
+            if( !Enum.IsDefined( typeof( NbtTagType ), ListType ) || ListType == NbtTagType.Unknown ) {
+                throw new NbtFormatException( "Unrecognized TAG_List tag type: " + ListType );
+            }
+
+            int length = readStream.ReadInt32();
+            if( length < 0 ) {
+                throw new NbtFormatException( "Negative count given in TAG_List" );
+            }
+
+            switch( ListType ) {
+                case NbtTagType.Byte:
+                    readStream.Skip( length );
+                    break;
+                case NbtTagType.Short:
+                    readStream.Skip( length * sizeof( short ) );
+                    break;
+                case NbtTagType.Int:
+                    readStream.Skip( length * sizeof( int ) );
+                    break;
+                case NbtTagType.Long:
+                    readStream.Skip( length * sizeof( long ) );
+                    break;
+                case NbtTagType.Float:
+                    readStream.Skip( length * sizeof( float ) );
+                    break;
+                case NbtTagType.Double:
+                    readStream.Skip( length * sizeof( double ) );
+                    break;
+                default:
+                    for( int i = 0; i < length; i++ ) {
+                        switch( listType ) {
+                            case NbtTagType.ByteArray:
+                                new NbtByteArray().SkipTag( readStream );
+                                break;
+                            case NbtTagType.String:
+                                readStream.SkipString();
+                                break;
+                            case NbtTagType.List:
+                                new NbtList().SkipTag( readStream );
+                                break;
+                            case NbtTagType.Compound:
+                                new NbtCompound().SkipTag( readStream );
+                                break;
+                            case NbtTagType.IntArray:
+                                new NbtIntArray().SkipTag( readStream );
+                                break;
+                        }
+                    }
+                    break;
             }
         }
 
@@ -426,12 +457,11 @@ namespace LibNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is null. </exception>
         public bool Remove( [NotNull] NbtTag tag ) {
             if( tag == null ) throw new ArgumentNullException( "tag" );
-            if( tags.Remove( tag ) ) {
-                tag.Parent = null;
-                return true;
-            } else {
+            if( !tags.Remove( tag ) ) {
                 return false;
             }
+            tag.Parent = null;
+            return true;
         }
 
 
