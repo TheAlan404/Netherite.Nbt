@@ -180,7 +180,9 @@ namespace LibNbt {
         /// <summary> Copies all tags in this NbtList to an array. </summary>
         /// <returns> Array of NbtTags. </returns>
         [NotNull]
+        // ReSharper disable ReturnTypeCanBeEnumerable.Global
         public NbtTag[] ToArray() {
+            // ReSharper restore ReturnTypeCanBeEnumerable.Global
             return tags.ToArray();
         }
 
@@ -189,7 +191,9 @@ namespace LibNbt {
         /// <typeparam name="T"> Type to cast every member of NbtList to. Must derive from NbtTag. </typeparam>
         /// <returns> Array of NbtTags cast to the desired type. </returns>
         /// <exception cref="InvalidCastException"> If contents of this list cannot be cast to the given type. </exception>
+        // ReSharper disable ReturnTypeCanBeEnumerable.Global
         public T[] ToArray<T>() where T : NbtTag {
+            // ReSharper restore ReturnTypeCanBeEnumerable.Global
             T[] result = new T[tags.Count];
             for( int i = 0; i < result.Length; i++ ) {
                 result[i] = (T)tags[i];
@@ -201,6 +205,11 @@ namespace LibNbt {
         #region Reading / Writing
 
         internal override bool ReadTag( NbtReader readStream ) {
+            if( readStream.Selector != null && !readStream.Selector( this ) ) {
+                SkipTag( readStream );
+                return false;
+            }
+
             // read list type, and make sure it's defined
             ListType = readStream.ReadTagType();
             if( !Enum.IsDefined( typeof( NbtTagType ), ListType ) || ListType == NbtTagType.Unknown ) {
@@ -210,11 +219,6 @@ namespace LibNbt {
             int length = readStream.ReadInt32();
             if( length < 0 ) {
                 throw new NbtFormatException( "Negative count given in TAG_List" );
-            }
-
-            if( readStream.Selector != null && !readStream.Selector( this ) ) {
-                // TODO
-                return false;
             }
 
             for( int i = 0; i < length; i++ ) {
