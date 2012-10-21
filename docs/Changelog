@@ -1,3 +1,6 @@
+0.3.3 (Matvei Stefarov)
+- Added a way to skip certain tags at load-time, using a TagSelector callback.
+
 0.3.2 (Matvei Stefarov)
 - Added a way to easily identify files, using static NbtFile.ReadRootTagName.
 - Added NbtTag.Parent (automatically set/reset by NbtList and NbtCompound).
