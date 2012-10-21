@@ -114,8 +114,8 @@ namespace LibNbt.Test {
             Assert.AreEqual( 2, ( (NbtCompound)node ).Count );
 
             // First nested test
-            Assert.IsInstanceOf<NbtCompound>( ( (NbtCompound)node )["ham"] );
-            NbtCompound subNode = (NbtCompound)( (NbtCompound)node )["ham"];
+            Assert.IsInstanceOf<NbtCompound>( node["ham"] );
+            NbtCompound subNode = (NbtCompound)node["ham"];
             Assert.AreEqual( "ham", subNode.Name );
             Assert.AreEqual( 2, subNode.Count );
 
@@ -130,8 +130,8 @@ namespace LibNbt.Test {
             // End sub node
 
             // Second nested test
-            Assert.IsInstanceOf<NbtCompound>( ( (NbtCompound)node )["egg"] );
-            subNode = (NbtCompound)( (NbtCompound)node )["egg"];
+            Assert.IsInstanceOf<NbtCompound>( node["egg"] );
+            subNode = (NbtCompound)node["egg"];
             Assert.AreEqual( "egg", subNode.Name );
             Assert.AreEqual( 2, subNode.Count );
 
@@ -152,9 +152,9 @@ namespace LibNbt.Test {
 
             // The values should be: 11, 12, 13, 14, 15
             for( int nodeIndex = 0; nodeIndex < ( (NbtList)node ).Count; nodeIndex++ ) {
-                Assert.IsInstanceOf<NbtLong>( ( (NbtList)node )[nodeIndex] );
-                Assert.AreEqual( null, ( (NbtList)node )[nodeIndex].Name );
-                Assert.AreEqual( nodeIndex + 11, ( (NbtLong)( (NbtList)node )[nodeIndex] ).Value );
+                Assert.IsInstanceOf<NbtLong>( node[nodeIndex] );
+                Assert.AreEqual( null, node[nodeIndex].Name );
+                Assert.AreEqual( nodeIndex + 11, ( (NbtLong)node[nodeIndex] ).Value );
             }
 
             Assert.IsInstanceOf<NbtList>( root["listTest (compound)"] );
@@ -163,8 +163,8 @@ namespace LibNbt.Test {
             Assert.AreEqual( 2, ( (NbtList)node ).Count );
 
             // First Sub Node
-            Assert.IsInstanceOf<NbtCompound>( ( (NbtList)node )[0] );
-            subNode = (NbtCompound)( (NbtList)node )[0];
+            Assert.IsInstanceOf<NbtCompound>( node[0] );
+            subNode = (NbtCompound)node[0];
 
             // First node in sub node
             Assert.IsInstanceOf<NbtString>( subNode["name"] );
@@ -177,8 +177,8 @@ namespace LibNbt.Test {
             Assert.AreEqual( 1264099775885, ( (NbtLong)subNode["created-on"] ).Value );
 
             // Second Sub Node
-            Assert.IsInstanceOf<NbtCompound>( ( (NbtList)node )[1] );
-            subNode = (NbtCompound)( (NbtList)node )[1];
+            Assert.IsInstanceOf<NbtCompound>( node[1] );
+            subNode = (NbtCompound)node[1];
 
             // First node in sub node
             Assert.IsInstanceOf<NbtString>( subNode["name"] );
@@ -257,7 +257,7 @@ namespace LibNbt.Test {
 
         [Test]
         public void ReloadUncompressed() {
-            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
+            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" );
             loadedFile.SaveToFile( "TestTemp/bigtest.nbt", NbtCompression.None );
             loadedFile.LoadFromFile( "TestTemp/bigtest.nbt", NbtCompression.AutoDetect, null );
             AssertNbtBigFile( loadedFile );
@@ -266,7 +266,7 @@ namespace LibNbt.Test {
 
         [Test]
         public void ReloadGZip() {
-            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
+            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" );
             loadedFile.SaveToFile( "TestTemp/bigtest.nbt.gz", NbtCompression.GZip );
             loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.gz", NbtCompression.AutoDetect, null );
             AssertNbtBigFile( loadedFile );
@@ -275,7 +275,7 @@ namespace LibNbt.Test {
 
         [Test]
         public void ReloadZLib() {
-            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
+            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" );
             loadedFile.SaveToFile( "TestTemp/bigtest.nbt.z", NbtCompression.ZLib );
             loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.z", NbtCompression.AutoDetect, null );
             AssertNbtBigFile( loadedFile );
@@ -284,7 +284,7 @@ namespace LibNbt.Test {
 
         [Test]
         public void PrettyPrint() {
-            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt", NbtCompression.AutoDetect );
+            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" );
             Console.WriteLine( loadedFile.RootTag.ToString( "   " ) );
         }
 

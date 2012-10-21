@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompoundTests.cs" />
+    <Compile Include="TagSelectorTests.cs" />
     <Compile Include="ShortcutTest.cs" />
     <Compile Include="NbtFileTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

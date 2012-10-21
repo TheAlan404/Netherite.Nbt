@@ -173,8 +173,8 @@ namespace LibNbt {
         #region Reading / Writing
 
         internal override bool ReadTag( NbtReader readStream ) {
-            if( readStream.Selector != null && !readStream.Selector( this ) ) {
-                // TODO
+            if( Parent != null && readStream.Selector != null && !readStream.Selector( this ) ) {
+                SkipTag( readStream );
                 return false;
             }
 

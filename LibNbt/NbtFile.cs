@@ -62,6 +62,7 @@ namespace LibNbt {
         /// <summary> Loads NBT data from a file. </summary>
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
+        /// <param name="selector"> Optional callback to select which tags to load into memory. Root may not be skipped. May be null. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
@@ -69,15 +70,16 @@ namespace LibNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
-        public NbtFile( [NotNull] string fileName, NbtCompression compression ) {
+        public NbtFile( [NotNull] string fileName, NbtCompression compression, [CanBeNull] TagSelector selector ) {
             if( fileName == null ) throw new ArgumentNullException( "fileName" );
-            LoadFromFile( fileName, compression, null );
+            LoadFromFile( fileName, compression, selector );
         }
 
 
         /// <summary> Loads NBT data from a stream. </summary>
         /// <param name="stream"> Stream from which data will be loaded. If compression is set to AutoDetect, this stream must support seeking. </param>
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
+        /// <param name="selector"> Optional callback to select which tags to load into memory. Root may not be skipped. May be null. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
@@ -85,8 +87,8 @@ namespace LibNbt {
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
-        public NbtFile( [NotNull] Stream stream, NbtCompression compression ) {
-            LoadFromStream( stream, compression, null );
+        public NbtFile( [NotNull] Stream stream, NbtCompression compression, [CanBeNull] TagSelector selector ) {
+            LoadFromStream( stream, compression, selector );
         }
 
 
@@ -107,6 +109,7 @@ namespace LibNbt {
         /// <summary> Loads NBT data from a file. Existing RootTag will be replaced. </summary>
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
+        /// <param name="selector"> Optional callback to select which tags to load into memory. Root may not be skipped. May be null. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
@@ -131,7 +134,7 @@ namespace LibNbt {
         /// <summary> Loads NBT data from a stream. Existing RootTag will be replaced </summary>
         /// <param name="stream"> Stream from which data will be loaded. If compression is set to AutoDetect, this stream must support seeking. </param>
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
-        /// <param name="selector"> </param>
+        /// <param name="selector"> Optional callback to select which tags to load into memory. Root may not be skipped. May be null. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is null. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for compression. </exception>
         /// <exception cref="NotSupportedException"> If compression is set to AutoDetect, but the stream is not seekable. </exception>
