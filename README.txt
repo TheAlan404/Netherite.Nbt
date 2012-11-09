@@ -66,6 +66,10 @@ and reliability.
     Console.WriteLine( myRandomTag.ToString("    ") );
 
 
+==== REFERENCE ================================================================
+Up to date online reference can be found at http://www.fcraft.net/api/libnbt/
+
+
 ==== LICENSING ================================================================
 LibNbt2012 keeps LibNbt's original license (LGPLv3). See ./docs/LICENSE
 
