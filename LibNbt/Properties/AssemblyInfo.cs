@@ -15,8 +15,8 @@ using System.Resources;
 [assembly: ComVisible(false)]
 [assembly: Guid("9253db1f-f1d4-45aa-a277-4f3ba635d651")]
 
-[assembly: AssemblyVersion( "0.3.3.0" )]
-[assembly: AssemblyFileVersion( "0.3.3.0" )]
+[assembly: AssemblyVersion( "0.3.4.0" )]
+[assembly: AssemblyFileVersion( "0.3.4.0" )]
 
 // Allow the unit tests to see internal classes
 [assembly: InternalsVisibleTo("LibNbt.Test")]
