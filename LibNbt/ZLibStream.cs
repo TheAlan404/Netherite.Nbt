@@ -25,8 +25,7 @@ namespace LibNbt {
 
 
         public ZLibStream( Stream stream, CompressionMode mode, bool leaveOpen )
-            :
-                base( stream, mode, leaveOpen ) {}
+            : base( stream, mode, leaveOpen ) {}
 
 
         public override void Write( byte[] array, int offset, int count ) {

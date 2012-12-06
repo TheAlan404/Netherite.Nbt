@@ -25,14 +25,14 @@ namespace LibNbt {
 
 
         /// <summary> Creates an NbtByte tag with the given name and the default value of 0. </summary>
-        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
+        /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtByte( [CanBeNull] string tagName )
             : this( tagName, 0 ) {}
 
 
 
         /// <summary> Creates an NbtByte tag with the given name and value. </summary>
-        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
+        /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         /// <param name="value"> Value to assign to this tag. </param>
         public NbtByte( [CanBeNull] string tagName, byte value ) {
             Name = tagName;

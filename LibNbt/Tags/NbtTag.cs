@@ -17,7 +17,7 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Name of this tag. Immutable, and set by the constructor. May be null. </summary>
+        /// <summary> Name of this tag. Immutable, and set by the constructor. May be <c>null</c>. </summary>
         [CanBeNull]
         public string Name { get; internal set; }
 
@@ -55,7 +55,7 @@ namespace LibNbt {
 
         #region Shortcuts
 
-        /// <summary> Gets or sets the tag with the specified name. May return null. </summary>
+        /// <summary> Gets or sets the tag with the specified name. May return <c>null</c>. </summary>
         /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
         /// <param name="tagName"> The name of the tag to get or set. Must match tag's actual name. </param>
         /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtCompound. </exception>
@@ -71,7 +71,7 @@ namespace LibNbt {
         /// <returns> The tag at the specified index. </returns>
         /// <param name="tagIndex"> The zero-based index of the tag to get or set. </param>
         /// <exception cref="ArgumentOutOfRangeException"> tagIndex is not a valid index in the NbtList. </exception>
-        /// <exception cref="ArgumentNullException"> Given tag is null. </exception>
+        /// <exception cref="ArgumentNullException"> Given tag is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> Given tag's type does not match ListType. </exception>
         /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtList. </exception>
         /// <remarks> ONLY APPLICABLE TO NbtList OBJECTS!
@@ -303,7 +303,7 @@ namespace LibNbt {
         /// Indents the string using multiples of the given indentation string. </summary>
         /// <param name="indentString"> String to be used for indentation. </param>
         /// <returns> A string representing contants of this tag, and all child tags (if any). </returns>
-        /// <exception cref="ArgumentNullException"> identString is null. </exception>
+        /// <exception cref="ArgumentNullException"> identString is <c>null</c>. </exception>
         [NotNull]
         public string ToString( [NotNull] string indentString ) {
             if( indentString == null ) throw new ArgumentNullException( "indentString" );

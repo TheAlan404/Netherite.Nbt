@@ -20,7 +20,7 @@ namespace LibNbt {
 
 
         /// <summary> Creates an empty NbtByte tag with the given name. </summary>
-        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
+        /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtCompound( [CanBeNull] string tagName ) {
             Name = tagName;
         }
@@ -28,16 +28,16 @@ namespace LibNbt {
 
         /// <summary> Creates an unnamed NbtByte tag, containing the given tags. </summary>
         /// <param name="tags"> Collection of tags to assign to this tag's Value. May not be null </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="tags"/> is null, or one of the tags is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="tags"/> is <c>null</c>, or one of the tags is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If some of the given tags were not named, or two tags with the same name were given. </exception>
         public NbtCompound( [NotNull] IEnumerable<NbtTag> tags )
             : this( null, tags ) {}
 
 
         /// <summary> Creates an NbtByte tag with the given name, containing the given tags. </summary>
-        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
+        /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         /// <param name="tags"> Collection of tags to assign to this tag's Value. May not be null </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="tags"/> is null, or one of the tags is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="tags"/> is <c>null</c>, or one of the tags is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If some of the given tags were not named, or two tags with the same name were given. </exception>
         public NbtCompound( [CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags ) {
             if( tags == null ) throw new ArgumentNullException( "tags" );
@@ -48,10 +48,10 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Gets or sets the tag with the specified name. May return null. </summary>
+        /// <summary> Gets or sets the tag with the specified name. May return <c>null</c>. </summary>
         /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
         /// <param name="tagName"> The name of the tag to get or set. Must match tag's actual name. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is null; or if trying to assign null value. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>; or if trying to assign null value. </exception>
         /// <exception cref="ArgumentException"> <paramref name="tagName"/> does not match the given tag's actual name;
         /// or given tag already has a Parent. </exception>
         public override NbtTag this[ [NotNull] string tagName ] {
@@ -72,11 +72,11 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Gets or sets the tag with the specified name. May return null. </summary>
+        /// <summary> Gets or sets the tag with the specified name. May return <c>null</c>. </summary>
         /// <param name="tagName"> The name of the tag to get. </param>
         /// <typeparam name="T"> Type to cast the result to. Must derive from NbtTag. </typeparam>
         /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
-        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
         /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
         [CanBeNull]
         public T Get<T>( [NotNull] string tagName ) where T : NbtTag {
@@ -117,7 +117,7 @@ namespace LibNbt {
 
         /// <summary> Adds all tags from the specified collection to this NbtCompound. </summary>
         /// <param name="newTags"> The collection whose elements should be added to this NbtCompound. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="newTags"/> is null, or one of the tags in newTags is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="newTags"/> is <c>null</c>, or one of the tags in newTags is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If one of the given tags was unnamed,
         /// or if a tag with the given name already exists in this NbtCompound. </exception>
         public void AddRange( [NotNull] IEnumerable<NbtTag> newTags ) {
@@ -129,9 +129,9 @@ namespace LibNbt {
 
 
         /// <summary> Determines whether this NbtCompound contains a tag with a specific name. </summary>
-        /// <param name="tagName"> Tag name to search for. May not be null. </param>
+        /// <param name="tagName"> Tag name to search for. May not be <c>null</c>. </param>
         /// <returns> true if a tag with given name was found; otherwise, false. </returns>
-        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
         public bool Contains( [NotNull] string tagName ) {
             if( tagName == null ) throw new ArgumentNullException( "tagName" );
             return tags.ContainsKey( tagName );
@@ -142,7 +142,7 @@ namespace LibNbt {
         /// <param name="tagName"> The name of the tag to remove. </param>
         /// <returns> true if the tag is successfully found and removed; otherwise, false.
         /// This method returns false if name is not found in the NbtCompound. </returns>
-        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
         public bool Remove( [NotNull] string tagName ) {
             if( tagName == null ) throw new ArgumentNullException( "tagName" );
             NbtTag tag;
@@ -160,7 +160,7 @@ namespace LibNbt {
         /// <summary> Renames a child tags. </summary>
         /// <param name="oldName"> Current name of the tag that's being renamed. </param>
         /// <param name="newName"> Desired new name for the renamed tag. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="oldName"/> or <paramref name="newName"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="oldName"/> or <paramref name="newName"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> No tag found for <paramref name="oldName"/>;
         /// or tag with the same name as <paramref name="newName"/> already exists in this compound. </exception>
         public void RenameTag( [NotNull] string oldName, [NotNull] string newName ) {
@@ -368,7 +368,7 @@ namespace LibNbt {
 
         /// <summary> Adds a tag to this NbtCompound. </summary>
         /// <param name="newTag"> The object to add to this NbtCompound. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If the given tag is unnamed;
         /// or if a tag with the given name already exists in this NbtCompound. </exception>
         public void Add( [NotNull] NbtTag newTag ) {
@@ -398,8 +398,8 @@ namespace LibNbt {
         /// <summary> Determines whether this NbtCompound contains a specific NbtTag.
         /// Looks for exact object matches, not name matches. </summary>
         /// <returns> true if tag is found; otherwise, false. </returns>
-        /// <param name="tag"> The object to locate in this NbtCompound. May not be null. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is null. </exception>
+        /// <param name="tag"> The object to locate in this NbtCompound. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is <c>null</c>. </exception>
         public bool Contains( [NotNull] NbtTag tag ) {
             if( tag == null ) throw new ArgumentNullException( "tag" );
             return tags.ContainsValue( tag );
@@ -410,7 +410,7 @@ namespace LibNbt {
         /// <param name="array"> The one-dimensional array that is the destination of the tag copied from NbtCompound.
         /// The array must have zero-based indexing. </param>
         /// <param name="arrayIndex"> The zero-based index in array at which copying begins. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="array"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="array"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> arrayIndex is less than 0. </exception>
         /// <exception cref="ArgumentException"> Given array is multidimensional; arrayIndex is equal to or greater than the length of array;
         /// the number of tags in this NbtCompound is greater than the available space from arrayIndex to the end of the destination array;
@@ -425,7 +425,7 @@ namespace LibNbt {
         /// <returns> true if tag was successfully removed from the NbtCompound; otherwise, false.
         /// This method also returns false if tag is not found. </returns>
         /// <param name="tag"> The tag to remove from the NbtCompound. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is null. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If the given tag is unnamed </exception>
         public bool Remove( [NotNull] NbtTag tag ) {
             if( tag == null ) throw new ArgumentNullException( "tag" );

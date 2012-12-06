@@ -11,8 +11,8 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Value/payload of this tag (an array of signed 32-bit integers). May not be null. </summary>
-        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
+        /// <summary> Value/payload of this tag (an array of signed 32-bit integers). May not be <c>null</c>. </summary>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         [NotNull]
         public int[] Value {
             get { return ints; }
@@ -33,22 +33,22 @@ namespace LibNbt {
 
 
         /// <summary> Creates an unnamed NbtIntArray tag, containing the given array of ints. </summary>
-        /// <param name="value"> Int array to assign to this tag's Value. May not be null. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
+        /// <param name="value"> Int array to assign to this tag's Value. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         public NbtIntArray( [NotNull] int[] value )
             : this( null, value ) {}
 
 
         /// <summary> Creates an NbtIntArray tag with the given name, containing an empty array of ints. </summary>
-        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
+        /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtIntArray( [CanBeNull] string tagName )
             : this( tagName, new int[0] ) {}
 
 
         /// <summary> Creates an NbtIntArray tag with the given name, containing the given array of ints. </summary>
-        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
-        /// <param name="value"> Int array to assign to this tag's Value. May not be null. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
+        /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
+        /// <param name="value"> Int array to assign to this tag's Value. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         public NbtIntArray( [CanBeNull] string tagName, [NotNull] int[] value ) {
             if( value == null ) throw new ArgumentNullException( "value" );
             Name = tagName;

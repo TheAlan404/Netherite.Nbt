@@ -10,7 +10,7 @@ namespace LibNbt {
             get { return NbtTagType.String; }
         }
 
-        /// <summary> Value/payload of this tag (a single string). May not be null. </summary>
+        /// <summary> Value/payload of this tag (a single string). May not be <c>null</c>. </summary>
         [NotNull]
         public string Value {
             get { return stringVal; }
@@ -30,16 +30,16 @@ namespace LibNbt {
 
 
         /// <summary> Creates an unnamed NbtString tag with the given value. </summary>
-        /// <param name="value"> String value to assign to this tag. May not be null. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
+        /// <param name="value"> String value to assign to this tag. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         public NbtString( [NotNull] string value )
             : this( null, value ) {}
 
 
         /// <summary> Creates an NbtString tag with the given name and value. </summary>
-        /// <param name="tagName"> Name to assign to this tag. May be null. </param>
-        /// <param name="value"> String value to assign to this tag. May not be null. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
+        /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
+        /// <param name="value"> String value to assign to this tag. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         public NbtString( [CanBeNull] string tagName, [NotNull] string value ) {
             if( value == null ) throw new ArgumentNullException( "value" );
             Name = tagName;
