@@ -58,12 +58,12 @@ namespace LibNbt {
 
 
         /// <summary> Gets or sets an integer at the given index. </summary>
-        /// <param name="index"> The zero-based index of the element to get or set. </param>
+        /// <param name="tagIndex"> The zero-based index of the element to get or set. </param>
         /// <returns> The integer at the specified index. </returns>
-        /// <exception cref="IndexOutOfRangeException"> If given index was outside the array bounds. </exception>
-        public new int this[int index] {
-            get { return Value[index]; }
-            set { Value[index] = value; }
+        /// <exception cref="IndexOutOfRangeException"> <paramref name="tagIndex"/> is outside the array bounds. </exception>
+        public new int this[int tagIndex] {
+            get { return Value[tagIndex]; }
+            set { Value[tagIndex] = value; }
         }
 
 

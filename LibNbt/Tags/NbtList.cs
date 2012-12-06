@@ -63,7 +63,7 @@ namespace LibNbt {
         /// If ListType is Unknown, it will be inferred from the type of the first added tag.
         /// Otherwise, all tags added to this list are expected to be of the given type. </summary>
         /// <param name="givenListType"> Name to assign to this tag. May be Unknown. </param>
-        /// <exception cref="ArgumentOutOfRangeException"> If the given NbtTagType is not among recognized tag types. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
         public NbtList( NbtTagType givenListType )
             : this( null, null, givenListType ) {}
 
@@ -87,8 +87,8 @@ namespace LibNbt {
         /// List may be empty, but may not be null. </param>
         /// <param name="givenListType"> Name to assign to this tag. May be Unknown (to infer type from the first element of tags). </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tags"/> is null. </exception>
-        /// <exception cref="ArgumentOutOfRangeException"> If the given NbtTagType is not among recognized tag types. </exception>
-        /// <exception cref="ArgumentException"> If given tags do not match givenListType, or are of mixed types. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
+        /// <exception cref="ArgumentException"> If given tags do not match <paramref name="givenListType"/>, or are of mixed types. </exception>
         public NbtList( [NotNull] IEnumerable<NbtTag> tags, NbtTagType givenListType )
             : this( null, tags, givenListType ) {
             if( tags == null ) throw new ArgumentNullException( "tags" );
@@ -99,7 +99,7 @@ namespace LibNbt {
         /// <param name="tagName"> Name to assign to this tag. May be null. </param>
         /// <param name="givenListType"> Name to assign to this tag.
         /// If givenListType is Unknown, ListType will be infered from the first tag added to this NbtList. </param>
-        /// <exception cref="ArgumentOutOfRangeException"> If the given NbtTagType is not among recognized tag types. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
         public NbtList( [CanBeNull] string tagName, NbtTagType givenListType )
             : this( tagName, null, givenListType ) {}
 
@@ -109,8 +109,8 @@ namespace LibNbt {
         /// <param name="tags"> Collection of tags to insert into the list.
         /// All tags are expected to be of the same type (matching givenListType). May be empty or null. </param>
         /// <param name="givenListType"> Name to assign to this tag. May be Unknown (to infer type from the first element of tags). </param>
-        /// <exception cref="ArgumentException"> If given tags do not match givenListType, or are of mixed types. </exception>
-        /// <exception cref="ArgumentOutOfRangeException"> If the given NbtTagType is not among recognized tag types. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
+        /// <exception cref="ArgumentException"> If given tags do not match <paramref name="givenListType"/>, or are of mixed types. </exception>
         public NbtList( [CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags, NbtTagType givenListType ) {
             Name = tagName;
             this.tags = new List<NbtTag>();
@@ -157,7 +157,7 @@ namespace LibNbt {
         /// <param name="tagIndex"> The zero-based index of the tag to get or set. </param>
         /// <typeparam name="T"> Type to cast the result to. Must derive from NbtTag. </typeparam>
         /// <returns> The tag with the specified key. </returns>
-        /// <exception cref="ArgumentOutOfRangeException"> tagIndex is not a valid index in the NbtList. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="tagIndex"/> is not a valid index in the NbtList. </exception>
         /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
         [NotNull]
         public T Get<T>( int tagIndex ) where T : NbtTag {
@@ -371,16 +371,19 @@ namespace LibNbt {
         /// <summary> Determines the index of a specific tag in this NbtList </summary>
         /// <returns> The index of tag if found in the list; otherwise, -1. </returns>
         /// <param name="tag"> The tag to locate in this NbtList. </param>
-        public int IndexOf( NbtTag tag ) {
+        public int IndexOf( [NotNull] NbtTag tag ) {
+            if( tag == null ) throw new ArgumentNullException( "tag" );
             return tags.IndexOf( tag );
         }
 
 
         /// <summary> Inserts an item to this NbtList at the specified index. </summary>
-        /// <param name="index"> The zero-based index at which newTag should be inserted. </param>
+        /// <param name="tagIndex"> The zero-based index at which newTag should be inserted. </param>
         /// <param name="newTag"> The tag to insert into this NbtList. </param>
-        /// <exception cref="ArgumentOutOfRangeException"> index is not a valid index in this NbtList. </exception>
-        public void Insert( int index, NbtTag newTag ) {
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="tagIndex"/> is not a valid index in this NbtList. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is null. </exception>
+        public void Insert( int tagIndex, [NotNull] NbtTag newTag ) {
+            if( newTag == null ) throw new ArgumentNullException( "newTag" );
             if( listType == NbtTagType.Unknown ) {
                 listType = newTag.TagType;
             } else if( newTag.TagType != listType ) {
@@ -388,14 +391,14 @@ namespace LibNbt {
             } else if( newTag.Parent != null ) {
                 throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
             }
-            tags.Insert( index, newTag );
+            tags.Insert( tagIndex, newTag );
             newTag.Parent = this;
         }
 
 
         /// <summary> Removes a tag at the specified index from this NbtList. </summary>
         /// <param name="index"> The zero-based index of the item to remove. </param>
-        /// <exception cref="ArgumentOutOfRangeException"> Given index is not a valid index in the NbtList. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="index"/> is not a valid index in the NbtList. </exception>
         public void RemoveAt( int index ) {
             NbtTag tag = this[index];
             tags.RemoveAt( index );
@@ -403,10 +406,10 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Adds an tag to this NbtList. </summary>
+        /// <summary> Adds a tag to this NbtList. </summary>
         /// <param name="newTag"> The tag to add to this NbtList. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is null. </exception>
-        /// <exception cref="ArgumentException"> If newTag does not match ListType. </exception>
+        /// <exception cref="ArgumentException"> If <paramref name="newTag"/> does not match ListType. </exception>
         public void Add( [NotNull] NbtTag newTag ) {
             if( newTag == null ) throw new ArgumentNullException( "newTag" );
             if( listType == NbtTagType.Unknown ) {
