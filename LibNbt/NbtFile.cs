@@ -35,6 +35,13 @@ namespace LibNbt {
         NbtCompound rootTag;
 
 
+        /// <summary> Renames the root tag. </summary>
+        /// <param name="newTagName"> New name to give to the root tag. May be null. </param>
+        public void RenameRootTag( string newTagName ) {
+            rootTag.Name = newTagName;
+        }
+
+
         /// <summary> Creates a new NBT file with the given root tag. </summary>
         /// <param name="rootTag"> Compound tag to set as the root tag. May be null. </param>
         /// <exception cref="ArgumentException"> If given rootTag is unnamed. </exception>

@@ -158,6 +158,29 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Renames a child tags. </summary>
+        /// <param name="oldName"> Current name of the tag that's being renamed. </param>
+        /// <param name="newName"> Desired new name for the renamed tag. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="oldName"/> or <paramref name="newName"/> is null. </exception>
+        /// <exception cref="ArgumentException"> No tag found for <paramref name="oldName"/>;
+        /// or tag with the same name as <paramref name="newName"/> already exists in this compound. </exception>
+        public void RenameTag( [NotNull] string oldName, [NotNull] string newName ) {
+            if( oldName == null ) throw new ArgumentNullException( "oldName" );
+            if( newName == null ) throw new ArgumentNullException( "newName" );
+            if( oldName == newName ) return;
+            NbtTag tag;
+            if( tags.TryGetValue( newName, out tag ) ) {
+                throw new ArgumentException( "Cannot rename: a tag with the name already exists in this compound." );
+            }
+            if( !tags.TryGetValue( oldName, out tag ) ) {
+                throw new ArgumentException( "Cannot rename: no tag found to rename." );
+            }
+            tags.Remove( oldName );
+            tag.Name = newName;
+            tags.Add( newName, tag );
+        }
+
+
         /// <summary> Gets a collection containing all tag names in this NbtCompound. </summary>
         public IEnumerable<string> Names {
             get { return tags.Keys; }
