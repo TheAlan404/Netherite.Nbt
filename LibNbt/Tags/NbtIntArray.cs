@@ -24,8 +24,7 @@ namespace LibNbt {
             }
         }
 
-        [NotNull]
-        int[] ints;
+        [NotNull] int[] ints;
 
 
         /// <summary> Creates an unnamed NbtIntArray tag, containing an empty array of ints. </summary>
@@ -61,7 +60,7 @@ namespace LibNbt {
         /// <param name="tagIndex"> The zero-based index of the element to get or set. </param>
         /// <returns> The integer at the specified index. </returns>
         /// <exception cref="IndexOutOfRangeException"> <paramref name="tagIndex"/> is outside the array bounds. </exception>
-        public new int this[int tagIndex] {
+        public new int this[ int tagIndex ] {
             get { return Value[tagIndex]; }
             set { Value[tagIndex] = value; }
         }

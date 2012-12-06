@@ -22,8 +22,7 @@ namespace LibNbt {
             }
         }
 
-        [NotNull]
-        string stringVal;
+        [NotNull] string stringVal;
 
 
         /// <summary> Creates an unnamed NbtString tag with the default value (empty string). </summary>

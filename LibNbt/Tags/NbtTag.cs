@@ -61,7 +61,7 @@ namespace LibNbt {
         /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtCompound. </exception>
         /// <remarks> ONLY APPLICABLE TO NntCompound OBJECTS!
         /// Included in NbtTag base class for programmers' convenience, to avoid extra type casts. </remarks>
-        public virtual NbtTag this[string tagName] {
+        public virtual NbtTag this[ string tagName ] {
             get { throw new InvalidOperationException( "String indexers only work on NbtCompound tags." ); }
             set { throw new InvalidOperationException( "String indexers only work on NbtCompound tags." ); }
         }
@@ -76,7 +76,7 @@ namespace LibNbt {
         /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtList. </exception>
         /// <remarks> ONLY APPLICABLE TO NbtList OBJECTS!
         /// Included in NbtTag base class for programmers' convenience, to avoid extra type casts. </remarks>
-        public virtual NbtTag this[int tagIndex] {
+        public virtual NbtTag this[ int tagIndex ] {
             get { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
             set { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
         }
@@ -298,7 +298,7 @@ namespace LibNbt {
             }
         }
 
-        
+
         /// <summary> Prints contents of this tag, and any child tags, to a string.
         /// Indents the string using multiples of the given indentation string. </summary>
         /// <param name="indentString"> String to be used for indentation. </param>

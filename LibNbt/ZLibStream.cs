@@ -8,6 +8,7 @@ namespace LibNbt {
     sealed class ZLibStream : DeflateStream {
         int adler32A = 1,
             adler32B;
+
         const int ChecksumModulus = 65521;
 
         public int Checksum {
@@ -23,8 +24,9 @@ namespace LibNbt {
         }
 
 
-        public ZLibStream( Stream stream, CompressionMode mode, bool leaveOpen ) :
-            base( stream, mode, leaveOpen ) { }
+        public ZLibStream( Stream stream, CompressionMode mode, bool leaveOpen )
+            :
+                base( stream, mode, leaveOpen ) {}
 
 
         public override void Write( byte[] array, int offset, int count ) {

@@ -8,6 +8,7 @@ namespace LibNbt {
     sealed class NbtReader : BinaryReader {
         readonly byte[] floatBuffer = new byte[sizeof( float )],
                         doubleBuffer = new byte[sizeof( double )];
+
         byte[] seekBuffer;
         const int SeekBufferSize = 64 * 1024;
 

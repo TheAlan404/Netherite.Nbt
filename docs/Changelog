@@ -1,3 +1,6 @@
+0.3.4 (Matvei Stefarov)
+- Added a way to rename tags inside NbtCompound and NbtFile.
+
 0.3.3 (Matvei Stefarov)
 - Added a way to skip certain tags at load-time, using a TagSelector callback.
 

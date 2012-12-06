@@ -55,8 +55,7 @@ namespace LibNbt {
         /// <exception cref="ArgumentException"> <paramref name="tagName"/> does not match the given tag's actual name;
         /// or given tag already has a Parent. </exception>
         public override NbtTag this[ [NotNull] string tagName ] {
-            [CanBeNull]
-            get { return Get<NbtTag>( tagName ); }
+            [CanBeNull] get { return Get<NbtTag>( tagName ); }
             set {
                 if( tagName == null ) {
                     throw new ArgumentNullException( "tagName" );

@@ -5,6 +5,6 @@ namespace LibNbt {
     [Serializable]
     public sealed class NbtFormatException : Exception {
         internal NbtFormatException( string message )
-            : base( message ) { }
+            : base( message ) {}
     }
 }

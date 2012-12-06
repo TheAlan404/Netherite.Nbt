@@ -24,20 +24,19 @@ namespace LibNbt {
             }
         }
 
-        [NotNull]
-        byte[] bytes;
+        [NotNull] byte[] bytes;
 
 
         /// <summary> Creates an unnamed NbtByte tag, containing an empty array of bytes. </summary>
         public NbtByteArray()
-            : this( null, new byte[0] ) { }
+            : this( null, new byte[0] ) {}
 
 
         /// <summary> Creates an unnamed NbtByte tag, containing the given array of bytes. </summary>
         /// <param name="value"> Byte array to assign to this tag's Value. May not be null. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is null. </exception>
         public NbtByteArray( [NotNull] byte[] value )
-            : this( null, value ) { }
+            : this( null, value ) {}
 
 
         /// <summary> Creates an NbtByte tag with the given name, containing an empty array of bytes. </summary>
@@ -61,7 +60,7 @@ namespace LibNbt {
         /// <param name="tagIndex"> The zero-based index of the element to get or set. </param>
         /// <returns> The byte at the specified index. </returns>
         /// <exception cref="IndexOutOfRangeException"> <paramref name="tagIndex"/> is outside the array bounds. </exception>
-        public new byte this[int tagIndex] {
+        public new byte this[ int tagIndex ] {
             get { return Value[tagIndex]; }
             set { Value[tagIndex] = value; }
         }
@@ -120,7 +119,7 @@ namespace LibNbt {
         internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
             for( int i = 0; i < indentLevel; i++ ) {
                 sb.Append( indentString );
-            }   
+            }
             sb.Append( "TAG_Byte_Array" );
             if( !String.IsNullOrEmpty( Name ) ) {
                 sb.AppendFormat( "(\"{0}\")", Name );
