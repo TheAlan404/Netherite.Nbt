@@ -149,10 +149,6 @@ namespace LibNbt {
                                  [CanBeNull] TagSelector selector ) {
             if( fileName == null )
                 throw new ArgumentNullException( "fileName" );
-            if( !File.Exists( fileName ) ) {
-                throw new FileNotFoundException( "Could not find NBT file: " + fileName,
-                                                 fileName );
-            }
 
             using( FileStream readFileStream = File.OpenRead( fileName ) ) {
                 LoadFromStream( readFileStream, compression, selector );

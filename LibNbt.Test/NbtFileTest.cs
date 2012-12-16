@@ -75,6 +75,14 @@ namespace LibNbt.Test {
         }
 
 
+        [Test]
+        public void LoadingBigFileBuffer() {
+            byte[] fileBytes = File.ReadAllBytes( "TestFiles/bigtest.nbt" );
+            var file = new NbtFile( fileBytes, 0, fileBytes.Length, NbtCompression.AutoDetect, null );
+            AssertNbtBigFile( file );
+        }
+
+
         void AssertNbtBigFile( NbtFile file ) {
             // See TestFiles/bigtest.nbt.txt to see the expected format
             Assert.IsInstanceOf<NbtCompound>( file.RootTag );
