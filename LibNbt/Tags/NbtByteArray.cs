@@ -7,7 +7,9 @@ namespace LibNbt {
     public sealed class NbtByteArray : NbtTag {
         /// <summary> Type of this tag (ByteArray). </summary>
         public override NbtTagType TagType {
-            get { return NbtTagType.ByteArray; }
+            get {
+                return NbtTagType.ByteArray;
+            }
         }
 
 
@@ -15,7 +17,9 @@ namespace LibNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         [NotNull]
         public byte[] Value {
-            get { return bytes; }
+            get {
+                return bytes;
+            }
             set {
                 if( value == null ) {
                     throw new ArgumentNullException( "value" );
@@ -24,7 +28,8 @@ namespace LibNbt {
             }
         }
 
-        [NotNull] byte[] bytes;
+        [NotNull]
+        byte[] bytes;
 
 
         /// <summary> Creates an unnamed NbtByte tag, containing an empty array of bytes. </summary>
@@ -50,7 +55,8 @@ namespace LibNbt {
         /// <param name="value"> Byte array to assign to this tag's Value. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         public NbtByteArray( [CanBeNull] string tagName, [NotNull] byte[] value ) {
-            if( value == null ) throw new ArgumentNullException( "value" );
+            if( value == null )
+                throw new ArgumentNullException( "value" );
             Name = tagName;
             Value = (byte[])value.Clone();
         }
@@ -61,8 +67,12 @@ namespace LibNbt {
         /// <returns> The byte at the specified index. </returns>
         /// <exception cref="IndexOutOfRangeException"> <paramref name="tagIndex"/> is outside the array bounds. </exception>
         public new byte this[ int tagIndex ] {
-            get { return Value[tagIndex]; }
-            set { Value[tagIndex] = value; }
+            get {
+                return Value[tagIndex];
+            }
+            set {
+                Value[tagIndex] = value;
+            }
         }
 
 
@@ -93,7 +103,8 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.ByteArray );
             if( writeName ) {
-                if( Name == null ) throw new NbtFormatException( "Name is null" );
+                if( Name == null )
+                    throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
             WriteData( writeStream );

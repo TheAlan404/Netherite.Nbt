@@ -73,7 +73,8 @@ namespace LibNbt {
             } else if( BaseStream.CanSeek ) {
                 BaseStream.Position += bytesToSkip;
             } else if( bytesToSkip != 0 ) {
-                if( seekBuffer == null ) seekBuffer = new byte[SeekBufferSize];
+                if( seekBuffer == null )
+                    seekBuffer = new byte[SeekBufferSize];
                 int bytesDone = 0;
                 while( bytesDone < bytesToSkip ) {
                     int readThisTime = BaseStream.Read( seekBuffer, bytesDone, bytesToSkip - bytesDone );

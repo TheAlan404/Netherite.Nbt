@@ -7,7 +7,9 @@ namespace LibNbt {
     public sealed class NbtFloat : NbtTag {
         /// <summary> Type of this tag (Float). </summary>
         public override NbtTagType TagType {
-            get { return NbtTagType.Float; }
+            get {
+                return NbtTagType.Float;
+            }
         }
 
         /// <summary> Value/payload of this tag (a single-precision floating point number). </summary>
@@ -57,7 +59,8 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Float );
             if( writeName ) {
-                if( Name == null ) throw new NbtFormatException( "Name is null" );
+                if( Name == null )
+                    throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
             writeStream.Write( Value );

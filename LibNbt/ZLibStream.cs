@@ -12,7 +12,9 @@ namespace LibNbt {
         const int ChecksumModulus = 65521;
 
         public int Checksum {
-            get { return ( ( adler32B * 65536 ) + adler32A ); }
+            get {
+                return ( ( adler32B * 65536 ) + adler32A );
+            }
         }
 
 

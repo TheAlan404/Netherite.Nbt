@@ -6,7 +6,9 @@ namespace LibNbt {
     public sealed class NbtLong : NbtTag {
         /// <summary> Type of this tag (Long). </summary>
         public override NbtTagType TagType {
-            get { return NbtTagType.Long; }
+            get {
+                return NbtTagType.Long;
+            }
         }
 
         /// <summary> Value/payload of this tag (a single signed 64-bit integer). </summary>
@@ -58,7 +60,8 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Long );
             if( writeName ) {
-                if( Name == null ) throw new NbtFormatException( "Name is null" );
+                if( Name == null )
+                    throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
             writeStream.Write( Value );

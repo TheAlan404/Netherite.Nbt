@@ -38,6 +38,7 @@ namespace LibNbt {
 
         NbtCompound rootTag;
 
+
         /// <summary> Creates an empty NbtFile. RootTag will be <c>null</c>. </summary>
         public NbtFile() {}
 
@@ -116,8 +117,9 @@ namespace LibNbt {
         /// <exception cref="EndOfStreamException"> If NBT stream extends beyond the given <paramref name="length"/>. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
-        public NbtFile( [NotNull] byte[] buffer, int index, int length, NbtCompression compression, [CanBeNull] TagSelector selector ) {
-            LoadFromBuffer(buffer, index, length, compression, selector);
+        public NbtFile( [NotNull] byte[] buffer, int index, int length, NbtCompression compression,
+                        [CanBeNull] TagSelector selector ) {
+            LoadFromBuffer( buffer, index, length, compression, selector );
         }
 
 
@@ -242,7 +244,7 @@ namespace LibNbt {
                 throw new ArgumentOutOfRangeException( "compression" );
             }
 
-            return (int)(stream.Position - startPosition);
+            return (int)( stream.Position - startPosition );
         }
 
 
@@ -527,8 +529,8 @@ namespace LibNbt {
             return reader.ReadString();
         }
 
-        public override string ToString()
-        {
+
+        public override string ToString() {
             return RootTag.ToString();
         }
     }

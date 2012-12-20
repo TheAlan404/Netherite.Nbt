@@ -7,13 +7,17 @@ namespace LibNbt {
     public sealed class NbtString : NbtTag {
         /// <summary> Type of this tag (String). </summary>
         public override NbtTagType TagType {
-            get { return NbtTagType.String; }
+            get {
+                return NbtTagType.String;
+            }
         }
 
         /// <summary> Value/payload of this tag (a single string). May not be <c>null</c>. </summary>
         [NotNull]
         public string Value {
-            get { return stringVal; }
+            get {
+                return stringVal;
+            }
             set {
                 if( value == null ) {
                     throw new ArgumentNullException( "value" );
@@ -22,7 +26,8 @@ namespace LibNbt {
             }
         }
 
-        [NotNull] string stringVal;
+        [NotNull]
+        string stringVal;
 
 
         /// <summary> Creates an unnamed NbtString tag with the default value (empty string). </summary>
@@ -41,7 +46,8 @@ namespace LibNbt {
         /// <param name="value"> String value to assign to this tag. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         public NbtString( [CanBeNull] string tagName, [NotNull] string value ) {
-            if( value == null ) throw new ArgumentNullException( "value" );
+            if( value == null )
+                throw new ArgumentNullException( "value" );
             Name = tagName;
             Value = value;
         }
@@ -67,7 +73,8 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.String );
             if( writeName ) {
-                if( Name == null ) throw new NbtFormatException( "Name is null" );
+                if( Name == null )
+                    throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
             writeStream.Write( Value );

@@ -9,17 +9,22 @@ namespace LibNbt {
     public sealed class NbtList : NbtTag, IList<NbtTag>, IList {
         /// <summary> Type of this tag (List). </summary>
         public override NbtTagType TagType {
-            get { return NbtTagType.List; }
+            get {
+                return NbtTagType.List;
+            }
         }
 
-        [NotNull] readonly List<NbtTag> tags;
+        [NotNull]
+        readonly List<NbtTag> tags;
 
 
         /// <summary> Gets or sets the tag type of this list. All tags in this NbtTag must be of the same type. </summary>
         /// <exception cref="ArgumentException"> If the given NbtTagType does not match the type of existing list items (for non-empty lists). </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If the given NbtTagType is not among recognized tag types. </exception>
         public NbtTagType ListType {
-            get { return listType; }
+            get {
+                return listType;
+            }
             set {
                 if( !Enum.IsDefined( typeof( NbtTagType ), value ) ) {
                     throw new ArgumentOutOfRangeException( "value" );
@@ -55,7 +60,8 @@ namespace LibNbt {
         /// <exception cref="ArgumentException"> If given tags are of mixed types. </exception>
         public NbtList( [NotNull] IEnumerable<NbtTag> tags )
             : this( null, tags, NbtTagType.Unknown ) {
-            if( tags == null ) throw new ArgumentNullException( "tags" );
+            if( tags == null )
+                throw new ArgumentNullException( "tags" );
         }
 
 
@@ -77,7 +83,8 @@ namespace LibNbt {
         /// <exception cref="ArgumentException"> If given tags are of mixed types. </exception>
         public NbtList( [CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags )
             : this( tagName, tags, NbtTagType.Unknown ) {
-            if( tags == null ) throw new ArgumentNullException( "tags" );
+            if( tags == null )
+                throw new ArgumentNullException( "tags" );
         }
 
 
@@ -91,7 +98,8 @@ namespace LibNbt {
         /// <exception cref="ArgumentException"> If given tags do not match <paramref name="givenListType"/>, or are of mixed types. </exception>
         public NbtList( [NotNull] IEnumerable<NbtTag> tags, NbtTagType givenListType )
             : this( null, tags, givenListType ) {
-            if( tags == null ) throw new ArgumentNullException( "tags" );
+            if( tags == null )
+                throw new ArgumentNullException( "tags" );
         }
 
 
@@ -120,7 +128,8 @@ namespace LibNbt {
                 throw new ArgumentOutOfRangeException( "givenListType" );
             }
 
-            if( tags == null ) return;
+            if( tags == null )
+                return;
             foreach( NbtTag tag in tags ) {
                 Add( tag );
             }
@@ -135,7 +144,9 @@ namespace LibNbt {
         /// <exception cref="ArgumentException"> Given tag's type does not match ListType. </exception>
         [NotNull]
         public override NbtTag this[ int tagIndex ] {
-            get { return tags[tagIndex]; }
+            get {
+                return tags[tagIndex];
+            }
             set {
                 if( value == null ) {
                     throw new ArgumentNullException( "value" );
@@ -170,7 +181,8 @@ namespace LibNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="newTags"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If given tags do not match ListType, or are of mixed types. </exception>
         public void AddRange( [NotNull] IEnumerable<NbtTag> newTags ) {
-            if( newTags == null ) throw new ArgumentNullException( "newTags" );
+            if( newTags == null )
+                throw new ArgumentNullException( "newTags" );
             foreach( NbtTag tag in newTags ) {
                 Add( tag );
             }
@@ -224,42 +236,42 @@ namespace LibNbt {
             for( int i = 0; i < length; i++ ) {
                 NbtTag newTag;
                 switch( ListType ) {
-                    case NbtTagType.Byte:
-                        newTag = new NbtByte();
-                        break;
-                    case NbtTagType.Short:
-                        newTag = new NbtShort();
-                        break;
-                    case NbtTagType.Int:
-                        newTag = new NbtInt();
-                        break;
-                    case NbtTagType.Long:
-                        newTag = new NbtLong();
-                        break;
-                    case NbtTagType.Float:
-                        newTag = new NbtFloat();
-                        break;
-                    case NbtTagType.Double:
-                        newTag = new NbtDouble();
-                        break;
-                    case NbtTagType.ByteArray:
-                        newTag = new NbtByteArray();
-                        break;
-                    case NbtTagType.String:
-                        newTag = new NbtString();
-                        break;
-                    case NbtTagType.List:
-                        newTag = new NbtList();
-                        break;
-                    case NbtTagType.Compound:
-                        newTag = new NbtCompound();
-                        break;
-                    case NbtTagType.IntArray:
-                        newTag = new NbtIntArray();
-                        break;
-                    default:
-                        // should never happen, since ListType is checked beforehand
-                        throw new NbtFormatException( "Unsupported tag type found in NBT_Compound" );
+                case NbtTagType.Byte:
+                    newTag = new NbtByte();
+                    break;
+                case NbtTagType.Short:
+                    newTag = new NbtShort();
+                    break;
+                case NbtTagType.Int:
+                    newTag = new NbtInt();
+                    break;
+                case NbtTagType.Long:
+                    newTag = new NbtLong();
+                    break;
+                case NbtTagType.Float:
+                    newTag = new NbtFloat();
+                    break;
+                case NbtTagType.Double:
+                    newTag = new NbtDouble();
+                    break;
+                case NbtTagType.ByteArray:
+                    newTag = new NbtByteArray();
+                    break;
+                case NbtTagType.String:
+                    newTag = new NbtString();
+                    break;
+                case NbtTagType.List:
+                    newTag = new NbtList();
+                    break;
+                case NbtTagType.Compound:
+                    newTag = new NbtCompound();
+                    break;
+                case NbtTagType.IntArray:
+                    newTag = new NbtIntArray();
+                    break;
+                default:
+                    // should never happen, since ListType is checked beforehand
+                    throw new NbtFormatException( "Unsupported tag type found in NBT_Compound" );
                 }
                 newTag.Parent = this;
                 if( newTag.ReadTag( readStream ) ) {
@@ -283,45 +295,45 @@ namespace LibNbt {
             }
 
             switch( ListType ) {
-                case NbtTagType.Byte:
-                    readStream.Skip( length );
-                    break;
-                case NbtTagType.Short:
-                    readStream.Skip( length * sizeof( short ) );
-                    break;
-                case NbtTagType.Int:
-                    readStream.Skip( length * sizeof( int ) );
-                    break;
-                case NbtTagType.Long:
-                    readStream.Skip( length * sizeof( long ) );
-                    break;
-                case NbtTagType.Float:
-                    readStream.Skip( length * sizeof( float ) );
-                    break;
-                case NbtTagType.Double:
-                    readStream.Skip( length * sizeof( double ) );
-                    break;
-                default:
-                    for( int i = 0; i < length; i++ ) {
-                        switch( listType ) {
-                            case NbtTagType.ByteArray:
-                                new NbtByteArray().SkipTag( readStream );
-                                break;
-                            case NbtTagType.String:
-                                readStream.SkipString();
-                                break;
-                            case NbtTagType.List:
-                                new NbtList().SkipTag( readStream );
-                                break;
-                            case NbtTagType.Compound:
-                                new NbtCompound().SkipTag( readStream );
-                                break;
-                            case NbtTagType.IntArray:
-                                new NbtIntArray().SkipTag( readStream );
-                                break;
-                        }
+            case NbtTagType.Byte:
+                readStream.Skip( length );
+                break;
+            case NbtTagType.Short:
+                readStream.Skip( length * sizeof( short ) );
+                break;
+            case NbtTagType.Int:
+                readStream.Skip( length * sizeof( int ) );
+                break;
+            case NbtTagType.Long:
+                readStream.Skip( length * sizeof( long ) );
+                break;
+            case NbtTagType.Float:
+                readStream.Skip( length * sizeof( float ) );
+                break;
+            case NbtTagType.Double:
+                readStream.Skip( length * sizeof( double ) );
+                break;
+            default:
+                for( int i = 0; i < length; i++ ) {
+                    switch( listType ) {
+                    case NbtTagType.ByteArray:
+                        new NbtByteArray().SkipTag( readStream );
+                        break;
+                    case NbtTagType.String:
+                        readStream.SkipString();
+                        break;
+                    case NbtTagType.List:
+                        new NbtList().SkipTag( readStream );
+                        break;
+                    case NbtTagType.Compound:
+                        new NbtCompound().SkipTag( readStream );
+                        break;
+                    case NbtTagType.IntArray:
+                        new NbtIntArray().SkipTag( readStream );
+                        break;
                     }
-                    break;
+                }
+                break;
             }
         }
 
@@ -329,7 +341,8 @@ namespace LibNbt {
         internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.List );
             if( writeName ) {
-                if( Name == null ) throw new NbtFormatException( "Name is null" );
+                if( Name == null )
+                    throw new NbtFormatException( "Name is null" );
                 writeStream.Write( Name );
             }
             WriteData( writeStream );
@@ -372,7 +385,8 @@ namespace LibNbt {
         /// <returns> The index of tag if found in the list; otherwise, -1. </returns>
         /// <param name="tag"> The tag to locate in this NbtList. </param>
         public int IndexOf( [NotNull] NbtTag tag ) {
-            if( tag == null ) throw new ArgumentNullException( "tag" );
+            if( tag == null )
+                throw new ArgumentNullException( "tag" );
             return tags.IndexOf( tag );
         }
 
@@ -383,7 +397,8 @@ namespace LibNbt {
         /// <exception cref="ArgumentOutOfRangeException"> <paramref name="tagIndex"/> is not a valid index in this NbtList. </exception>
         /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is <c>null</c>. </exception>
         public void Insert( int tagIndex, [NotNull] NbtTag newTag ) {
-            if( newTag == null ) throw new ArgumentNullException( "newTag" );
+            if( newTag == null )
+                throw new ArgumentNullException( "newTag" );
             if( listType == NbtTagType.Unknown ) {
                 listType = newTag.TagType;
             } else if( newTag.TagType != listType ) {
@@ -411,7 +426,8 @@ namespace LibNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If <paramref name="newTag"/> does not match ListType. </exception>
         public void Add( [NotNull] NbtTag newTag ) {
-            if( newTag == null ) throw new ArgumentNullException( "newTag" );
+            if( newTag == null )
+                throw new ArgumentNullException( "newTag" );
             if( listType == NbtTagType.Unknown ) {
                 listType = newTag.TagType;
             } else if( newTag.TagType != listType ) {
@@ -437,7 +453,8 @@ namespace LibNbt {
         /// <returns> true if given tag is found in this NbtList; otherwise, false. </returns>
         /// <param name="item"> The tag to locate in this NbtList. </param>
         public bool Contains( [NotNull] NbtTag item ) {
-            if( item == null ) throw new ArgumentNullException( "item" );
+            if( item == null )
+                throw new ArgumentNullException( "item" );
             return tags.Contains( item );
         }
 
@@ -463,7 +480,8 @@ namespace LibNbt {
         /// <param name="tag"> The tag to remove from this NbtList. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is <c>null</c>. </exception>
         public bool Remove( [NotNull] NbtTag tag ) {
-            if( tag == null ) throw new ArgumentNullException( "tag" );
+            if( tag == null )
+                throw new ArgumentNullException( "tag" );
             if( !tags.Remove( tag ) ) {
                 return false;
             }
@@ -475,12 +493,16 @@ namespace LibNbt {
         /// <summary> Gets the number of tags contained in the NbtList. </summary>
         /// <returns> The number of tags contained in the NbtList. </returns>
         public int Count {
-            get { return tags.Count; }
+            get {
+                return tags.Count;
+            }
         }
 
 
         bool ICollection<NbtTag>.IsReadOnly {
-            get { return false; }
+            get {
+                return false;
+            }
         }
 
         #endregion
@@ -497,8 +519,12 @@ namespace LibNbt {
 
 
         object IList.this[ int tagIndex ] {
-            get { return tags[tagIndex]; }
-            set { this[tagIndex] = (NbtTag)value; }
+            get {
+                return tags[tagIndex];
+            }
+            set {
+                this[tagIndex] = (NbtTag)value;
+            }
         }
 
 
@@ -524,7 +550,9 @@ namespace LibNbt {
 
 
         bool IList.IsFixedSize {
-            get { return false; }
+            get {
+                return false;
+            }
         }
 
 
@@ -534,17 +562,23 @@ namespace LibNbt {
 
 
         object ICollection.SyncRoot {
-            get { return ( tags as ICollection ).SyncRoot; }
+            get {
+                return ( tags as ICollection ).SyncRoot;
+            }
         }
 
 
         bool ICollection.IsSynchronized {
-            get { return false; }
+            get {
+                return false;
+            }
         }
 
 
         bool IList.IsReadOnly {
-            get { return false; }
+            get {
+                return false;
+            }
         }
 
         #endregion
