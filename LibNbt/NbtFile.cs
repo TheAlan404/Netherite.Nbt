@@ -39,14 +39,32 @@ namespace LibNbt {
         NbtCompound rootTag;
 
 
+        /// <summary> Whether new NbtFiles should default to big-endian encoding (default: true). </summary>
+        public static bool BigEndianByDefault { get; set; }
+
+        /// <summary> Whether this file should read/write tags in big-endian encoding format. </summary>
+        public bool BigEndian { get; set; }
+
+
+        #region Constructors
+
+        // static constructor
+        static NbtFile() {
+            BigEndianByDefault = true;
+        }
+
+
         /// <summary> Creates an empty NbtFile. RootTag will be <c>null</c>. </summary>
-        public NbtFile() {}
+        public NbtFile() {
+            BigEndian = BigEndianByDefault;
+        }
 
 
         /// <summary> Creates a new NBT file with the given root tag. </summary>
         /// <param name="rootTag"> Compound tag to set as the root tag. May be <c>null</c>. </param>
         /// <exception cref="ArgumentException"> If given rootTag is unnamed. </exception>
-        public NbtFile( [NotNull] NbtCompound rootTag ) {
+        public NbtFile( [NotNull] NbtCompound rootTag )
+            : this() {
             if( rootTag == null )
                 throw new ArgumentNullException( "rootTag" );
             RootTag = rootTag;
@@ -61,7 +79,8 @@ namespace LibNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
-        public NbtFile( [NotNull] string fileName ) {
+        public NbtFile( [NotNull] string fileName )
+            : this() {
             if( fileName == null )
                 throw new ArgumentNullException( "fileName" );
             LoadFromFile( fileName, NbtCompression.AutoDetect, null );
@@ -79,7 +98,8 @@ namespace LibNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
-        public NbtFile( [NotNull] string fileName, NbtCompression compression, [CanBeNull] TagSelector selector ) {
+        public NbtFile( [NotNull] string fileName, NbtCompression compression, [CanBeNull] TagSelector selector )
+            : this() {
             if( fileName == null )
                 throw new ArgumentNullException( "fileName" );
             LoadFromFile( fileName, compression, selector );
@@ -97,7 +117,8 @@ namespace LibNbt {
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
-        public NbtFile( [NotNull] Stream stream, NbtCompression compression, [CanBeNull] TagSelector selector ) {
+        public NbtFile( [NotNull] Stream stream, NbtCompression compression, [CanBeNull] TagSelector selector )
+            : this() {
             LoadFromStream( stream, compression, selector );
         }
 
@@ -118,10 +139,15 @@ namespace LibNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         public NbtFile( [NotNull] byte[] buffer, int index, int length, NbtCompression compression,
-                        [CanBeNull] TagSelector selector ) {
+                        [CanBeNull] TagSelector selector )
+            : this() {
             LoadFromBuffer( buffer, index, length, compression, selector );
         }
 
+        #endregion
+
+
+        #region Loading
 
         /// <summary> Loads NBT data from a file. Existing RootTag will be replaced. Compression will be auto-detected. </summary>
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
@@ -288,7 +314,7 @@ namespace LibNbt {
             if( stream.ReadByte() != (int)NbtTagType.Compound ) {
                 throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
             }
-            NbtReader reader = new NbtReader( stream ) {
+            NbtReader reader = new NbtReader( stream, BigEndian ) {
                 Selector = tagSelector
             };
 
@@ -297,6 +323,10 @@ namespace LibNbt {
             RootTag = rootCompound;
         }
 
+        #endregion
+
+
+        #region Saving
 
         /// <summary> Saves this NBT file to a stream. Nothing is written to stream if RootTag is <c>null</c>. </summary>
         /// <param name="fileName"> File to write data to. May not be <c>null</c>. </param>
@@ -395,7 +425,7 @@ namespace LibNbt {
                 int checksum;
                 using( var compressStream = new ZLibStream( stream, CompressionMode.Compress, true ) ) {
                     BufferedStream bufferedStream = new BufferedStream( compressStream, BufferSize );
-                    RootTag.WriteTag( new NbtWriter( bufferedStream ), true );
+                    RootTag.WriteTag( new NbtWriter( bufferedStream, BigEndian ), true );
                     bufferedStream.Flush();
                     checksum = compressStream.Checksum;
                 }
@@ -411,18 +441,20 @@ namespace LibNbt {
                 using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
                     // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
                     BufferedStream bufferedStream = new BufferedStream( compressStream, BufferSize );
-                    RootTag.WriteTag( new NbtWriter( bufferedStream ), true );
+                    RootTag.WriteTag( new NbtWriter( bufferedStream, BigEndian ), true );
                     bufferedStream.Flush();
                 }
                 break;
 
             case NbtCompression.None:
-                RootTag.WriteTag( new NbtWriter( stream ), true );
+                RootTag.WriteTag( new NbtWriter( stream, BigEndian ), true );
                 break;
             }
 
             return (int)( stream.Position - startPosition );
         }
+
+        #endregion
 
 
         /// <summary> Reads the root name from the given NBT file. Automatically detects compression. </summary>
@@ -520,7 +552,7 @@ namespace LibNbt {
         static string GetRootNameInternal( [NotNull] Stream stream ) {
             if( stream == null )
                 throw new ArgumentNullException( "stream" );
-            NbtReader reader = new NbtReader( stream );
+            NbtReader reader = new NbtReader( stream, BigEndianByDefault );
 
             if( reader.ReadTagType() != NbtTagType.Compound ) {
                 throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
@@ -530,8 +562,19 @@ namespace LibNbt {
         }
 
 
+        /// <summary> Prints contents of the root tag, and any child tags, to a string. </summary>
         public override string ToString() {
             return RootTag.ToString();
+        }
+
+
+        /// <summary> Prints contents of the root tag, and any child tags, to a string.
+        /// Indents the string using multiples of the given indentation string. </summary>
+        /// <param name="indentString"> String to be used for indentation. </param>
+        /// <returns> A string representing contants of this tag, and all child tags (if any). </returns>
+        /// <exception cref="ArgumentNullException"> identString is <c>null</c>. </exception>
+        public string ToString( string indentString ) {
+            return RootTag.ToString( indentString );
         }
     }
 }

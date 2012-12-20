@@ -6,8 +6,13 @@ using JetBrains.Annotations;
 
 namespace LibNbt {
     sealed class NbtWriter : BinaryWriter {
-        public NbtWriter( [NotNull] Stream input )
-            : base( input ) {}
+        readonly bool bigEndian;
+
+
+        public NbtWriter( [NotNull] Stream input, bool bigEndian )
+            : base( input ) {
+            this.bigEndian = bigEndian;
+        }
 
 
         public void Write( NbtTagType value ) {
@@ -16,22 +21,34 @@ namespace LibNbt {
 
 
         public override void Write( short value ) {
-            base.Write( IPAddress.HostToNetworkOrder( value ) );
+            if( BitConverter.IsLittleEndian == bigEndian ) {
+                base.Write( Swap( value ) );
+            } else {
+                base.Write( value );
+            }
         }
 
 
         public override void Write( int value ) {
-            base.Write( IPAddress.HostToNetworkOrder( value ) );
+            if( BitConverter.IsLittleEndian == bigEndian ) {
+                base.Write( Swap( value ) );
+            } else {
+                base.Write( value );
+            }
         }
 
 
         public override void Write( long value ) {
-            base.Write( IPAddress.HostToNetworkOrder( value ) );
+            if( BitConverter.IsLittleEndian == bigEndian ) {
+                base.Write( Swap( value ) );
+            } else {
+                base.Write( value );
+            }
         }
 
 
         public override void Write( float value ) {
-            if( BitConverter.IsLittleEndian ) {
+            if( BitConverter.IsLittleEndian == bigEndian ) {
                 byte[] floatBytes = BitConverter.GetBytes( value );
                 Array.Reverse( floatBytes );
                 Write( floatBytes );
@@ -42,7 +59,7 @@ namespace LibNbt {
 
 
         public override void Write( double value ) {
-            if( BitConverter.IsLittleEndian ) {
+            if( BitConverter.IsLittleEndian == bigEndian ) {
                 byte[] doubleBytes = BitConverter.GetBytes( value );
                 Array.Reverse( doubleBytes );
                 Write( doubleBytes );
@@ -58,6 +75,28 @@ namespace LibNbt {
             var bytes = Encoding.UTF8.GetBytes( value );
             Write( (short)bytes.Length );
             Write( bytes );
+        }
+
+
+
+        public static short Swap( short v ) {
+            return (short)( ( v >> 8 ) & 0x00FF |
+                            ( v << 8 ) & 0xFF00 );
+        }
+
+
+        public static int Swap( int v ) {
+            uint v2 = (uint)v;
+            return (int)( ( v2 >> 24 ) & 0x000000FF |
+                          ( v2 >> 8 ) & 0x0000FF00 |
+                          ( v2 << 8 ) & 0x00FF0000 |
+                          ( v2 << 24 ) & 0xFF000000 );
+        }
+
+
+        public static long Swap( long v ) {
+            return ( Swap( (int)v ) & uint.MaxValue ) << 32 |
+                     Swap( (int)( v >> 32 ) ) & uint.MaxValue;
         }
     }
 }

@@ -11,10 +11,13 @@ namespace LibNbt {
 
         byte[] seekBuffer;
         const int SeekBufferSize = 64 * 1024;
+        readonly bool bigEndian;
 
 
-        public NbtReader( [NotNull] Stream input )
-            : base( input ) {}
+        public NbtReader( [NotNull] Stream input, bool bigEndian )
+            : base( input ) {
+            this.bigEndian = bigEndian;
+        }
 
 
         public NbtTagType ReadTagType() {
@@ -23,22 +26,34 @@ namespace LibNbt {
 
 
         public override short ReadInt16() {
-            return IPAddress.NetworkToHostOrder( base.ReadInt16() );
+            if( BitConverter.IsLittleEndian == bigEndian ) {
+                return NbtWriter.Swap( base.ReadInt16() );
+            } else {
+                return base.ReadInt16();
+            }
         }
 
 
         public override int ReadInt32() {
-            return IPAddress.NetworkToHostOrder( base.ReadInt32() );
+            if( BitConverter.IsLittleEndian == bigEndian ) {
+                return NbtWriter.Swap( base.ReadInt32() );
+            } else {
+                return base.ReadInt32();
+            }
         }
 
 
         public override long ReadInt64() {
-            return IPAddress.NetworkToHostOrder( base.ReadInt64() );
+            if( BitConverter.IsLittleEndian == bigEndian ) {
+                return NbtWriter.Swap( base.ReadInt64() );
+            } else {
+                return base.ReadInt64();
+            }
         }
 
 
         public override float ReadSingle() {
-            if( BitConverter.IsLittleEndian ) {
+            if( BitConverter.IsLittleEndian == bigEndian ) {
                 BaseStream.Read( floatBuffer, 0, sizeof( float ) );
                 Array.Reverse( floatBuffer );
                 return BitConverter.ToSingle( floatBuffer, 0 );
@@ -48,7 +63,7 @@ namespace LibNbt {
 
 
         public override double ReadDouble() {
-            if( BitConverter.IsLittleEndian ) {
+            if( BitConverter.IsLittleEndian == bigEndian ) {
                 BaseStream.Read( doubleBuffer, 0, sizeof( double ) );
                 Array.Reverse( doubleBuffer );
                 return BitConverter.ToDouble( doubleBuffer, 0 );
