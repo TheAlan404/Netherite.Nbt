@@ -1,3 +1,13 @@
+0.4.0 (Matvei Stefarov)
+- Changed the way NbtFiles are constructed. Data is not loaded in the
+	constructor itself any more, use LoadFrom* method.
+- Added a way to load NBT data directly from byte arrays, and to save them to
+	byte arrays.
+- All LoadFrom-/SaveTo- methods now return an int, indicating the number of
+	bytes read/written.
+- Updated NbtFile to override ToString.
+- Added a way to control endianness when reading/writing NBT files.
+
 0.3.4 (Matvei Stefarov)
 - Added a way to rename tags inside NbtCompound and NbtFile.
 
