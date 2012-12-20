@@ -5,9 +5,10 @@ namespace LibNbt.Test {
     public sealed class TagSelectorTests {
         [Test]
         public void SkippingTagsOnFileLoad() {
-            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt",
-                                              NbtCompression.None,
-                                              tag => tag.Name != "nested compound test" );
+            NbtFile loadedFile = new NbtFile();
+            loadedFile.LoadFromFile( "TestFiles/bigtest.nbt",
+                                     NbtCompression.None,
+                                     tag => tag.Name != "nested compound test" );
             Assert.IsFalse( loadedFile.RootTag.Contains( "nested compound test" ) );
             Assert.IsTrue( loadedFile.RootTag.Contains( "listTest (long)" ) );
 
