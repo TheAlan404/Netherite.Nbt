@@ -288,8 +288,9 @@ namespace LibNbt.Test {
         [Test]
         public void ReloadUncompressed() {
             NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" );
-            loadedFile.SaveToFile( "TestTemp/bigtest.nbt", NbtCompression.None );
-            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt", NbtCompression.AutoDetect, null );
+            int bytesWritten = loadedFile.SaveToFile( "TestTemp/bigtest.nbt", NbtCompression.None );
+            int bytesRead = loadedFile.LoadFromFile( "TestTemp/bigtest.nbt", NbtCompression.AutoDetect, null );
+            Assert.AreEqual( bytesWritten, bytesRead );
             AssertNbtBigFile( loadedFile );
         }
 
@@ -297,8 +298,9 @@ namespace LibNbt.Test {
         [Test]
         public void ReloadGZip() {
             NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" );
-            loadedFile.SaveToFile( "TestTemp/bigtest.nbt.gz", NbtCompression.GZip );
-            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.gz", NbtCompression.AutoDetect, null );
+            int bytesWritten = loadedFile.SaveToFile( "TestTemp/bigtest.nbt.gz", NbtCompression.GZip );
+            int bytesRead = loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.gz", NbtCompression.AutoDetect, null );
+            Assert.AreEqual( bytesWritten, bytesRead );
             AssertNbtBigFile( loadedFile );
         }
 
@@ -306,9 +308,25 @@ namespace LibNbt.Test {
         [Test]
         public void ReloadZLib() {
             NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" );
-            loadedFile.SaveToFile( "TestTemp/bigtest.nbt.z", NbtCompression.ZLib );
-            loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.z", NbtCompression.AutoDetect, null );
+            int bytesWritten = loadedFile.SaveToFile( "TestTemp/bigtest.nbt.z", NbtCompression.ZLib );
+            int bytesRead = loadedFile.LoadFromFile( "TestTemp/bigtest.nbt.z", NbtCompression.AutoDetect, null );
+            Assert.AreEqual( bytesWritten, bytesRead );
             AssertNbtBigFile( loadedFile );
+        }
+
+
+        [Test]
+        public void ReloadNonSeekableStream() {
+            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" );
+            using( MemoryStream ms = new MemoryStream() ) {
+                using( NonSeekableStream nss = new NonSeekableStream( ms ) ) {
+                    int bytesWritten = loadedFile.SaveToStream( nss, NbtCompression.None );
+                    ms.Position = 0;
+                    int bytesRead = loadedFile.LoadFromStream( nss, NbtCompression.None, null );
+                    Assert.AreEqual( bytesWritten, bytesRead );
+                    AssertNbtBigFile( loadedFile );
+                }
+            }
         }
 
 
