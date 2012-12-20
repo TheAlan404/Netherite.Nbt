@@ -38,6 +38,9 @@ namespace LibNbt {
 
         NbtCompound rootTag;
 
+        /// <summary> Creates an empty NbtFile. RootTag will be <c>null</c>. </summary>
+        public NbtFile() {}
+
 
         /// <summary> Creates a new NBT file with the given root tag. </summary>
         /// <param name="rootTag"> Compound tag to set as the root tag. May be <c>null</c>. </param>
@@ -200,7 +203,7 @@ namespace LibNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         public int LoadFromStream( [NotNull] Stream stream, NbtCompression compression,
-                                    [CanBeNull] TagSelector selector ) {
+                                   [CanBeNull] TagSelector selector ) {
             if( stream == null )
                 throw new ArgumentNullException( "stream" );
 

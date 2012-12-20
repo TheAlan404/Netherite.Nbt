@@ -56,30 +56,52 @@ namespace LibNbt.Test {
 
         [Test]
         public void LoadingBigFileUncompressed() {
-            var file = new NbtFile( "TestFiles/bigtest.nbt" );
+            var file = new NbtFile();
+            int length = file.LoadFromFile( "TestFiles/bigtest.nbt" );
             AssertNbtBigFile( file );
+            Assert.AreEqual( length, new FileInfo( "TestFiles/bigtest.nbt" ).Length );
         }
 
 
         [Test]
         public void LoadingBigFileGZip() {
-            var file = new NbtFile( "TestFiles/bigtest.nbt.gz" );
+            var file = new NbtFile();
+            int length = file.LoadFromFile( "TestFiles/bigtest.nbt.gz" );
             AssertNbtBigFile( file );
+            Assert.AreEqual( length, new FileInfo( "TestFiles/bigtest.nbt.gz" ).Length );
         }
 
 
         [Test]
         public void LoadingBigFileZLib() {
-            var file = new NbtFile( "TestFiles/bigtest.nbt.z" );
+            var file = new NbtFile();
+            int length = file.LoadFromFile( "TestFiles/bigtest.nbt.z" );
             AssertNbtBigFile( file );
+            Assert.AreEqual( length, new FileInfo( "TestFiles/bigtest.nbt.z" ).Length );
         }
 
 
         [Test]
         public void LoadingBigFileBuffer() {
             byte[] fileBytes = File.ReadAllBytes( "TestFiles/bigtest.nbt" );
-            var file = new NbtFile( fileBytes, 0, fileBytes.Length, NbtCompression.AutoDetect, null );
+            var file = new NbtFile();
+            int length = file.LoadFromBuffer( fileBytes, 0, fileBytes.Length, NbtCompression.AutoDetect, null );
             AssertNbtBigFile( file );
+            Assert.AreEqual( length, new FileInfo( "TestFiles/bigtest.nbt" ).Length );
+        }
+
+
+        [Test]
+        public void LoadingBigFileStream() {
+            byte[] fileBytes = File.ReadAllBytes( "TestFiles/bigtest.nbt" );
+            using( MemoryStream ms = new MemoryStream( fileBytes ) ) {
+                using( NonSeekableStream nss = new NonSeekableStream( ms ) ) {
+                    var file = new NbtFile();
+                    int length = file.LoadFromStream( nss, NbtCompression.None, null );
+                    AssertNbtBigFile( file );
+                    Assert.AreEqual( length, new FileInfo( "TestFiles/bigtest.nbt" ).Length );
+                }
+            }
         }
 
 
