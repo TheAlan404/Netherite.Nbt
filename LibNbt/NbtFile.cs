@@ -526,5 +526,10 @@ namespace LibNbt {
 
             return reader.ReadString();
         }
+
+        public override string ToString()
+        {
+            return RootTag.ToString();
+        }
     }
 }
