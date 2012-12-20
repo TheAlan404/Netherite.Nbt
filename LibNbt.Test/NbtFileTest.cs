@@ -337,6 +337,12 @@ namespace LibNbt.Test {
         }
 
 
+        [Test]
+        public void ReadRootTag() {
+            Assert.AreEqual( NbtFile.ReadRootTagName( "TestFiles/bigtest.nbt" ), "hello world" );
+        }
+
+
         [TearDown]
         public void NbtFileTestTearDown() {
             if( Directory.Exists( "TestTemp" ) ) {
