@@ -27,8 +27,12 @@ with applications that use LibNbt2012; they are only used for testing.
 
 
 ==== DOWNLOAD =================================================================
-                      Binary (DLL): http://fcraft.net/libnbt/v0.4.0/LibNbt.dll
- Amalgamation (single source file): http://fcraft.net/libnbt/v0.4.0/LibNbt.cs
+ Compiled binary - under LGPL license:
+                    http://fcraft.net/libnbt/LibNbt2012_v0.4.0.zip
+
+ Amalgamation (single source file) - under 3-clause BSD license:
+         Annotated: http://fcraft.net/libnbt/LibNbt2012_v0.4.0.cs
+     Non-annotated: http://fcraft.net/libnbt/LibNbt2012_v0.4.0_Annotated.cs
 
 
 ==== EXAMPLES =================================================================
