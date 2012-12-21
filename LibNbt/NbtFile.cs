@@ -508,7 +508,7 @@ namespace LibNbt {
 
         /// <summary> Prints contents of the root tag, and any child tags, to a string. </summary>
         public override string ToString() {
-            return RootTag.ToString();
+            return RootTag.ToString( NbtTag.DefaultIndentString );
         }
 
 

@@ -311,6 +311,16 @@ namespace LibNbt {
 
         /// <summary> Prints contents of this tag, and any child tags, to a string.
         /// Indents the string using multiples of the given indentation string. </summary>
+        /// <returns> A string representing contants of this tag, and all child tags (if any). </returns>
+        public override string ToString() {
+            StringBuilder sb = new StringBuilder();
+            PrettyPrint( sb, DefaultIndentString, 0 );
+            return sb.ToString();
+        }
+
+
+        /// <summary> Prints contents of this tag, and any child tags, to a string.
+        /// Indents the string using multiples of the given indentation string. </summary>
         /// <param name="indentString"> String to be used for indentation. </param>
         /// <returns> A string representing contants of this tag, and all child tags (if any). </returns>
         /// <exception cref="ArgumentNullException"> identString is <c>null</c>. </exception>
@@ -325,5 +335,27 @@ namespace LibNbt {
 
 
         internal abstract void PrettyPrint( StringBuilder sb, string indentString, int indentLevel );
+
+
+        /// <summary> String to use for indentation in NbtTag's and NbtFile's ToString() methods by default. </summary>
+        /// <exception cref="ArgumentNullException"> value is <c>null</c>. </exception>
+        [NotNull]
+        public static string DefaultIndentString {
+            get {
+                return defaultIndentString;
+            }
+            set {
+                if( value == null )
+                    throw new ArgumentNullException( "value" );
+                defaultIndentString = value;
+            }
+        }
+
+        static string defaultIndentString;
+
+
+        static NbtTag() {
+            DefaultIndentString = "  ";
+        }
     }
 }
