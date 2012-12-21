@@ -26,6 +26,11 @@ with applications that use LibNbt2012; they are only used for testing.
 - Can work with both big-endian and little-endian NBT data and systems.
 
 
+==== DOWNLOAD =================================================================
+                      Binary (DLL): http://fcraft.net/libnbt/v0.4.0/LibNbt.dll
+ Amalgamation (single source file): http://fcraft.net/libnbt/v0.4.0/LibNbt.cs
+
+
 ==== EXAMPLES =================================================================
 - Loading a gzipped file:
     NbtFile myFile = new NbtFile();
@@ -72,7 +77,7 @@ with applications that use LibNbt2012; they are only used for testing.
 
 
 ==== REFERENCE ================================================================
-Up to date online reference can be found at http://www.fcraft.net/api/libnbt/
+Online reference can be found at http://www.fcraft.net/libnbt/v0.4.0/
 
 
 ==== LICENSING ================================================================
