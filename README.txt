@@ -1,4 +1,4 @@
-Current released version is 0.3.4 (5 December 2012).
+Current released version is 0.4.0 (21 December 2012).
 
 Named Binary Tag (NBT) is a structured binary file format used by Minecraft.
 LibNbt2012 is a small library, written in C# for .NET 2.0+. It provides
@@ -23,11 +23,13 @@ with applications that use LibNbt2012; they are only used for testing.
 - Good performance and low memory overhead.
 - Built-in pretty printing of individual tags or whole files.
 - Every class and method are fully documented and unit-tested.
+- Can work with both big-endian and little-endian NBT data and systems.
 
 
 ==== EXAMPLES =================================================================
 - Loading a gzipped file:
-    NbtFile myFile = new NbtFile("somefile.nbt.gz");
+    NbtFile myFile = new NbtFile();
+    myFile.LoadFromFile("somefile.nbt.gz");
     NbtTag myCompoundTag = myFile.RootTag;
 
 - Accessing tags (long/strongly-typed style):
@@ -65,7 +67,7 @@ with applications that use LibNbt2012; they are only used for testing.
     serverFile.SaveToFile( "server.nbt", NbtCompression.None );
 
 - Pretty-printing file structure
-    Console.WriteLine( myFile.RootTag.ToString("\t") );
+    Console.WriteLine( myFile.ToString("\t") );
     Console.WriteLine( myRandomTag.ToString("    ") );
 
 
