@@ -7,7 +7,7 @@ namespace LibNbt {
     /// <summary> Represents a complete NBT file. </summary>
     public sealed class NbtFile {
         // buffer used to avoid frequent reads from / writes to compressed streams
-        const int BufferSize = 8192;
+        const int WriteBufferSize = 8192;
 
         /// <summary> Gets the file name used for most recent loading/saving of this file.
         /// May be <c>null</c>, if this NbtFile instance has not been loaded from, or saved to, a file. </summary>
@@ -46,6 +46,39 @@ namespace LibNbt {
         public bool BigEndian { get; set; }
 
 
+        /// <summary> Gets or sets the default value of BufferSize property. Default is 8192. </summary>
+        /// <exception cref="ArgumentOutOfRangeException"> value is negative. </exception>
+        public static int DefaultBufferSize {
+            get {
+                return defaultBufferSize;
+            }
+            set {
+                if( value < 0 )
+                    throw new ArgumentOutOfRangeException( "value", value, "DefaultBufferSize cannot be negative." );
+                defaultBufferSize = value;
+            }
+        }
+
+        static int defaultBufferSize;
+
+
+        /// <summary> Gets or sets the size of internal buffer used for reading files and streams.
+        /// Initialized to value of DefaultBufferSize property. </summary>
+        /// <exception cref="ArgumentOutOfRangeException"> value is negative. </exception>
+        public int BufferSize {
+            get {
+                return bufferSize;
+            }
+            set {
+                if( value < 0 )
+                    throw new ArgumentOutOfRangeException( "value", value, "BufferSize cannot be negative." );
+                bufferSize = value;
+            }
+        }
+
+        int bufferSize;
+
+
         #region Constructors
 
         // static constructor
@@ -71,7 +104,8 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Loads NBT data from a file. Automatically detects compression. </summary>
+        /// <summary> Loads NBT data from a file using the most common settings.
+        /// Automatically detects compression. Assumes the file to be big-endian, and uses default buffer size. </summary>
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is <c>null</c>. </exception>
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
@@ -190,7 +224,11 @@ namespace LibNbt {
             switch( compression ) {
             case NbtCompression.GZip:
                 using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
-                    LoadFromStreamInternal( new BufferedStream( decStream, BufferSize ), selector );
+                    if( bufferSize > 0 ) {
+                        LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), selector );
+                    } else {
+                        LoadFromStreamInternal( decStream, selector );
+                    }
                 }
                 break;
 
@@ -204,7 +242,11 @@ namespace LibNbt {
                 }
                 stream.ReadByte();
                 using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
-                    LoadFromStreamInternal( new BufferedStream( decStream, BufferSize ), selector );
+                    if( bufferSize > 0 ) {
+                        LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), selector );
+                    } else {
+                        LoadFromStreamInternal( decStream, selector );
+                    }
                 }
                 break;
 
@@ -366,7 +408,7 @@ namespace LibNbt {
                 stream.WriteByte( 0x01 );
                 int checksum;
                 using( var compressStream = new ZLibStream( stream, CompressionMode.Compress, true ) ) {
-                    BufferedStream bufferedStream = new BufferedStream( compressStream, BufferSize );
+                    BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
                     RootTag.WriteTag( new NbtWriter( bufferedStream, BigEndian ), true );
                     bufferedStream.Flush();
                     checksum = compressStream.Checksum;
@@ -410,7 +452,7 @@ namespace LibNbt {
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         [NotNull]
         public static string ReadRootTagName( [NotNull] string fileName ) {
-            return ReadRootTagName( fileName, NbtCompression.AutoDetect, BigEndianByDefault );
+            return ReadRootTagName( fileName, NbtCompression.AutoDetect, BigEndianByDefault, defaultBufferSize );
         }
 
 
@@ -418,6 +460,7 @@ namespace LibNbt {
         /// <param name="fileName"> Name of the file from which data will be loaded. </param>
         /// <param name="compression"> Format in which the given file is compressed. </param>
         /// <param name="bigEndian"> Whether the file uses big-endian (default) or little-endian encoding. </param>
+        /// <param name="bufferSize"> Buffer size to use for reading, in bytes. Default is 8192. </param>
         /// <returns> Name of the root tag in the given NBT file. </returns>
         /// <exception cref="ArgumentNullException"> <paramref name="fileName"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for <paramref name="compression"/>. </exception>
@@ -427,15 +470,20 @@ namespace LibNbt {
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         [NotNull]
-        public static string ReadRootTagName( [NotNull] string fileName, NbtCompression compression, bool bigEndian ) {
-            if( fileName == null )
+        public static string ReadRootTagName( [NotNull] string fileName, NbtCompression compression, bool bigEndian,
+                                              int bufferSize ) {
+            if( fileName == null ) {
                 throw new ArgumentNullException( "fileName" );
+            }
             if( !File.Exists( fileName ) ) {
                 throw new FileNotFoundException( "Could not find the given NBT file.",
                                                  fileName );
             }
+            if( bufferSize < 0 ) {
+                throw new ArgumentOutOfRangeException( "bufferSize", bufferSize, "DefaultBufferSize cannot be negative." );
+            }
             using( FileStream readFileStream = File.OpenRead( fileName ) ) {
-                return ReadRootTagName( readFileStream, compression, bigEndian );
+                return ReadRootTagName( readFileStream, compression, bigEndian, bufferSize );
             }
         }
 
@@ -444,6 +492,7 @@ namespace LibNbt {
         /// <param name="stream"> Stream from which data will be loaded. If compression is set to AutoDetect, this stream must support seeking. </param>
         /// <param name="compression"> Compression method to use for loading this stream. </param>
         /// <param name="bigEndian"> Whether the stream uses big-endian (default) or little-endian encoding. </param>
+        /// <param name="bufferSize"> Buffer size to use for reading, in bytes. Default is 8192. </param>
         /// <returns> Name of the root tag in the given stream. </returns>
         /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for <paramref name="compression"/>. </exception>
@@ -452,10 +501,14 @@ namespace LibNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
         /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
         [NotNull]
-        public static string ReadRootTagName( [NotNull] Stream stream, NbtCompression compression, bool bigEndian ) {
-            if( stream == null )
+        public static string ReadRootTagName( [NotNull] Stream stream, NbtCompression compression, bool bigEndian,
+                                              int bufferSize ) {
+            if( stream == null ) {
                 throw new ArgumentNullException( "stream" );
-
+            }
+            if( bufferSize < 0 ) {
+                throw new ArgumentOutOfRangeException( "bufferSize", bufferSize, "DefaultBufferSize cannot be negative." );
+            }
             // detect compression, based on the first byte
             if( compression == NbtCompression.AutoDetect ) {
                 compression = DetectCompression( stream );
@@ -464,7 +517,11 @@ namespace LibNbt {
             switch( compression ) {
             case NbtCompression.GZip:
                 using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
-                    return GetRootNameInternal( new BufferedStream( decStream, BufferSize ), bigEndian );
+                    if( bufferSize > 0 ) {
+                        return GetRootNameInternal( new BufferedStream( decStream, bufferSize ), bigEndian );
+                    } else {
+                        return GetRootNameInternal( decStream, bigEndian );
+                    }
                 }
 
             case NbtCompression.None:
@@ -476,7 +533,11 @@ namespace LibNbt {
                 }
                 stream.ReadByte();
                 using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
-                    return GetRootNameInternal( new BufferedStream( decStream, BufferSize ), bigEndian );
+                    if( bufferSize > 0 ) {
+                        return GetRootNameInternal( new BufferedStream( decStream, bufferSize ), bigEndian );
+                    } else {
+                        return GetRootNameInternal( decStream, bigEndian );
+                    }
                 }
 
             default:
@@ -500,8 +561,13 @@ namespace LibNbt {
 
 
         /// <summary> Renames the root tag. </summary>
-        /// <param name="newTagName"> New name to give to the root tag. May be <c>null</c>. </param>
-        public void RenameRootTag( string newTagName ) {
+        /// <param name="newTagName"> New name to give to the root tag. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="newTagName"/> is <c>null</c>. </exception>
+        /// <exception cref="NullReferenceException"> RootTag of this file is <c>null</c>. </exception>
+        public void RenameRootTag( [NotNull] string newTagName ) {
+            if( newTagName == null ) {
+                throw new ArgumentNullException( "newTagName" );
+            }
             rootTag.Name = newTagName;
         }
 
@@ -516,8 +582,8 @@ namespace LibNbt {
         /// Indents the string using multiples of the given indentation string. </summary>
         /// <param name="indentString"> String to be used for indentation. </param>
         /// <returns> A string representing contants of this tag, and all child tags (if any). </returns>
-        /// <exception cref="ArgumentNullException"> identString is <c>null</c>. </exception>
-        public string ToString( string indentString ) {
+        /// <exception cref="ArgumentNullException"> <paramref name="indentString"/> is <c>null</c>. </exception>
+        public string ToString( [NotNull] string indentString ) {
             return RootTag.ToString( indentString );
         }
     }
