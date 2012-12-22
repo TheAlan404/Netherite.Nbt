@@ -6,7 +6,8 @@ using JetBrains.Annotations;
 namespace LibNbt {
     /// <summary> Base class for different kinds of named binary tags. </summary>
     public abstract class NbtTag {
-        /// <summary> Parent compound tag, either NbtList or NbtCompound, if any. </summary>
+        /// <summary> Parent compound tag, either NbtList or NbtCompound, if any.
+        /// May be <c>null</c> for detached tags. </summary>
         [CanBeNull]
         public NbtTag Parent { get; internal set; }
 
@@ -323,7 +324,7 @@ namespace LibNbt {
         /// Indents the string using multiples of the given indentation string. </summary>
         /// <param name="indentString"> String to be used for indentation. </param>
         /// <returns> A string representing contants of this tag, and all child tags (if any). </returns>
-        /// <exception cref="ArgumentNullException"> identString is <c>null</c>. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="indentString"/> is <c>null</c>. </exception>
         [NotNull]
         public string ToString( [NotNull] string indentString ) {
             if( indentString == null )
@@ -338,7 +339,7 @@ namespace LibNbt {
 
 
         /// <summary> String to use for indentation in NbtTag's and NbtFile's ToString() methods by default. </summary>
-        /// <exception cref="ArgumentNullException"> value is <c>null</c>. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         [NotNull]
         public static string DefaultIndentString {
             get {
