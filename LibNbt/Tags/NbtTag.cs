@@ -13,14 +13,12 @@ namespace LibNbt {
 
 
         /// <summary> Type of this tag. </summary>
-        public virtual NbtTagType TagType {
-            get {
-                return NbtTagType.Unknown;
-            }
-        }
+        public abstract NbtTagType TagType { get; }
 
 
         /// <summary> Name of this tag. Immutable, and set by the constructor. May be <c>null</c>. </summary>
+        /// <exception cref="ArgumentNullException"> If <paramref name="value"/> is <c>null</c>, and <c>Parent</c> tag is an NbtCompound.
+        /// Name of tags inside an <c>NbtCompound</c> may not be null. </exception>
         [CanBeNull]
         public string Name {
             get {
@@ -32,13 +30,6 @@ namespace LibNbt {
                 } else if( Parent == null ) {
                     name = value;
                     return;
-                }
-
-                NbtList parentAsList = Parent as NbtList;
-                if( parentAsList != null && value != null ) {
-                    throw new ArgumentException(
-                        "Cannot assign name to tag: parent tag is NbtList, and all tags in NbtList must be null.",
-                        "value" );
                 }
 
                 NbtCompound parentAsCompound = Parent as NbtCompound;

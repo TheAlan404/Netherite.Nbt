@@ -383,7 +383,9 @@ namespace LibNbt {
         /// <exception cref="ArgumentException"> If AutoDetect was given as the <paramref name="compression"/> mode. </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If an unrecognized/unsupported value was given for <paramref name="compression"/>. </exception>
         /// <exception cref="InvalidDataException"> If given stream does not support writing. </exception>
-        /// <exception cref="NbtFormatException"> If one of the NbtCompound tags contained unnamed tags;
+        /// <exception cref="NbtFormatException"> If RootTag is null;
+        /// or if RootTag is unnamed;
+        /// or if one of the NbtCompound tags contained unnamed tags;
         /// or if an NbtList tag had Unknown list type and no elements. </exception>
         public int SaveToStream( [NotNull] Stream stream, NbtCompression compression ) {
             if( stream == null )
