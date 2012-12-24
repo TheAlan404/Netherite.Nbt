@@ -400,6 +400,14 @@ namespace LibNbt {
                 throw new ArgumentOutOfRangeException( "compression" );
             }
 
+            if( rootTag == null ) {
+                throw new NbtFormatException( "Cannot save NbtFile: No root tag." );
+            }
+
+            if( rootTag.Name == null ) {
+                throw new NbtFormatException( "Cannot save NbtFile: Root tag is not named. Its name may be an empty string, but not null." );
+            }
+
             long startPosition = stream.Position;
 
             switch( compression ) {
