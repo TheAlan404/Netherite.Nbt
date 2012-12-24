@@ -40,7 +40,7 @@ namespace LibNbt {
                         throw new ArgumentException(
                             "Cannot rename: a tag with the name already exists in this tag's parent NbtCompound.",
                             "value" );
-                    } else {
+                    } else if( name != null ) {
                         parentAsCompound.RenameTag( name, value );
                     }
                 }

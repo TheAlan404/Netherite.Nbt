@@ -434,7 +434,7 @@ namespace LibNbt {
             case NbtCompression.GZip:
                 using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
                     // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
-                    BufferedStream bufferedStream = new BufferedStream( compressStream, BufferSize );
+                    BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
                     RootTag.WriteTag( new NbtWriter( bufferedStream, BigEndian ), true );
                     bufferedStream.Flush();
                 }
