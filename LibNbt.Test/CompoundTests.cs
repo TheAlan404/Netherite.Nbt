@@ -114,6 +114,17 @@ namespace LibNbt.Test {
 
 
         [Test]
+        public void Renaming() {
+            NbtCompound compound = new NbtCompound();
+            compound.Add( new NbtInt( "SameName", 1 ) );
+            var tagToRename = new NbtInt( "DifferentName", 1 );
+            compound.Add( tagToRename );
+            Assert.DoesNotThrow( () => tagToRename.Name = "SomeOtherName" );
+            Assert.Throws<ArgumentNullException>( () => tagToRename.Name = "SameName" );
+        }
+
+
+        [Test]
         public void AddingAndRemoving() {
             NbtCompound test = new NbtCompound();
 
