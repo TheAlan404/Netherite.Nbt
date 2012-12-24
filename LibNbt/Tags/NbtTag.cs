@@ -22,7 +22,43 @@ namespace LibNbt {
 
         /// <summary> Name of this tag. Immutable, and set by the constructor. May be <c>null</c>. </summary>
         [CanBeNull]
-        public string Name { get; internal set; }
+        public string Name {
+            get {
+                return name;
+            }
+            set {
+                if( name == value ) {
+                    return;
+                } else if( Parent == null ) {
+                    name = value;
+                    return;
+                }
+
+                NbtList parentAsList = Parent as NbtList;
+                if( parentAsList != null && value != null ) {
+                    throw new ArgumentException(
+                        "Cannot assign name to tag: parent tag is NbtList, and all tags in NbtList must be null.",
+                        "value" );
+                }
+
+                NbtCompound parentAsCompound = Parent as NbtCompound;
+                if( parentAsCompound != null ) {
+                    if( value == null ) {
+                        throw new ArgumentNullException( "value", "Name of tags inside an NbtCompound may not be null." );
+                    } else if( parentAsCompound.Contains( value ) ) {
+                        throw new ArgumentException(
+                            "Cannot rename: a tag with the name already exists in this tag's parent NbtCompound.",
+                            "value" );
+                    } else {
+                        parentAsCompound.RenameTag( name, value );
+                    }
+                }
+
+                name = value;
+            }
+        }
+
+        string name;
 
 
         /// <summary> Gets the full name of this tag, including all parent tag names, separated by dots. 

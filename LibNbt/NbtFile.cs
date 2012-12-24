@@ -560,18 +560,6 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Renames the root tag. </summary>
-        /// <param name="newTagName"> New name to give to the root tag. May not be <c>null</c>. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="newTagName"/> is <c>null</c>. </exception>
-        /// <exception cref="NullReferenceException"> RootTag of this file is <c>null</c>. </exception>
-        public void RenameRootTag( [NotNull] string newTagName ) {
-            if( newTagName == null ) {
-                throw new ArgumentNullException( "newTagName" );
-            }
-            rootTag.Name = newTagName;
-        }
-
-
         /// <summary> Prints contents of the root tag, and any child tags, to a string. </summary>
         public override string ToString() {
             return RootTag.ToString( NbtTag.DefaultIndentString );
