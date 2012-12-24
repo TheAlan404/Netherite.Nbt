@@ -87,9 +87,12 @@ namespace LibNbt {
         }
 
 
-        /// <summary> Creates an empty NbtFile. RootTag will be <c>null</c>. </summary>
+        /// <summary> Creates an empty NbtFile.
+        /// RootTag will be set to an empty <c>NbtCompound</c> with a blank name (""). </summary>
         public NbtFile() {
             BigEndian = BigEndianByDefault;
+            BufferSize = DefaultBufferSize;
+            RootTag = new NbtCompound( "" );
         }
 
 
