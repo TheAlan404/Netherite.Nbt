@@ -1,3 +1,15 @@
+0.4.1 (Matvei Stefarov)
+- Added a way to set up default indent for NbtTag.ToString() methods, using
+	NbtTag.DefaultIndentString static property.
+- Added a way to control/disable buffering when reading tags, using properties
+	NbtFile.DefaultBufferSize (static) and "nbtFile.BufferSize" (instance).
+- Simplified renaming tags. Instead of using NbtFile.RenameRootTag or
+	NbtCompound.RenameTag, you can now set tag's Name property directly. It
+	will check parent tag automatically, and throw ArgumentException or
+	ArgumentNullException is renaming is not possible.
+- NbtFile() constructor now initializes RootTag to an empty NbtCompound("").
+- Added LoadFro* overloads that do not require a TagSelector parameter.
+
 0.4.0 (Matvei Stefarov)
 - Changed the way NbtFiles are constructed. Data is not loaded in the
 	constructor itself any more, use LoadFrom* method.

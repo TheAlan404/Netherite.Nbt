@@ -1,4 +1,4 @@
-Current released version is 0.4.0 (21 December 2012).
+Current released version is 0.4.1 (24 December 2012).
 
 Named Binary Tag (NBT) is a structured binary file format used by Minecraft.
 LibNbt2012 is a small library, written in C# for .NET 2.0+. It provides
@@ -28,11 +28,11 @@ with applications that use LibNbt2012; they are only used for testing.
 
 ==== DOWNLOAD =================================================================
  Compiled binary - under LGPL license:
-                    http://fcraft.net/libnbt/LibNbt2012_v0.4.0.zip
+                    http://fcraft.net/libnbt/LibNbt2012_v0.4.1.zip
 
  Amalgamation (single source file) - under 3-clause BSD license:
-         Annotated: http://fcraft.net/libnbt/LibNbt2012_v0.4.0.cs
-     Non-annotated: http://fcraft.net/libnbt/LibNbt2012_v0.4.0_Annotated.cs
+         Annotated: http://fcraft.net/libnbt/LibNbt2012_v0.4.1.cs
+     Non-annotated: http://fcraft.net/libnbt/LibNbt2012_v0.4.1_Annotated.cs
 
 
 ==== EXAMPLES =================================================================
@@ -81,7 +81,7 @@ with applications that use LibNbt2012; they are only used for testing.
 
 
 ==== REFERENCE ================================================================
-Online reference can be found at http://www.fcraft.net/libnbt/v0.4.0/
+Online reference can be found at http://www.fcraft.net/libnbt/v0.4.1/
 
 
 ==== LICENSING ================================================================
