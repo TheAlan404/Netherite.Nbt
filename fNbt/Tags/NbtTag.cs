@@ -70,17 +70,17 @@ namespace fNbt {
         }
 
 
-        internal abstract bool ReadTag( NbtReader readStream );
+        internal abstract bool ReadTag( NbtBinaryReader readStream );
 
 
-        internal abstract void SkipTag( NbtReader readStream );
+        internal abstract void SkipTag( NbtBinaryReader readStream );
 
 
-        internal abstract void WriteTag( [NotNull] NbtWriter writeReader, bool writeName );
+        internal abstract void WriteTag( [NotNull] NbtBinaryWriter writeReader, bool writeName );
 
 
         // WriteData does not write the tag's ID byte or the name
-        internal abstract void WriteData( [NotNull] NbtWriter writeReader );
+        internal abstract void WriteData( [NotNull] NbtBinaryWriter writeReader );
 
 
         #region Shortcuts

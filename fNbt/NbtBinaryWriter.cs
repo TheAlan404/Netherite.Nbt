@@ -4,11 +4,13 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace fNbt {
-    sealed class NbtWriter : BinaryWriter {
+    /// <summary> BinaryWriter wrapper that takes care of writing primitives to an NBT stream,
+    /// while taking care of endianness and string encoding. </summary>
+    sealed class NbtBinaryWriter : BinaryWriter {
         readonly bool bigEndian;
 
 
-        public NbtWriter( [NotNull] Stream input, bool bigEndian )
+        public NbtBinaryWriter( [NotNull] Stream input, bool bigEndian )
             : base( input ) {
             this.bigEndian = bigEndian;
         }

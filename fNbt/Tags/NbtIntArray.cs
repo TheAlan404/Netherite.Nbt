@@ -76,7 +76,7 @@ namespace fNbt {
         }
 
 
-        internal override bool ReadTag( NbtReader readStream ) {
+        internal override bool ReadTag( NbtBinaryReader readStream ) {
             int length = readStream.ReadInt32();
             if( length < 0 ) {
                 throw new NbtFormatException( "Negative length given in TAG_Int_Array" );
@@ -95,7 +95,7 @@ namespace fNbt {
         }
 
 
-        internal override void SkipTag( NbtReader readStream ) {
+        internal override void SkipTag( NbtBinaryReader readStream ) {
             int length = readStream.ReadInt32();
             if( length < 0 ) {
                 throw new NbtFormatException( "Negative length given in TAG_Int_Array" );
@@ -104,7 +104,7 @@ namespace fNbt {
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+        internal override void WriteTag( NbtBinaryWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.IntArray );
             if( writeName ) {
                 if( Name == null )
@@ -115,7 +115,7 @@ namespace fNbt {
         }
 
 
-        internal override void WriteData( NbtWriter writeStream ) {
+        internal override void WriteData( NbtBinaryWriter writeStream ) {
             writeStream.Write( Value.Length );
             for( int i = 0; i < Value.Length; i++ ) {
                 writeStream.Write( Value[i] );

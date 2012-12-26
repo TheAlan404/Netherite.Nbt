@@ -41,7 +41,7 @@ namespace fNbt {
         }
 
 
-        internal override bool ReadTag( NbtReader readStream ) {
+        internal override bool ReadTag( NbtBinaryReader readStream ) {
             if( readStream.Selector != null && !readStream.Selector( this ) ) {
                 readStream.ReadSingle();
                 return false;
@@ -51,12 +51,12 @@ namespace fNbt {
         }
 
 
-        internal override void SkipTag( NbtReader readStream ) {
+        internal override void SkipTag( NbtBinaryReader readStream ) {
             readStream.ReadSingle();
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+        internal override void WriteTag( NbtBinaryWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.Float );
             if( writeName ) {
                 if( Name == null )
@@ -67,7 +67,7 @@ namespace fNbt {
         }
 
 
-        internal override void WriteData( NbtWriter writeStream ) {
+        internal override void WriteData( NbtBinaryWriter writeStream ) {
             writeStream.Write( Value );
         }
 

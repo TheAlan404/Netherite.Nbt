@@ -216,7 +216,7 @@ namespace fNbt {
 
         #region Reading / Writing
 
-        internal override bool ReadTag( NbtReader readStream ) {
+        internal override bool ReadTag( NbtBinaryReader readStream ) {
             if( readStream.Selector != null && !readStream.Selector( this ) ) {
                 SkipTag( readStream );
                 return false;
@@ -282,7 +282,7 @@ namespace fNbt {
         }
 
 
-        internal override void SkipTag( NbtReader readStream ) {
+        internal override void SkipTag( NbtBinaryReader readStream ) {
             // read list type, and make sure it's defined
             ListType = readStream.ReadTagType();
             if( !Enum.IsDefined( typeof( NbtTagType ), ListType ) || ListType == NbtTagType.Unknown ) {
@@ -338,7 +338,7 @@ namespace fNbt {
         }
 
 
-        internal override void WriteTag( NbtWriter writeStream, bool writeName ) {
+        internal override void WriteTag( NbtBinaryWriter writeStream, bool writeName ) {
             writeStream.Write( NbtTagType.List );
             if( writeName ) {
                 if( Name == null )
@@ -349,7 +349,7 @@ namespace fNbt {
         }
 
 
-        internal override void WriteData( NbtWriter writeStream ) {
+        internal override void WriteData( NbtBinaryWriter writeStream ) {
             if( ListType == NbtTagType.Unknown ) {
                 throw new NbtFormatException( "NbtList had no elements and an Unknown ListType" );
             }

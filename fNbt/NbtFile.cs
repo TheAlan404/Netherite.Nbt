@@ -388,7 +388,7 @@ namespace fNbt {
             if( stream.ReadByte() != (int)NbtTagType.Compound ) {
                 throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
             }
-            NbtReader reader = new NbtReader( stream, BigEndian ) {
+            NbtBinaryReader reader = new NbtBinaryReader( stream, BigEndian ) {
                 Selector = tagSelector
             };
 
@@ -509,7 +509,7 @@ namespace fNbt {
                 int checksum;
                 using( var compressStream = new ZLibStream( stream, CompressionMode.Compress, true ) ) {
                     BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
-                    RootTag.WriteTag( new NbtWriter( bufferedStream, BigEndian ), true );
+                    RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ), true );
                     bufferedStream.Flush();
                     checksum = compressStream.Checksum;
                 }
@@ -525,13 +525,13 @@ namespace fNbt {
                 using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
                     // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
                     BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
-                    RootTag.WriteTag( new NbtWriter( bufferedStream, BigEndian ), true );
+                    RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ), true );
                     bufferedStream.Flush();
                 }
                 break;
 
             case NbtCompression.None:
-                RootTag.WriteTag( new NbtWriter( stream, BigEndian ), true );
+                RootTag.WriteTag( new NbtBinaryWriter( stream, BigEndian ), true );
                 break;
             }
 
@@ -650,7 +650,7 @@ namespace fNbt {
         static string GetRootNameInternal( [NotNull] Stream stream, bool bigEndian ) {
             if( stream == null )
                 throw new ArgumentNullException( "stream" );
-            NbtReader reader = new NbtReader( stream, bigEndian );
+            NbtBinaryReader reader = new NbtBinaryReader( stream, bigEndian );
 
             if( reader.ReadTagType() != NbtTagType.Compound ) {
                 throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );

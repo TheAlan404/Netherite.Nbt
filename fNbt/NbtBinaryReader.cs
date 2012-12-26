@@ -4,7 +4,9 @@ using System.Text;
 using JetBrains.Annotations;
 
 namespace fNbt {
-    sealed class NbtReader : BinaryReader {
+    /// <summary> BinaryReader wrapper that takes care of reading primitives from an NBT stream,
+    /// while taking care of endianness, string encoding, and skipping. </summary>
+    sealed class NbtBinaryReader : BinaryReader {
         readonly byte[] floatBuffer = new byte[sizeof( float )],
                         doubleBuffer = new byte[sizeof( double )];
 
@@ -13,7 +15,7 @@ namespace fNbt {
         readonly bool bigEndian;
 
 
-        public NbtReader( [NotNull] Stream input, bool bigEndian )
+        public NbtBinaryReader( [NotNull] Stream input, bool bigEndian )
             : base( input ) {
             this.bigEndian = bigEndian;
         }
@@ -26,7 +28,7 @@ namespace fNbt {
 
         public override short ReadInt16() {
             if( BitConverter.IsLittleEndian == bigEndian ) {
-                return NbtWriter.Swap( base.ReadInt16() );
+                return NbtBinaryWriter.Swap( base.ReadInt16() );
             } else {
                 return base.ReadInt16();
             }
@@ -35,7 +37,7 @@ namespace fNbt {
 
         public override int ReadInt32() {
             if( BitConverter.IsLittleEndian == bigEndian ) {
-                return NbtWriter.Swap( base.ReadInt32() );
+                return NbtBinaryWriter.Swap( base.ReadInt32() );
             } else {
                 return base.ReadInt32();
             }
@@ -44,7 +46,7 @@ namespace fNbt {
 
         public override long ReadInt64() {
             if( BitConverter.IsLittleEndian == bigEndian ) {
-                return NbtWriter.Swap( base.ReadInt64() );
+                return NbtBinaryWriter.Swap( base.ReadInt64() );
             } else {
                 return base.ReadInt64();
             }

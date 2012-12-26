@@ -55,8 +55,8 @@
     <Compile Include="JetBrains.Annotations.cs" />
     <Compile Include="NbtCompression.cs" />
     <Compile Include="NbtFormatException.cs" />
-    <Compile Include="NbtReader.cs" />
-    <Compile Include="NbtWriter.cs" />
+    <Compile Include="NbtBinaryReader.cs" />
+    <Compile Include="NbtBinaryWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NbtFile.cs" />
     <Compile Include="TagSelector.cs" />

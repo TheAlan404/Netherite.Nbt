@@ -35,5 +35,5 @@ using System.Resources;
 [assembly: AssemblyVersion( "0.5.0.0" )]
 [assembly: AssemblyFileVersion( "0.5.0.0" )]
 
-// etc
+// Potentially speed up resource probes
 [assembly: NeutralResourcesLanguageAttribute( "en-US" )]
