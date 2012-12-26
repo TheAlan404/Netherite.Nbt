@@ -120,7 +120,8 @@ namespace fNbt.Test {
             var tagToRename = new NbtInt( "DifferentName", 1 );
             compound.Add( tagToRename );
             Assert.DoesNotThrow( () => tagToRename.Name = "SomeOtherName" );
-            Assert.Throws<ArgumentNullException>( () => tagToRename.Name = "SameName" );
+            Assert.Throws<ArgumentException>( () => tagToRename.Name = "SameName" );
+            Assert.Throws<ArgumentNullException>( () => tagToRename.Name = null );
         }
 
 

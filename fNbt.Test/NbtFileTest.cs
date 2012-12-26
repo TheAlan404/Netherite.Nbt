@@ -339,7 +339,7 @@ namespace fNbt.Test {
 
         [Test]
         public void ReadRootTag() {
-            Assert.AreEqual( NbtFile.ReadRootTagName( "TestFiles/bigtest.nbt" ), "hello world" );
+            Assert.AreEqual( NbtFile.ReadRootTagName( "TestFiles/test.nbt" ), "hello world" );
         }
 
 
