@@ -85,9 +85,8 @@ Online reference can be found at http://www.fcraft.net/libnbt/v0.4.1/
 
 
 ==== LICENSING ================================================================
-LibNbt2012 binaries and regular distribution keep LibNbt's original license
-(LGPLv3). See ./docs/LICENSE
-LibNbt2012 amalgamation is licensed under BSD 3-clause license.
+fNbt v0.5.0+ are licensed under BSD-3clause license. See ./docs/LICENSE
+LibNbt2012 up to and including v0.4.1 kept LibNbt's original license (LGPLv3).
 LibNbt2012 makes use of the NUnit framework (www.nunit.org)
 
 
