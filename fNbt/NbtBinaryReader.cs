@@ -22,7 +22,11 @@ namespace fNbt {
 
 
         public NbtTagType ReadTagType() {
-            return (NbtTagType)ReadByte();
+            NbtTagType type = (NbtTagType)ReadByte();
+            if( type < NbtTagType.End || type > NbtTagType.IntArray ) {
+                throw new NbtFormatException( "NBT tag type out of range: " + (int)type );
+            }
+            return type;
         }
 
 

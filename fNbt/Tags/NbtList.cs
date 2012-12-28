@@ -222,11 +222,7 @@ namespace fNbt {
                 return false;
             }
 
-            // read list type, and make sure it's defined
             ListType = readStream.ReadTagType();
-            if( !Enum.IsDefined( typeof( NbtTagType ), ListType ) || ListType == NbtTagType.Unknown ) {
-                throw new NbtFormatException( "Unrecognized TAG_List tag type: " + ListType );
-            }
 
             int length = readStream.ReadInt32();
             if( length < 0 ) {
@@ -285,9 +281,6 @@ namespace fNbt {
         internal override void SkipTag( NbtBinaryReader readStream ) {
             // read list type, and make sure it's defined
             ListType = readStream.ReadTagType();
-            if( !Enum.IsDefined( typeof( NbtTagType ), ListType ) || ListType == NbtTagType.Unknown ) {
-                throw new NbtFormatException( "Unrecognized TAG_List tag type: " + ListType );
-            }
 
             int length = readStream.ReadInt32();
             if( length < 0 ) {
