@@ -8,21 +8,19 @@ namespace fNbt {
     public class NbtReader {
         NbtParseState state = NbtParseState.AtStreamBeginning;
         readonly NbtBinaryReader reader;
-        readonly Stack<NbtReaderDepthState> states = new Stack<NbtReaderDepthState>();
+        readonly Stack<NbtReaderState> states = new Stack<NbtReaderState>();
+        readonly long streamStartOffset;
+        bool atValue;
 
 
         /// <summary> Initializes a new instance of the NbtReader class. </summary>
         /// <param name="stream"> Stream to read from. </param>
         /// <param name="bigEndian"> Whether NBT data is in Big-Endian encoding. </param>
         public NbtReader( Stream stream, bool bigEndian = true ) {
-            BaseStream = stream;
+            streamStartOffset = stream.Position;
             reader = new NbtBinaryReader( stream, bigEndian );
             ReadToFollowing();
         }
-
-
-        /// <summary> Stream from which data is being read. </summary>
-        public Stream BaseStream { get; private set; }
 
 
         /// <summary> Gets the name of the root tag of this NBT stream. </summary>
@@ -74,20 +72,36 @@ namespace fNbt {
 
 
         /// <summary> Whether the current tag is TAG_Compound. </summary>
-        public bool IsCompound { get; private set; }
+        public bool IsCompound {
+            get {
+                return ( TagType == NbtTagType.Compound );
+            }
+        }
 
         /// <summary> Whether the current tag is TAG_List. </summary>
-        public bool IsList { get; private set; }
+        public bool IsList {
+            get {
+                return (TagType == NbtTagType.List);
+            }
+        }
 
         /// <summary> Whether the current tag is TAG_End. </summary>
-        public bool IsEnd { get; private set; }
+        public bool IsEnd {
+            get {
+                return (TagType == NbtTagType.End);
+            }
+        }
 
+
+        /// <summary> Stream from which data is being read. </summary>
+        public Stream BaseStream {
+            get {
+                return reader.BaseStream;
+            }
+        }
 
         /// <summary> Gets the number of bytes from the beginning of the stream to the beginning of this tag. </summary>
         public int TagStartOffset { get; private set; }
-
-        /// <summary> Gets the number of bytes from the beginning of the stream to the beginning of this tag's content. </summary>
-        public int TagContentOffset { get; set; }
 
 
         /// <summary> Gets the depth of the current tag in the hierarchy. RootTag is 0, its descendant tags are 1, etc. </summary>
@@ -120,13 +134,21 @@ namespace fNbt {
                     RootName = TagName;
                     return true;
 
+                case NbtParseState.AtCompoundBeginning:
+                    GoDown();
+                    state = NbtParseState.InCompound;
+                    goto case NbtParseState.InCompound;
+
                 case NbtParseState.InCompound:
+                    if( atValue )
+                        SkipValue();
                     // Read next tag, check if we've hit the end
+                    TagStartOffset = (int)( reader.BaseStream.Position - streamStartOffset );
                     NbtTagType nextTagType = reader.ReadTagType();
                     if( nextTagType == NbtTagType.End ) {
                         state = NbtParseState.AtCompoundEnd;
                         if( SkipEndTags ) {
-                            return ReadToFollowing();
+                            goto case NbtParseState.AtCompoundEnd;
                         } else {
                             return true;
                         }
@@ -136,17 +158,22 @@ namespace fNbt {
                         return true;
                     }
 
-                case NbtParseState.AtValue:
-                    SkipValue();
-                    return ReadToFollowing();
+                case NbtParseState.AtListBeginning:
+                    GoDown();
+                    state = NbtParseState.InList;
+                    goto case NbtParseState.InList;
 
                 case NbtParseState.InList:
+                    if( atValue )
+                        SkipValue();
                     ListIndex++;
                     if( ListIndex > TagLength ) {
                         GoUp();
                         return ReadToFollowing();
+                    } else {
+                        TagStartOffset = (int)( reader.BaseStream.Position - streamStartOffset );
+                        ReadTagHeader( false );
                     }
-                    ReadTagHeader( false );
                     return true;
 
                 case NbtParseState.AtCompoundEnd:
@@ -182,25 +209,27 @@ namespace fNbt {
                 case NbtTagType.Short:
                 case NbtTagType.Int:
                 case NbtTagType.String:
-                    state = NbtParseState.AtValue;
+                    atValue = true;
                     break;
 
                 case NbtTagType.IntArray:
                 case NbtTagType.ByteArray:
                     TagLength = reader.ReadInt32();
-                    state = NbtParseState.AtValue;
+                    atValue = true;
                     break;
 
                 case NbtTagType.List:
-                    GoDown();
                     ListType = reader.ReadTagType();
                     TagLength = reader.ReadInt32();
-                    state = NbtParseState.InList;
+                    ListIndex = 0;
+                    state = NbtParseState.AtListBeginning;
+                    atValue = false;
                     break;
 
                 case NbtTagType.Compound:
                     GoDown();
-                    state = NbtParseState.InCompound;
+                    state = NbtParseState.AtCompoundBeginning;
+                    atValue = false;
                     break;
 
                 default:
@@ -211,7 +240,7 @@ namespace fNbt {
 
         // Goes one step down the NBT file's hierarchy, preserving current state
         void GoDown() {
-            NbtReaderDepthState newState = new NbtReaderDepthState {
+            NbtReaderState newState = new NbtReaderState {
                 ListIndex = ListIndex,
                 TagLength = TagLength,
                 ParentName = ParentName,
@@ -238,7 +267,7 @@ namespace fNbt {
 
         // Goes one step up the NBT file's hierarchy, restoring previous state
         void GoUp() {
-            NbtReaderDepthState oldState = states.Pop();
+            NbtReaderState oldState = states.Pop();
 
             ParentName = oldState.ParentName;
             ParentTagType = oldState.ParentTagType;

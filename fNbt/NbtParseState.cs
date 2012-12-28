@@ -1,10 +1,11 @@
 ﻿namespace fNbt {
     enum NbtParseState {
         AtStreamBeginning,
-        AtValue,
+        AtCompoundBeginning,
         InCompound,
-        InList,
         AtCompoundEnd,
+        AtListBeginning,
+        InList,
         AtStreamEnd,
         Error
     }
