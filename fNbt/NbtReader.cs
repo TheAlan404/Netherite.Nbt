@@ -33,7 +33,7 @@ namespace fNbt {
         /// <summary> Gets the name of the current tag. May be null (for list elements and end tags). </summary>
         public string TagName { get; private set; }
 
-        
+
         /// <summary> Gets the type of the parent tag. Returns TagType.Unknown if there is no parent tag. </summary>
         public NbtTagType ParentTagType { get; private set; }
 
@@ -52,19 +52,19 @@ namespace fNbt {
         public bool HasValue {
             get {
                 switch( TagType ) {
-                case NbtTagType.Compound:
-                case NbtTagType.End:
-                case NbtTagType.List:
-                    return false;
-                default:
-                    return true;
-                case NbtTagType.Unknown:
-                    ThrowNotRead();
-                    return false;
+                    case NbtTagType.Compound:
+                    case NbtTagType.End:
+                    case NbtTagType.List:
+                        return false;
+                    default:
+                        return true;
+                    case NbtTagType.Unknown:
+                        ThrowNotRead();
+                        return false;
                 }
             }
         }
-        
+
         /// <summary> Whether current tag has a name. </summary>
         public bool HasName {
             get {
@@ -83,7 +83,7 @@ namespace fNbt {
         /// <summary> Whether the current tag is TAG_List. </summary>
         public bool IsList {
             get {
-                return (TagType == NbtTagType.List);
+                return ( TagType == NbtTagType.List );
             }
         }
 
@@ -97,7 +97,7 @@ namespace fNbt {
         /// <summary> Whether the current tag is TAG_End. </summary>
         public bool IsEnd {
             get {
-                return (TagType == NbtTagType.End);
+                return ( TagType == NbtTagType.End );
             }
         }
 
@@ -126,7 +126,10 @@ namespace fNbt {
 
         /// <summary> If the current tag is TAG_List, TAG_Byte_Array, or TAG_Int_Array, returns the number of elements. </summary>
         public int TagLength { get; private set; }
-        
+
+        /// <summary> If the parent tag is TAG_List, returns the number of elements. </summary>
+        public int ParentTagLength { get; private set; }
+
         /// <summary> If the current tag is TAG_List, returns index of the current elements. </summary>
         public int ListIndex { get; private set; }
 
@@ -174,6 +177,8 @@ namespace fNbt {
 
                 case NbtParseState.AtListBeginning:
                     GoDown();
+                    ListIndex = -1;
+                    TagType = ListType;
                     state = NbtParseState.InList;
                     goto case NbtParseState.InList;
 
@@ -181,9 +186,19 @@ namespace fNbt {
                     if( atValue )
                         SkipValue();
                     ListIndex++;
-                    if( ListIndex > TagLength ) {
+                    if( ListIndex >= ParentTagLength ) {
                         GoUp();
-                        return ReadToFollowing();
+                        if( ParentTagType == NbtTagType.List ) {
+                            state = NbtParseState.InList;
+                            TagType = ListType;
+                            goto case NbtParseState.InList;
+                        } else if( ParentTagType == NbtTagType.Compound ) {
+                            state = NbtParseState.InCompound;
+                            goto case NbtParseState.InCompound;
+                        } else {
+                            state = NbtParseState.Error;
+                            throw new NbtFormatException( "Tag parent is neither a List nor a Compound!" );
+                        }
                     } else {
                         TagStartOffset = (int)( reader.BaseStream.Position - streamStartOffset );
                         ReadTagHeader( false );
@@ -192,11 +207,19 @@ namespace fNbt {
 
                 case NbtParseState.AtCompoundEnd:
                     GoUp();
-                    if( Depth == 0 ) {
+                    if( ParentTagType == NbtTagType.List ) {
+                        state = NbtParseState.InList;
+                        TagType = ListType;
+                        goto case NbtParseState.InList;
+                    } else if( ParentTagType == NbtTagType.Compound ) {
+                        state = NbtParseState.InCompound;
+                        goto case NbtParseState.InCompound;
+                    } else if( ParentTagType == NbtTagType.Unknown ) {
                         state = NbtParseState.AtStreamEnd;
                         return false;
                     } else {
-                        return true;
+                        state = NbtParseState.Error;
+                        throw new NbtFormatException( "Tag parent is neither a List nor a Compound!" );
                     }
 
                 case NbtParseState.AtStreamEnd:
@@ -220,11 +243,11 @@ namespace fNbt {
             }
             switch( TagType ) {
                 case NbtTagType.Byte:
-                case NbtTagType.Double:
-                case NbtTagType.Float:
-                case NbtTagType.Long:
                 case NbtTagType.Short:
                 case NbtTagType.Int:
+                case NbtTagType.Long:
+                case NbtTagType.Float:
+                case NbtTagType.Double:
                 case NbtTagType.String:
                     atValue = true;
                     break;
@@ -238,7 +261,6 @@ namespace fNbt {
                 case NbtTagType.List:
                     ListType = reader.ReadTagType();
                     TagLength = reader.ReadInt32();
-                    ListIndex = 0;
                     state = NbtParseState.AtListBeginning;
                     atValue = false;
                     break;
@@ -258,14 +280,16 @@ namespace fNbt {
         void GoDown() {
             NbtReaderState newState = new NbtReaderState {
                 ListIndex = ListIndex,
-                TagLength = TagLength,
+                ParentTagLength = ParentTagLength,
                 ParentName = ParentName,
-                ParentTagType = ParentTagType
+                ParentTagType = ParentTagType,
+                ListType = ListType
             };
             states.Push( newState );
 
             ParentName = TagName;
             ParentTagType = TagType;
+            ParentTagLength = TagLength;
             ListIndex = 0;
             TagLength = 0;
 
@@ -280,20 +304,11 @@ namespace fNbt {
             ParentName = oldState.ParentName;
             ParentTagType = oldState.ParentTagType;
             ListIndex = oldState.ListIndex;
-            TagLength = oldState.TagLength;
+            ListType = oldState.ListType;
+            ParentTagLength = oldState.ParentTagLength;
+            TagLength = 0;
 
             Depth--;
-
-            if( ParentTagType == NbtTagType.List ) {
-                state = NbtParseState.InList;
-            } else if( ParentTagType == NbtTagType.Compound ) {
-                state = NbtParseState.InCompound;
-            } else if( ParentTagType == NbtTagType.Unknown ) {
-                state = NbtParseState.AtStreamEnd;
-            } else {
-                state = NbtParseState.Error;
-                throw new NbtFormatException( "Tag parent is neither a List nor a Compound!" );
-            }
         }
 
 
@@ -442,7 +457,7 @@ namespace fNbt {
             throw new NotImplementedException();
         }
 
-        
+
         static void ThrowNotRead() {
             throw new InvalidOperationException( "No data has been read yet!" );
         }

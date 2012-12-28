@@ -1,8 +1,9 @@
 ﻿namespace fNbt {
-    struct NbtReaderState {
+    class NbtReaderState {
         public string ParentName;
         public NbtTagType ParentTagType;
-        public int TagLength;
+        public NbtTagType ListType;
+        public int ParentTagLength;
         public int ListIndex;
     }
 }
