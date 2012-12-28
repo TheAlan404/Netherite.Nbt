@@ -57,7 +57,9 @@
     <Compile Include="NbtFormatException.cs" />
     <Compile Include="NbtBinaryReader.cs" />
     <Compile Include="NbtBinaryWriter.cs" />
+    <Compile Include="NbtParseState.cs" />
     <Compile Include="NbtReader.cs" />
+    <Compile Include="NbtReaderDepthState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NbtFile.cs" />
     <Compile Include="TagSelector.cs" />
