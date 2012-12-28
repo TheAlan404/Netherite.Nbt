@@ -448,13 +448,67 @@ namespace fNbt {
         }
 
 
-        /// <summary> Reads the value of this tag as an array.
-        /// Current tag must be TAG_Byte_Array, TAG_Int_Array, or a TAG_List of primitive ListType. </summary>
+
+        /// <summary> If the current tag is a TAG_List, reads all elements of this tag as an array.
+        /// ListType must be a value type (byte, short, int, long, float, double, or string). </summary>
         /// <typeparam name="T"> Element type of the array to be returned.
         /// Tag contents should be convertible to this type. </typeparam>
-        /// <returns> Tag value converted to an array of the requested type. </returns>
-        public T[] ReadValueAsArray<T>() {
-            throw new NotImplementedException();
+        /// <returns> List contents converted to an array of the requested type. </returns>
+        T[] ReadListAsArray<T>() {
+            if( TagType != NbtTagType.List ) {
+                throw new InvalidOperationException( "ReadListAsArray may only be used on TAG_List tags." );
+            }
+
+            T[] result = new T[TagLength];
+            switch( ListType ) {
+                case NbtTagType.Byte:
+                    for( int i = 0; i < TagLength; i++ ) {
+                        result[i] = (T)Convert.ChangeType( reader.ReadByte(), typeof( T ) );
+                    }
+                    break;
+
+                case NbtTagType.Short:
+                    for( int i = 0; i < TagLength; i++ ) {
+                        result[i] = (T)Convert.ChangeType( reader.ReadInt64(), typeof( T ) );
+                    }
+                    break;
+
+                case NbtTagType.Int:
+                    for( int i = 0; i < TagLength; i++ ) {
+                        result[i] = (T)Convert.ChangeType( reader.ReadDouble(), typeof( T ) );
+                    }
+                    break;
+
+                case NbtTagType.Long:
+                    for( int i = 0; i < TagLength; i++ ) {
+                        result[i] = (T)Convert.ChangeType( reader.ReadInt64(), typeof( T ) );
+                    }
+                    break;
+
+                case NbtTagType.Float:
+                    for( int i = 0; i < TagLength; i++ ) {
+                        result[i] = (T)Convert.ChangeType( reader.ReadSingle(), typeof( T ) );
+                    }
+                    break;
+
+                case NbtTagType.Double:
+                    for( int i = 0; i < TagLength; i++ ) {
+                        result[i] = (T)Convert.ChangeType( reader.ReadDouble(), typeof( T ) );
+                    }
+                    break;
+
+                case NbtTagType.String:
+                    for( int i = 0; i < TagLength; i++ ) {
+                        result[i] = (T)Convert.ChangeType( reader.ReadString(), typeof( T ) );
+                    }
+                    break;
+
+                default:
+                    throw new InvalidOperationException( "ReadListAsArray may only be used on lists of value types." );
+            }
+            TagsRead += TagLength;
+            ListIndex = TagLength - 1;
+            return result;
         }
 
 
