@@ -11,12 +11,15 @@ namespace fNbt {
         readonly Stack<NbtReaderState> states = new Stack<NbtReaderState>();
         readonly long streamStartOffset;
         bool atValue;
+        object valueCache;
 
 
         /// <summary> Initializes a new instance of the NbtReader class. </summary>
         /// <param name="stream"> Stream to read from. </param>
         /// <param name="bigEndian"> Whether NBT data is in Big-Endian encoding. </param>
         public NbtReader( Stream stream, bool bigEndian = true ) {
+            SkipEndTags = false;
+            CacheTagValues = false;
             ParentTagType = NbtTagType.Unknown;
             TagType = NbtTagType.Unknown;
             streamStartOffset = stream.Position;
@@ -228,11 +231,13 @@ namespace fNbt {
 
                 case NbtParseState.Error:
                     // previous call produced a parsing error
-                    throw new InvalidOperationException( "NbtReader is in an erroneous state!" );
+                    throw new InvalidOperationException( ErroneousStateMessage );
             }
             return true;
         }
 
+
+        const string ErroneousStateMessage = "NbtReader is in an erroneous state!";
 
         void ReadTagHeader( bool readName ) {
             TagsRead++;
@@ -263,11 +268,13 @@ namespace fNbt {
                     TagLength = reader.ReadInt32();
                     state = NbtParseState.AtListBeginning;
                     atValue = false;
+                    valueCache = null;
                     break;
 
                 case NbtTagType.Compound:
                     state = NbtParseState.AtCompoundBeginning;
                     atValue = false;
+                    valueCache = null;
                     break;
 
                 default:
@@ -348,6 +355,7 @@ namespace fNbt {
                     throw new InvalidOperationException( "Trying to skip value of a non-value tag." );
             }
             atValue = false;
+            valueCache = null;
         }
 
 
@@ -389,7 +397,52 @@ namespace fNbt {
         /// and constructs an NbtTag object of the appropriate type. </summary>
         /// <returns> Constructed NbtTag object. </returns>
         public NbtTag ReadAsTag() {
-            throw new NotImplementedException();
+            if( state == NbtParseState.AtStreamEnd ) {
+                throw new InvalidOperationException( "End of stream: no more NBT data to read." );
+            } else if( state == NbtParseState.Error ) {
+                // previous call produced a parsing error
+                throw new InvalidOperationException( ErroneousStateMessage );
+            }
+            return ReadAsTagInternal( Depth );
+        }
+
+
+        NbtTag ReadAsTagInternal( int endAtDepth ) {
+            switch( TagType ) {
+                case NbtTagType.Byte:
+                    return new NbtByte( TagName, reader.ReadByte() );
+
+                case NbtTagType.Short:
+                    return new NbtShort( TagName, reader.ReadInt16() );
+
+                case NbtTagType.Int:
+                    return new NbtInt( TagName, reader.ReadInt32() );
+
+                case NbtTagType.Long:
+                    return new NbtLong( TagName, reader.ReadInt64() );
+
+                case NbtTagType.Float:
+                    return new NbtFloat( TagName, reader.ReadSingle() );
+
+                case NbtTagType.Double:
+                    return new NbtDouble( TagName, reader.ReadDouble() );
+
+                case NbtTagType.String:
+                    return new NbtString( TagName, reader.ReadString() );
+
+                case NbtTagType.ByteArray:
+                    return new NbtByteArray( TagName, reader.ReadBytes( TagLength ) );
+
+                case NbtTagType.IntArray:
+                    int[] ints = new int[TagLength];
+                    for( int i = 0; i < TagLength; i++ ) {
+                        ints[i] = reader.ReadInt32();
+                    }
+                    return new NbtIntArray( TagName, ints );
+
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
 
@@ -407,46 +460,70 @@ namespace fNbt {
         /// <returns> Tag value converted to the requested type. </returns>
         public object ReadValue() {
             if( !atValue ) {
-                throw new InvalidOperationException( "Value aready read, or no value to read." );
+                if( cacheTagValues ) {
+                    if( valueCache == null ) {
+                        throw new InvalidOperationException( "No value to read." );
+                    } else {
+                        return valueCache;
+                    }
+                } else {
+                    throw new InvalidOperationException( "Value aready read, or no value to read." );
+                }
             }
+            valueCache = null;
             atValue = false;
+            object value;
             switch( TagType ) {
                 case NbtTagType.Byte:
-                    return reader.ReadByte();
+                    value = reader.ReadByte();
+                    break;
 
                 case NbtTagType.Short:
-                    return reader.ReadInt16();
+                    value = reader.ReadInt16();
+                    break;
 
                 case NbtTagType.Float:
-                    return reader.ReadSingle();
+                    value = reader.ReadSingle();
+                    break;
 
                 case NbtTagType.Int:
-                    return reader.ReadInt32();
+                    value = reader.ReadInt32();
+                    break;
 
                 case NbtTagType.Double:
-                    return reader.ReadDouble();
+                    value = reader.ReadDouble();
+                    break;
 
                 case NbtTagType.Long:
-                    return reader.ReadInt64();
+                    value = reader.ReadInt64();
+                    break;
 
                 case NbtTagType.ByteArray:
-                    return reader.ReadBytes( TagLength );
+                    value = reader.ReadBytes( TagLength );
+                    break;
 
                 case NbtTagType.IntArray:
-                    int[] value = new int[TagLength];
+                    int[] intValue = new int[TagLength];
                     for( int i = 0; i < TagLength; i++ ) {
-                        value[i] = reader.ReadInt32();
+                        intValue[i] = reader.ReadInt32();
                     }
-                    return value;
+                    value = intValue;
+                    break;
 
                 case NbtTagType.String:
-                    return reader.ReadString();
+                    value = reader.ReadString();
+                    break;
 
                 default:
-                    throw new InvalidOperationException( "Trying to skip value of a non-value tag." );
+                    throw new InvalidOperationException( "Trying to read value of a non-value tag." );
             }
+            if( cacheTagValues ) {
+                valueCache = value;
+            } else {
+                valueCache = null;
+            }
+            return value;
         }
-
 
 
         /// <summary> If the current tag is a TAG_List, reads all elements of this tag as an array.
@@ -517,7 +594,25 @@ namespace fNbt {
         }
 
 
-        /// <summary> Parsing option: Whether NbtReader should skip End tags in ReadToFollowing() automatically while parsing. </summary>
+        /// <summary> Parsing option: Whether NbtReader should skip End tags in ReadToFollowing() automatically while parsing.
+        /// Default is false. </summary>
         public bool SkipEndTags { get; set; }
+
+
+        /// <summary> Parsing option: Whether NbtReader should save a copy of the most recently read tag's value.
+        /// If CacheTagValues=false, tag values can only be read once. Default is false. </summary>
+        public bool CacheTagValues {
+            get {
+                return cacheTagValues;
+            }
+            set {
+                cacheTagValues = value;
+                if( !cacheTagValues ) {
+                    valueCache = null;
+                }
+            }
+        }
+
+        bool cacheTagValues;
     }
 }
