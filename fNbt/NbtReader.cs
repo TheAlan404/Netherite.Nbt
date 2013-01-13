@@ -574,56 +574,66 @@ namespace fNbt {
 
         const string NoValueToReadError = "Value aready read, or no value to read.";
 
-        /// <summary> If the current tag is a TAG_List, reads all elements of this tag as an array.
-        /// ListType must be a value type (byte, short, int, long, float, double, or string). </summary>
+        /// <summary> If the current tag is a TAG_List, reads all elements of this list as an array.
+        /// If any tags/values have already been read from this list, only reads the remaining unread tags/values.
+        /// ListType must be a value type (byte, short, int, long, float, double, or string).
+        /// Stops reading after the last list element. </summary>
         /// <typeparam name="T"> Element type of the array to be returned.
         /// Tag contents should be convertible to this type. </typeparam>
         /// <returns> List contents converted to an array of the requested type. </returns>
-        T[] ReadListAsArray<T>() {
+        public T[] ReadListAsArray<T>() {
             if( TagType != NbtTagType.List ) {
                 throw new InvalidOperationException( "ReadListAsArray may only be used on TAG_List tags." );
             }
 
-            T[] result = new T[TagLength];
+            int elementsToRead = TagLength - ListIndex;
+
+            if( ListType == NbtTagType.Byte && typeof( T ) == typeof( byte ) ) {
+                TagsRead += TagLength;
+                ListIndex = TagLength - 1;
+                return (T[])(object)reader.ReadBytes( elementsToRead );
+            }
+
+            T[] result = new T[elementsToRead];
             switch( ListType ) {
                 case NbtTagType.Byte:
-                    for( int i = 0; i < TagLength; i++ ) {
+                    for( int i = 0; i < elementsToRead; i++ ) {
                         result[i] = (T)Convert.ChangeType( reader.ReadByte(), typeof( T ) );
                     }
                     break;
 
                 case NbtTagType.Short:
-                    for( int i = 0; i < TagLength; i++ ) {
-                        result[i] = (T)Convert.ChangeType( reader.ReadInt64(), typeof( T ) );
+                    for( int i = 0; i < elementsToRead; i++ ) {
+                        result[i] = (T)Convert.ChangeType( reader.ReadInt16(), typeof( T ) );
                     }
                     break;
 
                 case NbtTagType.Int:
-                    for( int i = 0; i < TagLength; i++ ) {
-                        result[i] = (T)Convert.ChangeType( reader.ReadDouble(), typeof( T ) );
+                    for( int i = 0; i < elementsToRead; i++ ) {
+                        result[i] = (T)Convert.ChangeType( reader.ReadInt32(), typeof( T ) );
                     }
                     break;
 
                 case NbtTagType.Long:
-                    for( int i = 0; i < TagLength; i++ ) {
+                    for( int i = 0; i < elementsToRead; i++ ) {
                         result[i] = (T)Convert.ChangeType( reader.ReadInt64(), typeof( T ) );
                     }
                     break;
 
                 case NbtTagType.Float:
-                    for( int i = 0; i < TagLength; i++ ) {
+                    for( int i = 0; i < elementsToRead; i++ ) {
                         result[i] = (T)Convert.ChangeType( reader.ReadSingle(), typeof( T ) );
                     }
                     break;
 
                 case NbtTagType.Double:
-                    for( int i = 0; i < TagLength; i++ ) {
+                    for( int i = 0; i < elementsToRead; i++ ) {
                         result[i] = (T)Convert.ChangeType( reader.ReadDouble(), typeof( T ) );
                     }
                     break;
 
                 case NbtTagType.String:
-                    for( int i = 0; i < TagLength; i++ ) {
+                    for( int i = 0; i < elementsToRead; i++ ) {
                         result[i] = (T)Convert.ChangeType( reader.ReadString(), typeof( T ) );
                     }
                     break;
@@ -631,7 +641,7 @@ namespace fNbt {
                 default:
                     throw new InvalidOperationException( "ReadListAsArray may only be used on lists of value types." );
             }
-            TagsRead += TagLength;
+            TagsRead += elementsToRead;
             ListIndex = TagLength - 1;
             return result;
         }
