@@ -1,5 +1,5 @@
 ﻿namespace fNbt {
-    class NbtReaderState {
+    class NbtReaderNode {
         public string ParentName;
         public NbtTagType ParentTagType;
         public NbtTagType ListType;

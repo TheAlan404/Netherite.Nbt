@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
 
@@ -10,6 +9,7 @@ namespace fNbt.Test {
         public void ReadBigFileUncompressed() {
             using( FileStream fs = File.OpenRead( "TestFiles/bigtest.nbt" ) ) {
                 NbtReader reader = new NbtReader( fs );
+                reader.SkipEndTags = false;
                 while( reader.ReadToFollowing() ) {
                     Debug.Write( new string( '\t', reader.Depth ) );
                     Debug.Write( "#" + reader.TagsRead + ". " + reader.TagType );
