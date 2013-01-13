@@ -133,7 +133,7 @@ namespace fNbt {
         /// <summary> If the parent tag is TAG_List, returns the number of elements. </summary>
         public int ParentTagLength { get; private set; }
 
-        /// <summary> If the current tag is TAG_List, returns index of the current elements. </summary>
+        /// <summary> If the parent tag is TAG_List, returns index of the current tag. </summary>
         public int ListIndex { get; private set; }
 
 
@@ -169,6 +169,7 @@ namespace fNbt {
                         TagsRead++;
                         state = NbtParseState.AtCompoundEnd;
                         if( SkipEndTags ) {
+                            TagsRead--;
                             goto case NbtParseState.AtCompoundEnd;
                         } else {
                             return true;
@@ -213,7 +214,7 @@ namespace fNbt {
                     GoUp();
                     if( ParentTagType == NbtTagType.List ) {
                         state = NbtParseState.InList;
-                        TagType = ListType;
+                        TagType = NbtTagType.Compound;
                         goto case NbtParseState.InList;
                     } else if( ParentTagType == NbtTagType.Compound ) {
                         state = NbtParseState.InCompound;
@@ -310,9 +311,9 @@ namespace fNbt {
 
             ParentName = oldNode.ParentName;
             ParentTagType = oldNode.ParentTagType;
+            ParentTagLength = oldNode.ParentTagLength;
             ListIndex = oldNode.ListIndex;
             ListType = oldNode.ListType;
-            ParentTagLength = oldNode.ParentTagLength;
             TagLength = 0;
 
             Depth--;
@@ -361,7 +362,7 @@ namespace fNbt {
 
 
         /// <summary> Reads until a tag with the specified name is found. 
-        /// Returns false if the end of stream is reached. </summary>
+        /// Returns false if are no more tags to read (end of stream is reached). </summary>
         /// <param name="tagName"> Name of the tag. </param>
         /// <returns> <c>true</c> if a matching tag is found; otherwise <c>false</c>. </returns>
         public bool ReadToFollowing( string tagName ) {
