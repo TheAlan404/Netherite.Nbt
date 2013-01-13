@@ -9,18 +9,33 @@ namespace fNbt.Test {
         public void ReadBigFileUncompressed() {
             using( FileStream fs = File.OpenRead( "TestFiles/bigtest.nbt" ) ) {
                 NbtReader reader = new NbtReader( fs );
-                reader.SkipEndTags = true;
                 while( reader.ReadToFollowing() ) {
-                    Debug.Write( new string( '\t', reader.Depth ) );
-                    Debug.Write( "#" + reader.TagsRead + ". " + reader.TagType );
-                    if( reader.HasLength ) {
-                        Debug.Write( "[" + reader.TagLength + "]" );
+                    Debug.WriteLine( reader.ReadAsString() );
+                }
+            }
+        }
+
+
+        [Test]
+        public void NestedListTest() {
+            NbtCompound root = new NbtCompound( "root" ) {
+                new NbtList( "OuterList" ) {
+                    new NbtList {
+                        new NbtByte()
+                    },
+                    new NbtList {
+                        new NbtShort()
+                    },
+                    new NbtList {
+                        new NbtInt()
                     }
-                    Debug.Write( "\t" + reader.TagName );
-                    if( reader.HasValue ) {
-                        Debug.Write( " = " + reader.ReadValue() );
-                    }
-                    Debug.WriteLine( "" );
+                }
+            };
+            byte[] testData = new NbtFile( root ).SaveToBuffer( NbtCompression.None );
+            using( MemoryStream ms = new MemoryStream( testData ) ) {
+                NbtReader reader = new NbtReader( ms );
+                while( reader.ReadToFollowing() ) {
+                    Debug.WriteLine( reader.ReadAsString() );
                 }
             }
         }

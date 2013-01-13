@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 
 namespace fNbt {
@@ -194,7 +196,7 @@ namespace fNbt {
                         GoUp();
                         if( ParentTagType == NbtTagType.List ) {
                             state = NbtParseState.InList;
-                            TagType = ListType;
+                            TagType = NbtTagType.List;
                             goto case NbtParseState.InList;
                         } else if( ParentTagType == NbtTagType.Compound ) {
                             state = NbtParseState.InCompound;
@@ -673,5 +675,32 @@ namespace fNbt {
         }
 
         bool cacheTagValues;
+
+
+        public string ReadAsString() {
+            StringBuilder sb = new StringBuilder();
+            sb.Append( '\t', Depth )
+              .Append( '#' )
+              .Append( TagsRead )
+              .Append( ". " )
+              .Append( TagType );
+            if( IsList ) {
+                sb.Append( '<' );
+                sb.Append( ListType );
+                sb.Append( '>' );
+            }
+            if( HasLength ) {
+                sb.Append( '[' )
+                  .Append( TagLength )
+                  .Append( ']' );
+            }
+            sb.Append( '\t' )
+              .Append( TagName );
+            if( atValue || HasValue && cacheTagValues ) {
+                sb.Append( " = " );
+                sb.Append( ReadValue() );
+            }
+            return sb.ToString();
+        }
     }
 }
