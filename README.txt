@@ -76,16 +76,16 @@ with applications that use LibNbt2012; they are only used for testing.
     serverFile.SaveToFile( "server.nbt", NbtCompression.None );
 
 - Constructing using collection initializer notation:
-    NbtCompound compound = new NbtCompound( "root" ){
-        { "anInt", new NbtInt(123) },
-        { "byteList", new NbtList {
+    NbtCompound compound = new NbtCompound("root"){
+        new NbtInt("someInt", 123),
+        new NbtList("byteList") {
             new NbtByte(1),
             new NbtByte(2),
             new NbtByte(3)
-        }},
-        { "nestedCompound", new NbtCompound {
-            { "pi", new NbtDouble(3.14) }
-        }}
+        },
+        new NbtCompound("nestedCompound") {
+            new NbtDouble("pi", 3.14)
+        }
     };
 
 - Pretty-printing file structure
