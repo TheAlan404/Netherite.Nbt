@@ -67,5 +67,34 @@ namespace fNbt.Test {
                 Assert.IsFalse( reader.ReadToNextSibling() );
             }
         }
+
+
+        [Test]
+        public void ReadToDescendantTest() {
+            NbtCompound root = new NbtCompound( "root" ) {
+                new NbtInt("first"),
+                new NbtInt("second"),
+                new NbtCompound("third-comp"){
+                    new NbtInt("sub1"),
+                    new NbtInt("sub2"),
+                    new NbtInt("sub3")
+                },
+                new NbtInt("fourth")
+            };
+            byte[] testData = new NbtFile( root ).SaveToBuffer( NbtCompression.None );
+            using( MemoryStream ms = new MemoryStream( testData ) ) {
+                NbtReader reader = new NbtReader( ms );
+                Assert.IsTrue( reader.ReadToDescendant( "third-comp" ) );
+                Assert.AreEqual( reader.TagName, "third-comp" );
+                Assert.IsTrue( reader.ReadToDescendant( "sub3" ) );
+                Assert.AreEqual( reader.TagName, "sub3" );
+                Assert.IsFalse( reader.ReadToDescendant( "derp" ) );
+            }
+            using( MemoryStream ms = new MemoryStream( testData ) ) {
+                NbtReader reader = new NbtReader( ms );
+                Assert.IsTrue( reader.ReadToDescendant( "sub2" ) );
+                Assert.AreEqual( reader.TagName, "sub2" );
+            }
+        }
     }
 }

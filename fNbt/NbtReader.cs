@@ -143,6 +143,7 @@ namespace fNbt {
                         state = NbtParseState.Error;
                         throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
                     }
+                    Depth = 1;
                     TagType = NbtTagType.Compound;
                     // Read root name. Advance to the first inside tag.
                     ReadTagHeader( true );
@@ -376,10 +377,26 @@ namespace fNbt {
         /// <param name="tagName"> Name of the tag you wish to move to. </param>
         /// <returns> true if a matching descendant tag is found; otherwise false. </returns>
         public bool ReadToDescendant( string tagName ) {
-            throw new NotImplementedException();
+            if( state == NbtParseState.Error ) {
+                throw new InvalidOperationException( ErroneousStateMessage );
+            } else if( state == NbtParseState.AtStreamEnd ) {
+                return false;
+            }
+            int currentDepth = Depth;
+            while( ReadToFollowing() ) {
+                if( Depth <= currentDepth ) {
+                    return false;
+                } else if( TagName.Equals( tagName ) ) {
+                    return true;
+                }
+            }
+            return false;
         }
 
 
+        /// <summary> Advances the NbtReader to the next sibling tag, skipping any child tags.
+        /// If there are no more siblings, NbtReader is positioned on the tag following the last of this tag's descendants. </summary>
+        /// <returns> true if a sibling element is found; otherwise false. </returns>
         public bool ReadToNextSibling() {
             if( state == NbtParseState.Error ) {
                 throw new InvalidOperationException( ErroneousStateMessage );
@@ -399,7 +416,7 @@ namespace fNbt {
 
 
         /// <summary> Advances the NbtReader to the next sibling tag with the specified name.
-        /// If a matching sibling tag is not found, the NbtReader is positioned on the end tag of the parent tag. </summary>
+        /// If a matching sibling tag is not found, NbtReader is positioned on the tag following the last siblings. </summary>
         /// <param name="tagName"> The name of the sibling tag you wish to move to. </param>
         /// <returns> true if a matching sibling element is found; otherwise false. </returns>
         public bool ReadToNextSibling( string tagName ) {
