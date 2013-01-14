@@ -78,36 +78,30 @@ namespace fNbt {
         }
 
 
-        /// <summary> Whether the current tag is TAG_Compound. </summary>
+        /// <summary> Whether the current tag is a Compound. </summary>
         public bool IsCompound {
             get {
                 return ( TagType == NbtTagType.Compound );
             }
         }
 
-        /// <summary> Whether the current tag is TAG_List. </summary>
+        /// <summary> Whether the current tag is a List. </summary>
         public bool IsList {
             get {
                 return ( TagType == NbtTagType.List );
             }
         }
 
-        /// <summary> Whether the current tag is TAG_List. </summary>
+        /// <summary> Whether the current tag has length (Lists, ByteArrays, and IntArrays have length).
+        /// Compound tags also have length, technically, but it is not known until all child tags are read. </summary>
         public bool HasLength {
             get {
                 return ( TagType == NbtTagType.List || TagType == NbtTagType.ByteArray || TagType == NbtTagType.IntArray );
             }
         }
 
-        /// <summary> Whether the current tag is TAG_End. </summary>
-        public bool IsEnd {
-            get {
-                return ( TagType == NbtTagType.End );
-            }
-        }
 
-
-        /// <summary> Stream from which data is being read. </summary>
+        /// <summary> Gets the Stream from which data is being read. </summary>
         public Stream BaseStream {
             get {
                 return reader.BaseStream;
@@ -577,7 +571,7 @@ namespace fNbt {
 
         const string NoValueToReadError = "Value aready read, or no value to read.";
 
-        /// <summary> If the current tag is a TAG_List, reads all elements of this list as an array.
+        /// <summary> If the current tag is a List, reads all elements of this list as an array.
         /// If any tags/values have already been read from this list, only reads the remaining unread tags/values.
         /// ListType must be a value type (byte, short, int, long, float, double, or string).
         /// Stops reading after the last list element. </summary>
@@ -677,7 +671,16 @@ namespace fNbt {
         bool cacheTagValues;
 
 
-        public string ReadAsString() {
+        public override string ToString() {
+            return ToString( false );
+        }
+
+        public string ToStringWithValue() {
+            return ToString( true );
+        }
+
+
+        string ToString( bool includeValue ) {
             StringBuilder sb = new StringBuilder();
             sb.Append( '\t', Depth )
               .Append( '#' )
@@ -696,9 +699,9 @@ namespace fNbt {
             }
             sb.Append( '\t' )
               .Append( TagName );
-            if( atValue || HasValue && cacheTagValues ) {
-                sb.Append( " = " );
-                sb.Append( ReadValue() );
+            if( includeValue && (atValue || HasValue && cacheTagValues) ) {
+                sb.Append( " = " )
+                  .Append( ReadValue() );
             }
             return sb.ToString();
         }

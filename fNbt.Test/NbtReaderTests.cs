@@ -10,7 +10,7 @@ namespace fNbt.Test {
             using( FileStream fs = File.OpenRead( "TestFiles/bigtest.nbt" ) ) {
                 NbtReader reader = new NbtReader( fs );
                 while( reader.ReadToFollowing() ) {
-                    Debug.WriteLine( reader.ReadAsString() );
+                    Debug.WriteLine( reader.ToStringWithValue() );
                 }
             }
         }
@@ -35,7 +35,7 @@ namespace fNbt.Test {
             using( MemoryStream ms = new MemoryStream( testData ) ) {
                 NbtReader reader = new NbtReader( ms );
                 while( reader.ReadToFollowing() ) {
-                    Debug.WriteLine( reader.ReadAsString() );
+                    Debug.WriteLine( reader.ToStringWithValue() );
                 }
             }
         }
