@@ -380,12 +380,35 @@ namespace fNbt {
         }
 
 
+        public bool ReadToNextSibling() {
+            if( state == NbtParseState.Error ) {
+                throw new InvalidOperationException( ErroneousStateMessage );
+            } else if( state == NbtParseState.AtStreamEnd ) {
+                return false;
+            }
+            int currentDepth = Depth;
+            while( ReadToFollowing() ) {
+                if( Depth == currentDepth ) {
+                    return true;
+                } else if( Depth < currentDepth ) {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+
         /// <summary> Advances the NbtReader to the next sibling tag with the specified name.
         /// If a matching sibling tag is not found, the NbtReader is positioned on the end tag of the parent tag. </summary>
         /// <param name="tagName"> The name of the sibling tag you wish to move to. </param>
         /// <returns> true if a matching sibling element is found; otherwise false. </returns>
         public bool ReadToNextSibling( string tagName ) {
-            throw new NotImplementedException();
+            while( ReadToNextSibling() ) {
+                if( TagName.Equals( tagName ) ) {
+                    return true;
+                }
+            }
+            return false;
         }
 
 
@@ -393,7 +416,7 @@ namespace fNbt {
         /// In other words, reads until parent tag's subling. </summary>
         /// <returns> Total number of tags that were skipped. </returns>
         /// <exception cref="InvalidOperationException"> If parser is in erroneous state. </exception>
-        public int SkipSiblings() {
+        public int Skip() {
             if( state == NbtParseState.Error ) {
                 throw new InvalidOperationException( ErroneousStateMessage );
             } else if( state == NbtParseState.AtStreamEnd ) {
@@ -580,7 +603,7 @@ namespace fNbt {
         /// <returns> List contents converted to an array of the requested type. </returns>
         public T[] ReadListAsArray<T>() {
             if( TagType != NbtTagType.List ) {
-                throw new InvalidOperationException( "ReadListAsArray may only be used on TAG_List tags." );
+                throw new InvalidOperationException( "ReadListAsArray may only be used on List tags." );
             }
 
             int elementsToRead = TagLength - ListIndex;
