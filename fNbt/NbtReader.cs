@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 
 namespace fNbt {
@@ -19,7 +20,8 @@ namespace fNbt {
         /// <summary> Initializes a new instance of the NbtReader class. </summary>
         /// <param name="stream"> Stream to read from. </param>
         /// <param name="bigEndian"> Whether NBT data is in Big-Endian encoding. </param>
-        public NbtReader( Stream stream, bool bigEndian = true ) {
+        public NbtReader( [NotNull] Stream stream, bool bigEndian = true ) {
+            if( stream == null ) throw new ArgumentNullException( "stream" );
             SkipEndTags = true;
             CacheTagValues = false;
             ParentTagType = NbtTagType.Unknown;
@@ -30,12 +32,15 @@ namespace fNbt {
 
 
         /// <summary> Gets the name of the root tag of this NBT stream. </summary>
+        [CanBeNull]
         public string RootName { get; private set; }
 
         /// <summary> Gets the name of the parent tag. May be null (for root tags and descendants of list elements). </summary>
+        [CanBeNull]
         public string ParentName { get; private set; }
 
         /// <summary> Gets the name of the current tag. May be null (for list elements and end tags). </summary>
+        [CanBeNull]
         public string TagName { get; private set; }
 
 
@@ -102,6 +107,7 @@ namespace fNbt {
 
 
         /// <summary> Gets the Stream from which data is being read. </summary>
+        [NotNull]
         public Stream BaseStream {
             get {
                 return reader.BaseStream;
@@ -362,9 +368,9 @@ namespace fNbt {
         /// Returns false if are no more tags to read (end of stream is reached). </summary>
         /// <param name="tagName"> Name of the tag. </param>
         /// <returns> <c>true</c> if a matching tag is found; otherwise <c>false</c>. </returns>
-        public bool ReadToFollowing( string tagName ) {
+        public bool ReadToFollowing( [CanBeNull] string tagName ) {
             while( ReadToFollowing() ) {
-                if( TagName.Equals( tagName ) ) {
+                if( TagName == tagName ) {
                     return true;
                 }
             }
@@ -376,7 +382,7 @@ namespace fNbt {
         /// If a matching child tag is not found, the NbtReader is positioned on the end tag. </summary>
         /// <param name="tagName"> Name of the tag you wish to move to. </param>
         /// <returns> true if a matching descendant tag is found; otherwise false. </returns>
-        public bool ReadToDescendant( string tagName ) {
+        public bool ReadToDescendant( [CanBeNull] string tagName ) {
             if( state == NbtParseState.Error ) {
                 throw new InvalidOperationException( ErroneousStateMessage );
             } else if( state == NbtParseState.AtStreamEnd ) {
@@ -386,7 +392,7 @@ namespace fNbt {
             while( ReadToFollowing() ) {
                 if( Depth <= currentDepth ) {
                     return false;
-                } else if( TagName.Equals( tagName ) ) {
+                } else if( TagName == tagName ) {
                     return true;
                 }
             }
@@ -419,7 +425,7 @@ namespace fNbt {
         /// If a matching sibling tag is not found, NbtReader is positioned on the tag following the last siblings. </summary>
         /// <param name="tagName"> The name of the sibling tag you wish to move to. </param>
         /// <returns> true if a matching sibling element is found; otherwise false. </returns>
-        public bool ReadToNextSibling( string tagName ) {
+        public bool ReadToNextSibling( [CanBeNull] string tagName ) {
             while( ReadToNextSibling() ) {
                 if( TagName.Equals( tagName ) ) {
                     return true;
@@ -453,43 +459,79 @@ namespace fNbt {
         /// <returns> Constructed NbtTag object;
         /// <c>null</c> if <c>SkipEndTags</c> is <c>true</c> and trying to read an End tag. </returns>
         public NbtTag ReadAsTag() {
-            if( atValue ) {
-                return ReadValueAsTag();
-            }
             switch( state ) {
-                case NbtParseState.AtStreamBeginning:
-                    // read whole file as tag
-                case NbtParseState.AtCompoundBeginning:
-                    // read whole compound
-                    break;
-
-                case NbtParseState.InCompound:
-                    // read tag within a compound
-                    break;
-
-                case NbtParseState.AtListBeginning:
-                    // read whole list
-                    break;
-
-                case NbtParseState.InList:
-                    // read list item
-                    break;
-
-                case NbtParseState.AtCompoundEnd:
-                    // end tag.
-                    return null;
-
-                case NbtParseState.AtStreamEnd:
-                    throw new InvalidOperationException( "End of stream: no more NBT data to read." );
-
                 case NbtParseState.Error:
-                    // previous call produced a parsing error
                     throw new InvalidOperationException( ErroneousStateMessage );
+                case NbtParseState.AtStreamEnd:
+                    return null;
+                case NbtParseState.AtStreamBeginning:
+                    ReadToFollowing();
+                    break;
             }
+
+            NbtTag parent;
+            if( TagType == NbtTagType.Compound ) {
+                parent = new NbtCompound( TagName );
+            } else if( TagType == NbtTagType.List ) {
+                parent = new NbtList( TagName, ListType );
+            } else if( atValue ) {
+                NbtTag result = ReadValueAsTag();
+                ReadToFollowing();
+                return result;
+            } else {
+                throw new InvalidOperationException( NoValueToReadError );
+            }
+
+            int startingDepth = Depth;
+            int lastDepth = Depth;
+
+            do {
+                if( !ReadToFollowing() || Depth < lastDepth ) {
+                    // Going up the file tree, or end of document: wrap up
+                    while( Depth < lastDepth && parent.Parent != null ) {
+                        parent = parent.Parent;
+                        lastDepth--;
+                    }
+                } else {
+                    NbtTag thisTag;
+                    // Going to a descendant, or the next sibling
+                    if( TagType == NbtTagType.Compound ) {
+                        thisTag = new NbtCompound( TagName );
+                        AddToParent( thisTag, parent );
+                        parent = thisTag;
+                    } else if( TagType == NbtTagType.List ) {
+                        thisTag = new NbtList( TagName, ListType );
+                        AddToParent( thisTag, parent );
+                        parent = thisTag;
+                    } else {
+                        thisTag = ReadValueAsTag();
+                        AddToParent( thisTag, parent );
+                    }
+                }
+                lastDepth = Depth;
+            } while( Depth > startingDepth ); 
+
             return null;
         }
 
 
+        static void AddToParent( NbtTag thisTag, NbtTag parent ) {
+            NbtList parentAsList = parent as NbtList;
+            if( parentAsList != null ) {
+                parentAsList.Add( thisTag );
+            } else {
+                NbtCompound parentAsCompound = parent as NbtCompound;
+                if( parentAsCompound != null ) {
+                    parentAsCompound.Add( thisTag );
+                } else {
+                    // cannot happen unless NbtReader is bugged
+                    throw new NbtFormatException( "Parent tag neither compound nor list" );
+                }
+            }
+        }
+
+
+        [NotNull]
         NbtTag ReadValueAsTag() {
             switch( TagType ) {
                 case NbtTagType.Byte:
