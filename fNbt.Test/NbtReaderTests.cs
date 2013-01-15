@@ -46,11 +46,28 @@ namespace fNbt.Test {
                 new NbtInt( "first" ),
                 new NbtInt( "second" ),
                 new NbtCompound( "third-comp" ) {
-                    new NbtInt( "sub1" ),
-                    new NbtInt( "sub2" ),
-                    new NbtInt( "sub3" )
+                    new NbtInt( "inComp1" ),
+                    new NbtInt( "inComp2" ),
+                    new NbtInt( "inComp3" )
                 },
-                new NbtInt( "fourth" )
+                new NbtList( "fourth-list" ) {
+                    new NbtList {
+                        new NbtCompound {
+                            new NbtCompound( "inList1" )
+                        }
+                    },
+                    new NbtList {
+                        new NbtCompound {
+                            new NbtCompound( "inList2" )
+                        }
+                    },
+                    new NbtList {
+                        new NbtCompound {
+                            new NbtCompound( "inList3" )
+                        }
+                    }
+                },
+                new NbtInt( "fifth" )
             };
             byte[] testData = new NbtFile( root ).SaveToBuffer( NbtCompression.None );
             return new MemoryStream( testData );
@@ -67,27 +84,25 @@ namespace fNbt.Test {
             Assert.IsTrue( reader.ReadToNextSibling( "third-comp" ) );
             Assert.AreEqual( reader.TagName, "third-comp" );
             Assert.IsTrue( reader.ReadToNextSibling() );
-            Assert.AreEqual( reader.TagName, "fourth" );
+            Assert.AreEqual( reader.TagName, "fourth-list" );
+            Assert.IsTrue( reader.ReadToNextSibling() );
+            Assert.AreEqual( reader.TagName, "fifth" );
             Assert.IsFalse( reader.ReadToNextSibling() );
         }
 
 
         [Test]
         public void ReadToDescendantTest() {
-            {
-                NbtReader reader = new NbtReader( MakeTest() );
-                Assert.IsTrue( reader.ReadToDescendant( "third-comp" ) );
-                Assert.AreEqual( reader.TagName, "third-comp" );
-                Assert.IsTrue( reader.ReadToDescendant( "sub3" ) );
-                Assert.AreEqual( reader.TagName, "sub3" );
-                Assert.IsFalse( reader.ReadToDescendant( "derp" ) );
-                Assert.AreEqual( reader.TagName, "fourth" );
-            }
-            {
-                NbtReader reader = new NbtReader( MakeTest() );
-                Assert.IsTrue( reader.ReadToDescendant( "sub2" ) );
-                Assert.AreEqual( reader.TagName, "sub2" );
-            }
+            NbtReader reader = new NbtReader( MakeTest() );
+            Assert.IsTrue( reader.ReadToDescendant( "third-comp" ) );
+            Assert.AreEqual( reader.TagName, "third-comp" );
+            Assert.IsTrue( reader.ReadToDescendant( "inComp2" ) );
+            Assert.AreEqual( reader.TagName, "inComp2" );
+            Assert.IsFalse( reader.ReadToDescendant( "derp" ) );
+            Assert.AreEqual( reader.TagName, "inComp3" );
+            reader.ReadToFollowing();
+            Assert.IsTrue( reader.ReadToDescendant( "inList2" ) );
+            Assert.AreEqual( reader.TagName, "inList2" );
         }
 
 
@@ -96,9 +111,20 @@ namespace fNbt.Test {
             NbtReader reader = new NbtReader( MakeTest() );
             reader.ReadToFollowing(); // at root
             reader.ReadToFollowing(); // at first
-            Assert.AreEqual( reader.TagName, "first" );
-            Assert.AreEqual( reader.Skip(), 6 );
+            reader.ReadToFollowing(); // at second
+            reader.ReadToFollowing(); // at third-comp
+            reader.ReadToFollowing(); // at inComp1
+            Assert.AreEqual( reader.TagName, "inComp1" );
+            Assert.AreEqual( reader.Skip(), 2 );
+            Assert.AreEqual( reader.TagName, "fourth-list" );
+            Assert.AreEqual( reader.Skip(), 10 );
             Assert.IsFalse( reader.ReadToFollowing() );
+        }
+
+
+        [Test]
+        public void ReadAsTagTest() {
+            NbtReader reader = new NbtReader( MakeTest() );
         }
     }
 }
