@@ -424,7 +424,7 @@ namespace fNbt {
             if( listType == NbtTagType.Unknown ) {
                 listType = newTag.TagType;
             } else if( newTag.TagType != listType ) {
-                throw new ArgumentException( "Items must be of type " + listType );
+                throw new ArgumentException( "Items in this list must be of type " + listType + ". Given type: " + newTag.TagType );
             } else if( newTag.Parent != null ) {
                 throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
             }

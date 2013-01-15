@@ -100,7 +100,7 @@ namespace fNbt.Test {
             Assert.AreEqual( reader.TagName, "inComp2" );
             Assert.IsFalse( reader.ReadToDescendant( "derp" ) );
             Assert.AreEqual( reader.TagName, "inComp3" );
-            reader.ReadToFollowing();
+            reader.ReadToFollowing(); // at fourth-list
             Assert.IsTrue( reader.ReadToDescendant( "inList2" ) );
             Assert.AreEqual( reader.TagName, "inList2" );
         }
@@ -125,6 +125,7 @@ namespace fNbt.Test {
         [Test]
         public void ReadAsTagTest() {
             NbtReader reader = new NbtReader( MakeTest() );
+            Debug.WriteLine( reader.ReadAsTag().ToString() );
         }
     }
 }

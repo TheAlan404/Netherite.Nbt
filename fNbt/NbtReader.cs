@@ -462,9 +462,12 @@ namespace fNbt {
             switch( state ) {
                 case NbtParseState.Error:
                     throw new InvalidOperationException( ErroneousStateMessage );
+
                 case NbtParseState.AtStreamEnd:
-                    return null;
+                    throw new EndOfStreamException();
+
                 case NbtParseState.AtStreamBeginning:
+                case NbtParseState.AtCompoundEnd:
                     ReadToFollowing();
                     break;
             }
@@ -486,32 +489,33 @@ namespace fNbt {
             int lastDepth = Depth;
 
             do {
-                if( !ReadToFollowing() || Depth < lastDepth ) {
+                bool end = !ReadToFollowing();
+                if( end || Depth < lastDepth ) {
                     // Going up the file tree, or end of document: wrap up
-                    while( Depth < lastDepth && parent.Parent != null ) {
+                    while( Depth <= lastDepth && parent.Parent != null ) {
                         parent = parent.Parent;
                         lastDepth--;
                     }
+                }
+                if( end || Depth <= startingDepth ) break;
+
+                NbtTag thisTag;
+                if( TagType == NbtTagType.Compound ) {
+                    thisTag = new NbtCompound( TagName );
+                    AddToParent( thisTag, parent );
+                    parent = thisTag;
+                } else if( TagType == NbtTagType.List ) {
+                    thisTag = new NbtList( TagName, ListType );
+                    AddToParent( thisTag, parent );
+                    parent = thisTag;
                 } else {
-                    NbtTag thisTag;
-                    // Going to a descendant, or the next sibling
-                    if( TagType == NbtTagType.Compound ) {
-                        thisTag = new NbtCompound( TagName );
-                        AddToParent( thisTag, parent );
-                        parent = thisTag;
-                    } else if( TagType == NbtTagType.List ) {
-                        thisTag = new NbtList( TagName, ListType );
-                        AddToParent( thisTag, parent );
-                        parent = thisTag;
-                    } else {
-                        thisTag = ReadValueAsTag();
-                        AddToParent( thisTag, parent );
-                    }
+                    thisTag = ReadValueAsTag();
+                    AddToParent( thisTag, parent );
                 }
                 lastDepth = Depth;
-            } while( Depth > startingDepth ); 
+            } while( true );
 
-            return null;
+            return parent;
         }
 
 
@@ -533,6 +537,10 @@ namespace fNbt {
 
         [NotNull]
         NbtTag ReadValueAsTag() {
+            if( !atValue ) {
+                throw new InvalidOperationException( NoValueToReadError );
+            }
+            atValue = false;
             switch( TagType ) {
                 case NbtTagType.Byte:
                     return new NbtByte( TagName, reader.ReadByte() );
