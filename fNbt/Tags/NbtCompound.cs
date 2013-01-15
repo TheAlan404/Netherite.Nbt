@@ -158,7 +158,7 @@ namespace fNbt {
 
         /// <summary> Copies all tags in this NbtCompound to an array. </summary>
         /// <returns> Array of NbtTags. </returns>
-        [NotNull]
+        [NotNull, Pure]
         public NbtTag[] ToArray() {
             NbtTag[] array = new NbtTag[tags.Count];
             int i = 0;
@@ -171,7 +171,7 @@ namespace fNbt {
 
         /// <summary> Copies names of all tags in this NbtCompound to an array. </summary>
         /// <returns> Array of strings (tag names). </returns>
-        [NotNull]
+        [NotNull, Pure]
         public string[] ToNameArray() {
             string[] array = new string[tags.Count];
             int i = 0;
@@ -200,6 +200,7 @@ namespace fNbt {
         /// <param name="tagName"> Tag name to search for. May not be <c>null</c>. </param>
         /// <returns> true if a tag with given name was found; otherwise, false. </returns>
         /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
+        [Pure]
         public bool Contains( [NotNull] string tagName ) {
             if( tagName == null )
                 throw new ArgumentNullException( "tagName" );
@@ -274,55 +275,55 @@ namespace fNbt {
                 NbtTagType nextTag = readStream.ReadTagType();
                 NbtTag newTag;
                 switch( nextTag ) {
-                case NbtTagType.End:
-                    return true;
+                    case NbtTagType.End:
+                        return true;
 
-                case NbtTagType.Byte:
-                    newTag = new NbtByte();
-                    break;
+                    case NbtTagType.Byte:
+                        newTag = new NbtByte();
+                        break;
 
-                case NbtTagType.Short:
-                    newTag = new NbtShort();
-                    break;
+                    case NbtTagType.Short:
+                        newTag = new NbtShort();
+                        break;
 
-                case NbtTagType.Int:
-                    newTag = new NbtInt();
-                    break;
+                    case NbtTagType.Int:
+                        newTag = new NbtInt();
+                        break;
 
-                case NbtTagType.Long:
-                    newTag = new NbtLong();
-                    break;
+                    case NbtTagType.Long:
+                        newTag = new NbtLong();
+                        break;
 
-                case NbtTagType.Float:
-                    newTag = new NbtFloat();
-                    break;
+                    case NbtTagType.Float:
+                        newTag = new NbtFloat();
+                        break;
 
-                case NbtTagType.Double:
-                    newTag = new NbtDouble();
-                    break;
+                    case NbtTagType.Double:
+                        newTag = new NbtDouble();
+                        break;
 
-                case NbtTagType.ByteArray:
-                    newTag = new NbtByteArray();
-                    break;
+                    case NbtTagType.ByteArray:
+                        newTag = new NbtByteArray();
+                        break;
 
-                case NbtTagType.String:
-                    newTag = new NbtString();
-                    break;
+                    case NbtTagType.String:
+                        newTag = new NbtString();
+                        break;
 
-                case NbtTagType.List:
-                    newTag = new NbtList();
-                    break;
+                    case NbtTagType.List:
+                        newTag = new NbtList();
+                        break;
 
-                case NbtTagType.Compound:
-                    newTag = new NbtCompound();
-                    break;
+                    case NbtTagType.Compound:
+                        newTag = new NbtCompound();
+                        break;
 
-                case NbtTagType.IntArray:
-                    newTag = new NbtIntArray();
-                    break;
+                    case NbtTagType.IntArray:
+                        newTag = new NbtIntArray();
+                        break;
 
-                default:
-                    throw new NbtFormatException( "Unsupported tag type found in NBT_Compound: " + nextTag );
+                    default:
+                        throw new NbtFormatException( "Unsupported tag type found in NBT_Compound: " + nextTag );
                 }
                 newTag.Parent = this;
                 newTag.Name = readStream.ReadString();
@@ -341,55 +342,55 @@ namespace fNbt {
                 NbtTagType nextTag = readStream.ReadTagType();
                 NbtTag newTag;
                 switch( nextTag ) {
-                case NbtTagType.End:
-                    return;
+                    case NbtTagType.End:
+                        return;
 
-                case NbtTagType.Byte:
-                    newTag = new NbtByte();
-                    break;
+                    case NbtTagType.Byte:
+                        newTag = new NbtByte();
+                        break;
 
-                case NbtTagType.Short:
-                    newTag = new NbtShort();
-                    break;
+                    case NbtTagType.Short:
+                        newTag = new NbtShort();
+                        break;
 
-                case NbtTagType.Int:
-                    newTag = new NbtInt();
-                    break;
+                    case NbtTagType.Int:
+                        newTag = new NbtInt();
+                        break;
 
-                case NbtTagType.Long:
-                    newTag = new NbtLong();
-                    break;
+                    case NbtTagType.Long:
+                        newTag = new NbtLong();
+                        break;
 
-                case NbtTagType.Float:
-                    newTag = new NbtFloat();
-                    break;
+                    case NbtTagType.Float:
+                        newTag = new NbtFloat();
+                        break;
 
-                case NbtTagType.Double:
-                    newTag = new NbtDouble();
-                    break;
+                    case NbtTagType.Double:
+                        newTag = new NbtDouble();
+                        break;
 
-                case NbtTagType.ByteArray:
-                    newTag = new NbtByteArray();
-                    break;
+                    case NbtTagType.ByteArray:
+                        newTag = new NbtByteArray();
+                        break;
 
-                case NbtTagType.String:
-                    newTag = new NbtString();
-                    break;
+                    case NbtTagType.String:
+                        newTag = new NbtString();
+                        break;
 
-                case NbtTagType.List:
-                    newTag = new NbtList();
-                    break;
+                    case NbtTagType.List:
+                        newTag = new NbtList();
+                        break;
 
-                case NbtTagType.Compound:
-                    newTag = new NbtCompound();
-                    break;
+                    case NbtTagType.Compound:
+                        newTag = new NbtCompound();
+                        break;
 
-                case NbtTagType.IntArray:
-                    newTag = new NbtIntArray();
-                    break;
+                    case NbtTagType.IntArray:
+                        newTag = new NbtIntArray();
+                        break;
 
-                default:
-                    throw new NbtFormatException( "Unsupported tag type found in NBT_Compound: " + nextTag );
+                    default:
+                        throw new NbtFormatException( "Unsupported tag type found in NBT_Compound: " + nextTag );
                 }
                 readStream.SkipString();
                 newTag.SkipTag( readStream );
@@ -471,6 +472,7 @@ namespace fNbt {
         /// <returns> true if tag is found; otherwise, false. </returns>
         /// <param name="tag"> The object to locate in this NbtCompound. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is <c>null</c>. </exception>
+        [Pure]
         public bool Contains( [NotNull] NbtTag tag ) {
             if( tag == null )
                 throw new ArgumentNullException( "tag" );
@@ -556,7 +558,8 @@ namespace fNbt {
         #endregion
 
 
-        new private NbtTag this[int tagIndex] {
+        // Hiding NbtTag[int]:NbtTag
+        new NbtTag this[ int tagIndex ] {
             get {
                 throw new InvalidOperationException( "Integer indexers only work on NbtList tags." );
             }

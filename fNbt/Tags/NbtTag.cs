@@ -89,7 +89,7 @@ namespace fNbt {
         /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
         /// <param name="tagName"> The name of the tag to get or set. Must match tag's actual name. </param>
         /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtCompound. </exception>
-        /// <remarks> ONLY APPLICABLE TO NntCompound OBJECTS!
+        /// <remarks> ONLY APPLICABLE TO NbtCompound OBJECTS!
         /// Included in NbtTag base class for programmers' convenience, to avoid extra type casts. </remarks>
         public virtual NbtTag this[ string tagName ] {
             get {
@@ -104,11 +104,11 @@ namespace fNbt {
         /// <summary> Gets or sets the tag at the specified index. </summary>
         /// <returns> The tag at the specified index. </returns>
         /// <param name="tagIndex"> The zero-based index of the tag to get or set. </param>
-        /// <exception cref="ArgumentOutOfRangeException"> tagIndex is not a valid index in the NbtList. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> tagIndex is not a valid index in this tag. </exception>
         /// <exception cref="ArgumentNullException"> Given tag is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> Given tag's type does not match ListType. </exception>
-        /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtList. </exception>
-        /// <remarks> ONLY APPLICABLE TO NbtList OBJECTS!
+        /// <exception cref="InvalidOperationException"> If used on a tag that is not NbtList, NbtByteArray, or NbtIntArray. </exception>
+        /// <remarks> ONLY APPLICABLE TO NbtList, NbtByteArray, and NbtIntArray OBJECTS!
         /// Included in NbtTag base class for programmers' convenience, to avoid extra type casts. </remarks>
         public virtual NbtTag this[ int tagIndex ] {
             get {

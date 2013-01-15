@@ -50,14 +50,14 @@ namespace fNbt.Serialization {
                     compound = new NbtCompound( ( (TagNameAttribute)nameAttributes[0] ).Name );
                 }
 
-                List<PropertyInfo> chosenProperties = new List<PropertyInfo>();
+                List<PropertyInfo> properties = new List<PropertyInfo>();
                 foreach( PropertyInfo p in Type.GetProperties() ) {
                     if( Attribute.GetCustomAttributes( p, typeof( NbtIgnoreAttribute ) ).Length == 0 ) {
-                        chosenProperties.Add( p );
+                        properties.Add( p );
                     }
                 }
 
-                foreach( PropertyInfo property in chosenProperties ) {
+                foreach( PropertyInfo property in properties ) {
                     if( !property.CanRead ) {
                         continue;
                     }

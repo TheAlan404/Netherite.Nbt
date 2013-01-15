@@ -170,7 +170,7 @@ namespace fNbt {
         /// <returns> The tag with the specified key. </returns>
         /// <exception cref="ArgumentOutOfRangeException"> <paramref name="tagIndex"/> is not a valid index in the NbtList. </exception>
         /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
-        [NotNull]
+        [NotNull, Pure]
         public T Get<T>( int tagIndex ) where T : NbtTag {
             return (T)tags[tagIndex];
         }
@@ -191,7 +191,7 @@ namespace fNbt {
 
         /// <summary> Copies all tags in this NbtList to an array. </summary>
         /// <returns> Array of NbtTags. </returns>
-        [NotNull]
+        [NotNull, Pure]
         // ReSharper disable ReturnTypeCanBeEnumerable.Global
         public NbtTag[] ToArray() {
             // ReSharper restore ReturnTypeCanBeEnumerable.Global
@@ -203,9 +203,8 @@ namespace fNbt {
         /// <typeparam name="T"> Type to cast every member of NbtList to. Must derive from NbtTag. </typeparam>
         /// <returns> Array of NbtTags cast to the desired type. </returns>
         /// <exception cref="InvalidCastException"> If contents of this list cannot be cast to the given type. </exception>
-        // ReSharper disable ReturnTypeCanBeEnumerable.Global
+        [NotNull, Pure]
         public T[] ToArray<T>() where T : NbtTag {
-            // ReSharper restore ReturnTypeCanBeEnumerable.Global
             T[] result = new T[tags.Count];
             for( int i = 0; i < result.Length; i++ ) {
                 result[i] = (T)tags[i];
@@ -575,6 +574,13 @@ namespace fNbt {
         }
 
         #endregion
+
+
+        // Hiding NbtTag[string]:NbtTag
+        new NbtTag this[string tagName] {
+            get { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
+            set { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
+        }
 
 
         /// <summary> Returns a String that represents the current NbtList object and its contents.
