@@ -16,6 +16,8 @@ namespace fNbt.Test {
         [Test]
         public void TestNbtSmallFileLoadingUncompressed() {
             var file = new NbtFile( "TestFiles/test.nbt" );
+            Assert.AreEqual( file.FileName, "TestFiles/test.nbt" );
+            Assert.AreEqual( file.FileCompression, NbtCompression.None );
             AssertNbtSmallFile( file );
         }
 
@@ -23,6 +25,7 @@ namespace fNbt.Test {
         [Test]
         public void LoadingSmallFileGZip() {
             var file = new NbtFile( "TestFiles/test.nbt.gz" );
+            Assert.AreEqual( file.FileCompression, NbtCompression.GZip );
             AssertNbtSmallFile( file );
         }
 
@@ -30,6 +33,7 @@ namespace fNbt.Test {
         [Test]
         public void LoadingSmallFileZLib() {
             var file = new NbtFile( "TestFiles/test.nbt.z" );
+            Assert.AreEqual( file.FileCompression, NbtCompression.ZLib );
             AssertNbtSmallFile( file );
         }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using JetBrains.Annotations;
@@ -54,7 +53,7 @@ namespace fNbt {
         /// <summary> Whether tag that we are currently on is a list element. </summary>
         public bool IsListElement {
             get {
-                return ( state == NbtParseState.InList );
+                return ( ParentTagType == NbtTagType.List );
             }
         }
 
@@ -427,7 +426,7 @@ namespace fNbt {
         /// <returns> true if a matching sibling element is found; otherwise false. </returns>
         public bool ReadToNextSibling( [CanBeNull] string tagName ) {
             while( ReadToNextSibling() ) {
-                if( TagName.Equals( tagName ) ) {
+                if( TagName == tagName ) {
                     return true;
                 }
             }
@@ -765,6 +764,7 @@ namespace fNbt {
             return ToString( false );
         }
 
+
         public string ToStringWithValue() {
             return ToString( true );
         }
@@ -789,7 +789,10 @@ namespace fNbt {
             }
             sb.Append( '\t' )
               .Append( TagName );
-            if( includeValue && (atValue || HasValue && cacheTagValues) ) {
+            if( includeValue &&
+                ( atValue || HasValue && cacheTagValues ) &&
+                TagType != NbtTagType.IntArray &&
+                TagType != NbtTagType.ByteArray ) {
                 sb.Append( " = " )
                   .Append( ReadValue() );
             }

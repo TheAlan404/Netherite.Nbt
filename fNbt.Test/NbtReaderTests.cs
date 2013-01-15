@@ -10,8 +10,10 @@ namespace fNbt.Test {
             using( FileStream fs = File.OpenRead( "TestFiles/bigtest.nbt" ) ) {
                 NbtReader reader = new NbtReader( fs );
                 while( reader.ReadToFollowing() ) {
+                    Debug.Write( "@" + reader.TagStartOffset + " " );
                     Debug.WriteLine( reader.ToStringWithValue() );
                 }
+                Assert.AreEqual( reader.RootName, "Level" );
             }
         }
 
@@ -71,6 +73,61 @@ namespace fNbt.Test {
             };
             byte[] testData = new NbtFile( root ).SaveToBuffer( NbtCompression.None );
             return new MemoryStream( testData );
+        }
+
+
+        [Test]
+        public void PropertiesTest() {
+            NbtReader reader = new NbtReader( MakeTest() );
+            Assert.AreEqual( reader.Depth, 0 );
+
+            Assert.IsTrue( reader.ReadToFollowing() );
+            Assert.AreEqual( reader.TagName, "root" );
+            Assert.AreEqual( reader.TagType, NbtTagType.Compound );
+            Assert.AreEqual( reader.ListType, NbtTagType.Unknown );
+            Assert.IsFalse( reader.HasValue );
+            Assert.IsTrue( reader.IsCompound );
+            Assert.IsFalse( reader.IsList );
+            Assert.IsFalse( reader.IsListElement );
+            Assert.IsFalse( reader.HasLength );
+            Assert.AreEqual( reader.ListIndex, 0 );
+            Assert.AreEqual( reader.Depth, 1 );
+
+            Assert.IsTrue( reader.ReadToFollowing() );
+            Assert.AreEqual( reader.TagName, "first" );
+            Assert.AreEqual( reader.TagType, NbtTagType.Int );
+            Assert.AreEqual( reader.ListType, NbtTagType.Unknown );
+            Assert.IsTrue( reader.HasValue );
+            Assert.IsFalse( reader.IsCompound );
+            Assert.IsFalse( reader.IsList );
+            Assert.IsFalse( reader.IsListElement );
+            Assert.IsFalse( reader.HasLength );
+            Assert.AreEqual( reader.ListIndex, 0 );
+            Assert.AreEqual( reader.Depth, 2 );
+
+            Assert.IsTrue( reader.ReadToFollowing( "fourth-list" ) );
+            Assert.AreEqual( reader.TagName, "fourth-list" );
+            Assert.AreEqual( reader.TagType, NbtTagType.List );
+            Assert.AreEqual( reader.ListType, NbtTagType.List );
+            Assert.IsFalse( reader.HasValue );
+            Assert.IsFalse( reader.IsCompound );
+            Assert.IsTrue( reader.IsList );
+            Assert.IsFalse( reader.IsListElement );
+            Assert.IsTrue( reader.HasLength );
+            Assert.AreEqual( reader.ListIndex, 0 );
+            Assert.AreEqual( reader.Depth, 2 );
+
+            Assert.IsTrue( reader.ReadToFollowing() ); // first list element
+            Assert.AreEqual( reader.TagName, null );
+            Assert.AreEqual( reader.TagType, NbtTagType.List );
+            Assert.AreEqual( reader.ListType, NbtTagType.Compound );
+            Assert.IsFalse( reader.HasValue );
+            Assert.IsFalse( reader.IsCompound );
+            Assert.IsTrue( reader.IsList );
+            Assert.IsTrue( reader.IsListElement );
+            Assert.IsTrue( reader.HasLength );
+            Assert.AreEqual( reader.ListIndex, 0 );
+            Assert.AreEqual( reader.Depth, 3 );
         }
 
 

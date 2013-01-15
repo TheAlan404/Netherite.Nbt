@@ -241,52 +241,53 @@ namespace fNbt {
                 throw new ArgumentNullException( "stream" );
 
             FileName = null;
-            FileCompression = compression;
 
             // detect compression, based on the first byte
             if( compression == NbtCompression.AutoDetect ) {
-                compression = DetectCompression( stream );
+                FileCompression = DetectCompression( stream );
+            } else {
+                FileCompression = compression;
             }
 
             long startPosition = stream.Position;
 
-            switch( compression ) {
-            case NbtCompression.GZip:
-                using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
-                    if( bufferSize > 0 ) {
-                        LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), selector );
-                    } else {
-                        LoadFromStreamInternal( decStream, selector );
+            switch( FileCompression ) {
+                case NbtCompression.GZip:
+                    using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
+                        if( bufferSize > 0 ) {
+                            LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), selector );
+                        } else {
+                            LoadFromStreamInternal( decStream, selector );
+                        }
                     }
-                }
-                break;
+                    break;
 
-            case NbtCompression.None:
-                LoadFromStreamInternal( stream, selector );
-                break;
+                case NbtCompression.None:
+                    LoadFromStreamInternal( stream, selector );
+                    break;
 
-            case NbtCompression.ZLib:
-                if( stream.ReadByte() != 0x78 ) {
-                    throw new InvalidDataException( "Incorrect ZLib header. Expected 0x78 0x9C" );
-                }
-                stream.ReadByte();
-                using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
-                    if( bufferSize > 0 ) {
-                        LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), selector );
-                    } else {
-                        LoadFromStreamInternal( decStream, selector );
+                case NbtCompression.ZLib:
+                    if( stream.ReadByte() != 0x78 ) {
+                        throw new InvalidDataException( "Incorrect ZLib header. Expected 0x78 0x9C" );
                     }
-                }
-                break;
+                    stream.ReadByte();
+                    using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
+                        if( bufferSize > 0 ) {
+                            LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), selector );
+                        } else {
+                            LoadFromStreamInternal( decStream, selector );
+                        }
+                    }
+                    break;
 
-            default:
-                throw new ArgumentOutOfRangeException( "compression" );
+                default:
+                    throw new ArgumentOutOfRangeException( "compression" );
             }
 
             return (int)( stream.Position - startPosition );
         }
 
-        
+
         /// <summary> Loads NBT data from a stream. Existing <c>RootTag</c> will be replaced </summary>
         /// <param name="stream"> Stream from which data will be loaded. If compression is set to AutoDetect, this stream must support seeking. </param>
         /// <param name="compression"> Compression method to use for loading/saving this file. </param>
@@ -312,36 +313,36 @@ namespace fNbt {
             long startPosition = stream.Position;
 
             switch( compression ) {
-            case NbtCompression.GZip:
-                using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
-                    if( bufferSize > 0 ) {
-                        LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), null );
-                    } else {
-                        LoadFromStreamInternal( decStream, null );
+                case NbtCompression.GZip:
+                    using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
+                        if( bufferSize > 0 ) {
+                            LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), null );
+                        } else {
+                            LoadFromStreamInternal( decStream, null );
+                        }
                     }
-                }
-                break;
+                    break;
 
-            case NbtCompression.None:
-                LoadFromStreamInternal( stream, null );
-                break;
+                case NbtCompression.None:
+                    LoadFromStreamInternal( stream, null );
+                    break;
 
-            case NbtCompression.ZLib:
-                if( stream.ReadByte() != 0x78 ) {
-                    throw new InvalidDataException( "Incorrect ZLib header. Expected 0x78 0x9C" );
-                }
-                stream.ReadByte();
-                using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
-                    if( bufferSize > 0 ) {
-                        LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), null );
-                    } else {
-                        LoadFromStreamInternal( decStream, null );
+                case NbtCompression.ZLib:
+                    if( stream.ReadByte() != 0x78 ) {
+                        throw new InvalidDataException( "Incorrect ZLib header. Expected 0x78 0x9C" );
                     }
-                }
-                break;
+                    stream.ReadByte();
+                    using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
+                        if( bufferSize > 0 ) {
+                            LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), null );
+                        } else {
+                            LoadFromStreamInternal( decStream, null );
+                        }
+                    }
+                    break;
 
-            default:
-                throw new ArgumentOutOfRangeException( "compression" );
+                default:
+                    throw new ArgumentOutOfRangeException( "compression" );
             }
 
             return (int)( stream.Position - startPosition );
@@ -355,25 +356,25 @@ namespace fNbt {
             }
             int firstByte = stream.ReadByte();
             switch( firstByte ) {
-            case -1:
-                throw new EndOfStreamException();
+                case -1:
+                    throw new EndOfStreamException();
 
-            case (byte)NbtTagType.Compound: // 0x0A
-                compression = NbtCompression.None;
-                break;
+                case (byte)NbtTagType.Compound: // 0x0A
+                    compression = NbtCompression.None;
+                    break;
 
-            case 0x1F:
-                // gzip magic number
-                compression = NbtCompression.GZip;
-                break;
+                case 0x1F:
+                    // gzip magic number
+                    compression = NbtCompression.GZip;
+                    break;
 
-            case 0x78:
-                // zlib header
-                compression = NbtCompression.ZLib;
-                break;
+                case 0x78:
+                    // zlib header
+                    compression = NbtCompression.ZLib;
+                    break;
 
-            default:
-                throw new InvalidDataException( "Could not auto-detect compression format." );
+                default:
+                    throw new InvalidDataException( "Could not auto-detect compression format." );
             }
             stream.Seek( -1, SeekOrigin.Current );
             return compression;
@@ -482,14 +483,14 @@ namespace fNbt {
                 throw new ArgumentNullException( "stream" );
 
             switch( compression ) {
-            case NbtCompression.AutoDetect:
-                throw new ArgumentException( "AutoDetect is not a valid NbtCompression value for saving." );
-            case NbtCompression.ZLib:
-            case NbtCompression.GZip:
-            case NbtCompression.None:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException( "compression" );
+                case NbtCompression.AutoDetect:
+                    throw new ArgumentException( "AutoDetect is not a valid NbtCompression value for saving." );
+                case NbtCompression.ZLib:
+                case NbtCompression.GZip:
+                case NbtCompression.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException( "compression" );
             }
 
             if( rootTag == null ) {
@@ -497,42 +498,43 @@ namespace fNbt {
             }
 
             if( rootTag.Name == null ) {
-                throw new NbtFormatException( "Cannot save NbtFile: Root tag is not named. Its name may be an empty string, but not null." );
+                throw new NbtFormatException(
+                    "Cannot save NbtFile: Root tag is not named. Its name may be an empty string, but not null." );
             }
 
             long startPosition = stream.Position;
 
             switch( compression ) {
-            case NbtCompression.ZLib:
-                stream.WriteByte( 0x78 );
-                stream.WriteByte( 0x01 );
-                int checksum;
-                using( var compressStream = new ZLibStream( stream, CompressionMode.Compress, true ) ) {
-                    BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
-                    RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ), true );
-                    bufferedStream.Flush();
-                    checksum = compressStream.Checksum;
-                }
-                byte[] checksumBytes = BitConverter.GetBytes( checksum );
-                if( BitConverter.IsLittleEndian ) {
-                    // Adler32 checksum is big-endian
-                    Array.Reverse( checksumBytes );
-                }
-                stream.Write( checksumBytes, 0, checksumBytes.Length );
-                break;
+                case NbtCompression.ZLib:
+                    stream.WriteByte( 0x78 );
+                    stream.WriteByte( 0x01 );
+                    int checksum;
+                    using( var compressStream = new ZLibStream( stream, CompressionMode.Compress, true ) ) {
+                        BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
+                        RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ), true );
+                        bufferedStream.Flush();
+                        checksum = compressStream.Checksum;
+                    }
+                    byte[] checksumBytes = BitConverter.GetBytes( checksum );
+                    if( BitConverter.IsLittleEndian ) {
+                        // Adler32 checksum is big-endian
+                        Array.Reverse( checksumBytes );
+                    }
+                    stream.Write( checksumBytes, 0, checksumBytes.Length );
+                    break;
 
-            case NbtCompression.GZip:
-                using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
-                    // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
-                    BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
-                    RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ), true );
-                    bufferedStream.Flush();
-                }
-                break;
+                case NbtCompression.GZip:
+                    using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
+                        // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
+                        BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
+                        RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ), true );
+                        bufferedStream.Flush();
+                    }
+                    break;
 
-            case NbtCompression.None:
-                RootTag.WriteTag( new NbtBinaryWriter( stream, BigEndian ), true );
-                break;
+                case NbtCompression.None:
+                    RootTag.WriteTag( new NbtBinaryWriter( stream, BigEndian ), true );
+                    break;
             }
 
             return (int)( stream.Position - startPosition );
@@ -615,33 +617,33 @@ namespace fNbt {
             }
 
             switch( compression ) {
-            case NbtCompression.GZip:
-                using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
-                    if( bufferSize > 0 ) {
-                        return GetRootNameInternal( new BufferedStream( decStream, bufferSize ), bigEndian );
-                    } else {
-                        return GetRootNameInternal( decStream, bigEndian );
+                case NbtCompression.GZip:
+                    using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
+                        if( bufferSize > 0 ) {
+                            return GetRootNameInternal( new BufferedStream( decStream, bufferSize ), bigEndian );
+                        } else {
+                            return GetRootNameInternal( decStream, bigEndian );
+                        }
                     }
-                }
 
-            case NbtCompression.None:
-                return GetRootNameInternal( stream, bigEndian );
+                case NbtCompression.None:
+                    return GetRootNameInternal( stream, bigEndian );
 
-            case NbtCompression.ZLib:
-                if( stream.ReadByte() != 0x78 ) {
-                    throw new InvalidDataException( "Incorrect ZLib header. Expected 0x78 0x9C" );
-                }
-                stream.ReadByte();
-                using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
-                    if( bufferSize > 0 ) {
-                        return GetRootNameInternal( new BufferedStream( decStream, bufferSize ), bigEndian );
-                    } else {
-                        return GetRootNameInternal( decStream, bigEndian );
+                case NbtCompression.ZLib:
+                    if( stream.ReadByte() != 0x78 ) {
+                        throw new InvalidDataException( "Incorrect ZLib header. Expected 0x78 0x9C" );
                     }
-                }
+                    stream.ReadByte();
+                    using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
+                        if( bufferSize > 0 ) {
+                            return GetRootNameInternal( new BufferedStream( decStream, bufferSize ), bigEndian );
+                        } else {
+                            return GetRootNameInternal( decStream, bigEndian );
+                        }
+                    }
 
-            default:
-                throw new ArgumentOutOfRangeException( "compression" );
+                default:
+                    throw new ArgumentOutOfRangeException( "compression" );
             }
         }
 
