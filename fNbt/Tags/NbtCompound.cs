@@ -78,7 +78,7 @@ namespace fNbt {
         }
 
 
-        /// <summary> Gets or sets the tag with the specified name. May return <c>null</c>. </summary>
+        /// <summary> Gets the tag with the specified name. May return <c>null</c>. </summary>
         /// <param name="tagName"> The name of the tag to get. </param>
         /// <typeparam name="T"> Type to cast the result to. Must derive from NbtTag. </typeparam>
         /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
@@ -93,6 +93,66 @@ namespace fNbt {
                 return (T)result;
             }
             return null;
+        }
+
+
+        /// <summary> Gets the tag with the specified name. May return <c>null</c>. </summary>
+        /// <param name="tagName"> The name of the tag to get. </param>
+        /// <returns> The tag with the specified key. Null if tag with the given name was not found. </returns>
+        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
+        /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
+        [CanBeNull]
+        public NbtTag Get( [NotNull] string tagName ) {
+            if( tagName == null )
+                throw new ArgumentNullException( "tagName" );
+            NbtTag result;
+            if( tags.TryGetValue( tagName, out result ) ) {
+                return result;
+            }
+            return null;
+        }
+
+
+        /// <summary> Gets the tag with the specified name. </summary>
+        /// <param name="tagName"> The name of the tag to get. </param>
+        /// <param name="result"> When this method returns, contains the tag associated with the specified name, if the tag is found;
+        /// otherwise, null. This parameter is passed uninitialized. </param>
+        /// <typeparam name="T"> Type to cast the result to. Must derive from NbtTag. </typeparam>
+        /// <returns> true if the NbtCompound contains a tag with the specified name; otherwise, false. </returns>
+        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
+        /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
+        public bool TryGet<T>( [NotNull] string tagName, out T result ) where T : NbtTag {
+            if( tagName == null )
+                throw new ArgumentNullException( "tagName" );
+            NbtTag tempResult;
+            if( tags.TryGetValue( tagName, out tempResult ) ) {
+                result = (T)tempResult;
+                return true;
+            } else {
+                result = null;
+                return false;
+            }
+        }
+
+
+        /// <summary> Gets the tag with the specified name. </summary>
+        /// <param name="tagName"> The name of the tag to get. </param>
+        /// <param name="result"> When this method returns, contains the tag associated with the specified name, if the tag is found;
+        /// otherwise, null. This parameter is passed uninitialized. </param>
+        /// <returns> true if the NbtCompound contains a tag with the specified name; otherwise, false. </returns>
+        /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
+        /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
+        public bool TryGet( [NotNull] string tagName, out NbtTag result ) {
+            if( tagName == null )
+                throw new ArgumentNullException( "tagName" );
+            NbtTag tempResult;
+            if( tags.TryGetValue( tagName, out tempResult ) ) {
+                result = tempResult;
+                return true;
+            } else {
+                result = null;
+                return false;
+            }
         }
 
 
@@ -494,6 +554,16 @@ namespace fNbt {
         }
 
         #endregion
+
+
+        new private NbtTag this[int tagIndex] {
+            get {
+                throw new InvalidOperationException( "Integer indexers only work on NbtList tags." );
+            }
+            set {
+                throw new InvalidOperationException( "Integer indexers only work on NbtList tags." );
+            }
+        }
 
 
         /// <summary> Returns a String that represents the current NbtCompound object and its contents.
