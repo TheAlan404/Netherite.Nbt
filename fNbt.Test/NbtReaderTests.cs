@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
 
@@ -10,8 +11,8 @@ namespace fNbt.Test {
             using( FileStream fs = File.OpenRead( "TestFiles/bigtest.nbt" ) ) {
                 NbtReader reader = new NbtReader( fs );
                 while( reader.ReadToFollowing() ) {
-                    Debug.Write( "@" + reader.TagStartOffset + " " );
-                    Debug.WriteLine( reader.ToStringWithValue() );
+                    Console.Write( "@" + reader.TagStartOffset + " " );
+                    Console.WriteLine( reader.ToString( true ) );
                 }
                 Assert.AreEqual( reader.RootName, "Level" );
             }
@@ -37,7 +38,7 @@ namespace fNbt.Test {
             using( MemoryStream ms = new MemoryStream( testData ) ) {
                 NbtReader reader = new NbtReader( ms );
                 while( reader.ReadToFollowing() ) {
-                    Debug.WriteLine( reader.ToStringWithValue() );
+                    Console.WriteLine( reader.ToString( true ) );
                 }
             }
         }
@@ -220,7 +221,7 @@ namespace fNbt.Test {
         [Test]
         public void ReadAsTagTest() {
             NbtReader reader = new NbtReader( MakeTest() );
-            Debug.WriteLine( reader.ReadAsTag().ToString() );
+            Console.WriteLine( reader.ReadAsTag().ToString() );
         }
 
 
