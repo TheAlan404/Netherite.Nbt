@@ -619,6 +619,11 @@ namespace fNbt {
         /// <typeparam name="T"> The type of the value to be returned.
         /// Tag value should be convertible to this type. </typeparam>
         /// <returns> Tag value converted to the requested type. </returns>
+        /// <exception cref="EndOfStreamException"> End of stream has been reached (no more tags can be read). </exception>
+        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="InvalidOperationException"> Value has already been read, or there is no value to read. </exception>
+        /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
+        /// <exception cref="InvalidCastException"> Tag value cannot be converted to the requested type. </exception>
         public T ReadValueAs<T>() {
             return (T)ReadValue();
         }
@@ -627,10 +632,10 @@ namespace fNbt {
         /// <summary> Reads the value as an object of the correct type, boxed.
         /// Cannot be called for tags that do not have a single-object value (compound, list, and end tags). </summary>
         /// <returns> Tag value converted to the requested type. </returns>
-        /// <exception cref="InvalidOperationException"> Value has already been read, or there is no value to read. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
-        /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         /// <exception cref="EndOfStreamException"> End of stream has been reached (no more tags can be read). </exception>
+        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="InvalidOperationException"> Value has already been read, or there is no value to read. </exception>
+        /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         public object ReadValue() {
             if( state == NbtParseState.AtStreamEnd ) {
                 throw new EndOfStreamException();

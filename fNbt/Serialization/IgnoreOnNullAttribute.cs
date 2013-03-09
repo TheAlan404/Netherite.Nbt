@@ -1,6 +1,6 @@
 ﻿using System;
 
 namespace fNbt.Serialization {
-    [AttributeUsage( AttributeTargets.Property, Inherited = false, AllowMultiple = false )]
-    public sealed class IgnoreOnNullAttribute : Attribute { }
+    [AttributeUsage( AttributeTargets.Property, AllowMultiple = false )]
+    public sealed class IgnoreOnNullAttribute : Attribute {}
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
 namespace fNbt.Serialization {
-    public class NbtIgnoreAttribute : Attribute {
-    }
+    [AttributeUsage( AttributeTargets.Property, AllowMultiple = false )]
+    public class NbtIgnoreAttribute : Attribute {}
 }
