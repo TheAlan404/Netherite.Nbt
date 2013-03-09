@@ -1,9 +1,11 @@
 ﻿using System;
 
 namespace fNbt.Serialization {
+    /// <summary> Overrides NBT tag name associated with a property, as read/written by NbtSerializer. </summary>
     [AttributeUsage( AttributeTargets.Property, AllowMultiple = false )]
     public class TagNameAttribute : Attribute {
-        public string Name { get; set; }
+        /// <summary> NBT tag name associated with this property. </summary>
+        public string Name { get; private set; }
 
 
         /// <summary> Decorates the given property or field with the specified NBT tag name. </summary>

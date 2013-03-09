@@ -82,7 +82,7 @@ namespace fNbt.Serialization {
 
                 object propValue = property.GetValue( value, null );
 
-                if( propValue == null && Attribute.IsDefined( property, typeof( IgnoreOnNullAttribute ) ) ) {
+                if( propValue == null && Attribute.IsDefined( property, typeof( NbtIgnoreOnNullAttribute ) ) ) {
                     continue;
                 }
 
