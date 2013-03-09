@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace fNbt.Test {
     [TestFixture]
-    public class NbtFileTest {
+    public class NbtFileTests {
         [SetUp]
         public void NbtFileTestSetup() {
             Directory.CreateDirectory( "TestTemp" );

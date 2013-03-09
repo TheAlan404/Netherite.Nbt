@@ -21,7 +21,7 @@ namespace fNbt {
         /// <remarks> Assumes that data in the stream is Big-Endian encoded. </remarks>
         /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c> </exception>
         public NbtReader( [NotNull] Stream stream )
-            : this( stream, false ) {}
+            : this( stream, true ) {}
 
 
         /// <summary> Initializes a new instance of the NbtReader class. </summary>
@@ -185,8 +185,9 @@ namespace fNbt {
                     goto case NbtParseState.InCompound;
 
                 case NbtParseState.InCompound:
-                    if( atValue )
+                    if( atValue ) {
                         SkipValue();
+                    }
                     // Read next tag, check if we've hit the end
                     TagStartOffset = (int)( reader.BaseStream.Position - streamStartOffset );
                     TagType = reader.ReadTagType();
@@ -213,8 +214,9 @@ namespace fNbt {
                     goto case NbtParseState.InList;
 
                 case NbtParseState.InList:
-                    if( atValue )
+                    if( atValue ) {
                         SkipValue();
+                    }
                     ListIndex++;
                     if( ListIndex >= ParentTagLength ) {
                         GoUp();

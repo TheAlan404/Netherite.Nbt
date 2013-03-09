@@ -30,14 +30,24 @@ namespace fNbt.Serialization {
             if( type.IsPrimitive ) {
                 if( value is bool ) {
                     return new NbtByte( tagName, (byte)( (bool)value ? 1 : 0 ) );
-                } else if( value is byte || value is sbyte ) {
+                } else if( value is byte ) {
                     return new NbtByte( tagName, (byte)value );
-                } else if( value is short || value is ushort || value is char ) {
-                    return new NbtShort( tagName, (short)value );
-                } else if( value is int || value is uint ) {
-                    return new NbtInt( tagName, (int)value );
-                } else if( value is long || value is ulong ) {
-                    return new NbtLong( tagName, (long)value );
+                } else if( value is sbyte ) {
+                    return new NbtByte( tagName, (byte)(sbyte)value );
+                } else if( value is short ) {
+                    return new NbtShort( tagName, unchecked( (short)value ) );
+                } else if( value is char ) {
+                    return new NbtShort( tagName, unchecked( (short)(char)value ) );
+                } else if( value is ushort ) {
+                    return new NbtShort( tagName, unchecked( (short)(ushort)value ) );
+                } else if( value is int ) {
+                    return new NbtInt( tagName, unchecked( (int)value ) );
+                } else if( value is uint ) {
+                    return new NbtInt( tagName, unchecked( (int)(uint)value ) );
+                } else if( value is long ) {
+                    return new NbtLong( tagName, unchecked( (long)value ) );
+                } else if( value is ulong ) {
+                    return new NbtLong( tagName, unchecked( (long)(ulong)value ) );
                 } else if( value is float ) {
                     return new NbtFloat( tagName, (float)value );
                 } else if( value is double ) {
@@ -101,7 +111,6 @@ namespace fNbt.Serialization {
                         propValue = "";
                     }
                 }
-
                 compound.Add( Serialize( propValue, name ) );
             }
 
@@ -219,8 +228,43 @@ namespace fNbt.Serialization {
 
                     NbtTag node = compound.Get( name );
                     if( node == null ) continue;
+                    Type ptype = property.PropertyType;
 
-                    property.SetValue( resultObject, Deserialize( tag ), null );
+                    if( ptype == typeof( bool ) ) {
+                        property.SetValue( resultObject, ( node.ByteValue != 0 ), null );
+                    } else if( ptype == typeof( byte ) ) {
+                        property.SetValue( resultObject, node.ByteValue, null );
+                    } else if( ptype == typeof( sbyte ) ) {
+                        property.SetValue( resultObject, (sbyte)node.ByteValue, null );
+                    } else if( ptype == typeof( short ) ) {
+                        property.SetValue( resultObject, node.ShortValue, null );
+                    } else if( ptype == typeof( ushort ) ) {
+                        property.SetValue( resultObject, (ushort)node.ShortValue, null );
+                    } else if( ptype == typeof( char ) ) {
+                        property.SetValue( resultObject, (char)node.ShortValue, null );
+                    } else if( ptype == typeof( int ) ) {
+                        property.SetValue( resultObject, node.IntValue, null );
+                    } else if( ptype == typeof( uint ) ) {
+                        property.SetValue( resultObject, (uint)node.IntValue, null );
+                    } else if( ptype == typeof( long ) ) {
+                        property.SetValue( resultObject, node.LongValue, null );
+                    } else if( ptype == typeof( ulong ) ) {
+                        property.SetValue( resultObject, (ulong)node.LongValue, null );
+                    } else if( ptype == typeof( float ) ) {
+                        property.SetValue( resultObject, node.FloatValue, null );
+                    } else if( ptype == typeof( double ) ) {
+                        property.SetValue( resultObject, (ulong)node.DoubleValue, null );
+                    } else if( ptype == typeof( string ) ) {
+                        property.SetValue( resultObject, node.StringValue, null );
+                    } else if( ptype == typeof( byte[] ) ) {
+                        property.SetValue( resultObject, node.ByteArrayValue, null );
+                    } else if( ptype == typeof( int[] ) ) {
+                        property.SetValue( resultObject, node.IntArrayValue, null );
+                    } else {
+                        throw new NotSupportedException( "Serializing objects with fields of type " + type +
+                                                         " is not supported by NbtSerializer." );
+                    }
+                    Console.WriteLine( "name = " + property.GetValue( resultObject, null ) );
                 }
                 return resultObject;
 

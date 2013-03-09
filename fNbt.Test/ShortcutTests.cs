@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace fNbt.Test {
     [TestFixture]
-    public class ShortcutTest {
+    public class ShortcutTests {
         [Test]
         public void NbtByteTest() {
             object dummy;
