@@ -61,7 +61,6 @@
     <Compile Include="NbtParseState.cs" />
     <Compile Include="NbtReader.cs" />
     <Compile Include="NbtReaderNode.cs" />
-    <Compile Include="Serialization\NbtIgnoreOnNullAttribute.cs" />
     <Compile Include="Serialization\NbtIgnoreAttribute.cs" />
     <Compile Include="Serialization\INbtSerializable.cs" />
     <Compile Include="Serialization\NbtSerializer.cs" />

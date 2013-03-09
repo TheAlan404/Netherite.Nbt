@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Reflection;
 using JetBrains.Annotations;
 
@@ -92,7 +93,7 @@ namespace fNbt.Serialization {
 
                 object propValue = property.GetValue( value, null );
 
-                if( propValue == null && Attribute.IsDefined( property, typeof( NbtIgnoreOnNullAttribute ) ) ) {
+                if( propValue == null ) {
                     continue;
                 }
 
@@ -104,13 +105,6 @@ namespace fNbt.Serialization {
                     name = property.Name;
                 }
 
-                if( propValue == null ) {
-                    if( property.PropertyType.IsValueType ) {
-                        propValue = Activator.CreateInstance( property.PropertyType );
-                    } else if( property.PropertyType == typeof( string ) ) {
-                        propValue = "";
-                    }
-                }
                 compound.Add( Serialize( propValue, name ) );
             }
 
@@ -175,6 +169,7 @@ namespace fNbt.Serialization {
         /// <exception cref="ArgumentNullException"> <paramref name="tag"/> or <paramref name="type"/> is null. </exception>
         /// <exception cref="NotSupportedException"> <paramref name="tag"/> cannot be deserialized (e.g. is a list of non-value tags). </exception>
         /// <exception cref="MissingMethodException"> Given <paramref name="type"/> does not provide a public parameterless constructor. </exception>
+        [CanBeNull]
         public virtual object Deserialize( [NotNull] NbtTag tag, [NotNull] Type type ) {
             if( tag == null ) {
                 throw new ArgumentNullException( "tag" );
@@ -212,6 +207,7 @@ namespace fNbt.Serialization {
             // deserializing compounds
             NbtCompound compound = tag as NbtCompound;
             if( compound != null ) {
+                if( compound.Count == 0 ) return null;
                 object resultObject = Activator.CreateInstance( type );
                 foreach( PropertyInfo property in type.GetProperties() ) {
                     if( !property.CanWrite || Attribute.IsDefined( property, typeof( NbtIgnoreAttribute ) ) ) {
@@ -227,7 +223,13 @@ namespace fNbt.Serialization {
                     }
 
                     NbtTag node = compound.Get( name );
-                    if( node == null ) continue;
+                    if( node == null ) {
+                        DefaultValueAttribute[] defValAttr = (DefaultValueAttribute[])Attribute.GetCustomAttributes( property, typeof( DefaultValueAttribute ) );
+                        if( defValAttr.Length > 0 ) {
+                            property.SetValue( resultObject, defValAttr[0].Value, null );
+                        }
+                        continue;
+                    }
                     Type ptype = property.PropertyType;
 
                     if( ptype == typeof( bool ) ) {
