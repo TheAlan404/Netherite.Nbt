@@ -1,16 +1,20 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
+using JetBrains.Annotations;
 
 namespace fNbt.Serialization {
+    /// <summary> Rudimentary Nbt serializer. Provides functionality to convert whole objects to/from Nbt format,
+    /// using reflection to map object properties to Nbt compound fields. 
+    /// Does not support lists or arrays of non-value types, multi-dimensional arrays, nested lists, or nested compounds. </summary>
     public class NbtSerializer {
-        public NbtTag Serialize( object value ) {
-            return Serialize( value, null );
-        }
-
-
-        public NbtTag Serialize( object value, string tagName ) {
+        /// <summary> Converts given object into NbtTag representation. </summary>
+        /// <param name="value"> Object to serialize. May be null. Null values get serialized to an empty Compound tag. </param>
+        /// <param name="tagName"> Name of the object. May be null. </param>
+        /// <returns> NbtTag representing the given value. </returns>
+        /// <exception cref="NotSupportedException"> If serializing objects of the given type is not supported. </exception>
+        [NotNull]
+        public virtual NbtTag Serialize( [CanBeNull] object value, [CanBeNull] string tagName ) {
             if( value == null ) {
                 return new NbtCompound( tagName );
             }
@@ -105,16 +109,70 @@ namespace fNbt.Serialization {
         }
 
 
-        NbtTag SerializeList( IList value, string tagName ) {
-            NbtList list = new NbtList( tagName );
-            foreach( object item in value ) {
-                list.Add( Serialize( value ) );
+        [NotNull]
+        protected virtual NbtTag SerializeList( [NotNull] IList list, [CanBeNull] string tagName ) {
+            NbtList resultList = new NbtList( tagName );
+            foreach( object item in list ) {
+                resultList.Add( Serialize( item, null ) );
             }
-            return list;
+            return resultList;
         }
 
 
-        public object Deserialize( NbtTag tag, Type type ) {
+        /// <summary> Gets value from a simple value-type NbtTag. Does not support Lists or Compounds.
+        /// Use Deserialize(NbtTag,Type) overload to deserialize complex tags. </summary>
+        /// <param name="tag"> Tag to parse. </param>
+        /// <returns> Value of the given tag. </returns>
+        /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is null. </exception>
+        /// <exception cref="NotSupportedException"> <paramref name="tag"/> is not a value tag. </exception>
+        public virtual object Deserialize( [NotNull] NbtTag tag ) {
+            if( tag == null ) {
+                throw new ArgumentNullException( "tag" );
+            }
+            switch( tag.TagType ) {
+                case NbtTagType.Byte:
+                    return tag.ByteValue;
+                case NbtTagType.ByteArray:
+                    return tag.ByteArrayValue;
+                case NbtTagType.Double:
+                    return tag.DoubleValue;
+                case NbtTagType.Float:
+                    return tag.FloatValue;
+                case NbtTagType.Int:
+                    return tag.IntValue;
+                case NbtTagType.IntArray:
+                    return tag.IntArrayValue;
+                case NbtTagType.Long:
+                    return tag.LongValue;
+                case NbtTagType.Short:
+                    return tag.ShortValue;
+                case NbtTagType.String:
+                    return tag.StringValue;
+                default:
+                    throw new NotSupportedException(
+                        "Deserialize(NbtTag) can only handle value-type tags. " +
+                        "For lists and compounds, use Deserialize(NbtTag,Type) overload." );
+            }
+        }
+
+
+        /// <summary> Creates an object from the given NbtTag. For primitive types, strings, byte arrays, and int arrays.
+        /// If <paramref name="tag"/> is of type List, expects given <paramref name="type"/> to implement IList.
+        /// If <paramref name="tag"/> is of type Compound, object properties will be matched to compound's child tags by name.
+        /// For List and Compound tags, <paramref name="type"/> is expected to provide a public parameterless constructor. </summary>
+        /// <param name="tag"> Tag to parse. </param>
+        /// <param name="type"> Expected type of the resulting object. </param>
+        /// <returns> Given tag interpreted as an object of the given type. </returns>
+        /// <exception cref="ArgumentNullException"> <paramref name="tag"/> or <paramref name="type"/> is null. </exception>
+        /// <exception cref="NotSupportedException"> <paramref name="tag"/> cannot be deserialized (e.g. is a list of non-value tags). </exception>
+        /// <exception cref="MissingMethodException"> Given <paramref name="type"/> does not provide a public parameterless constructor. </exception>
+        public virtual object Deserialize( [NotNull] NbtTag tag, [NotNull] Type type ) {
+            if( tag == null ) {
+                throw new ArgumentNullException( "tag" );
+            }
+            if( type == null ) {
+                throw new ArgumentNullException( "type" );
+            }
             // custom deserialization
             if( typeof( INbtSerializable ).IsAssignableFrom( type ) ) {
                 INbtSerializable resultObject = (INbtSerializable)Activator.CreateInstance( type );
@@ -124,7 +182,7 @@ namespace fNbt.Serialization {
 
             // deserialize value types (including primitives, Strings, ByteArrays, and IntArrays)
             if( tag.HasValue ) {
-                return DeserializeTagValue( tag );
+                return Deserialize( tag );
             }
 
             // deserialize lists
@@ -133,7 +191,7 @@ namespace fNbt.Serialization {
                 IList resultObject = (IList)Activator.CreateInstance( type );
                 foreach( NbtTag childTag in list ) {
                     if( childTag.HasValue ) {
-                        resultObject.Add( DeserializeTagValue( childTag ) );
+                        resultObject.Add( Deserialize( childTag ) );
                     } else {
                         throw new NotSupportedException(
                             "List deserialization is only supported for lists of value tags." );
@@ -162,39 +220,13 @@ namespace fNbt.Serialization {
                     NbtTag node = compound.Get( name );
                     if( node == null ) continue;
 
-                    property.SetValue( resultObject, DeserializeTagValue( tag ), null );
+                    property.SetValue( resultObject, Deserialize( tag ), null );
                 }
                 return resultObject;
 
             }
 
             throw new NotSupportedException( "Could not deserialize tag " + tag );
-        }
-
-
-        object DeserializeTagValue( NbtTag tag ) {
-            switch( tag.TagType ) {
-                case NbtTagType.Byte:
-                    return tag.ByteValue;
-                case NbtTagType.ByteArray:
-                    return tag.ByteArrayValue;
-                case NbtTagType.Double:
-                    return tag.DoubleValue;
-                case NbtTagType.Float:
-                    return tag.FloatValue;
-                case NbtTagType.Int:
-                    return tag.IntValue;
-                case NbtTagType.IntArray:
-                    return tag.IntArrayValue;
-                case NbtTagType.Long:
-                    return tag.LongValue;
-                case NbtTagType.Short:
-                    return tag.ShortValue;
-                case NbtTagType.String:
-                    return tag.StringValue;
-                default:
-                    throw new NotSupportedException( "Could not deserialize tag " + tag );
-            }
         }
     }
 }
