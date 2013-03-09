@@ -16,6 +16,23 @@ namespace fNbt {
         public abstract NbtTagType TagType { get; }
 
 
+        /// <summary> Returns true if tags of this type have a value attached.
+        /// All tags except Compound, List, and End have values. </summary>
+        public bool HasValue {
+            get {
+                switch( TagType ) {
+                    case NbtTagType.Compound:
+                    case NbtTagType.End:
+                    case NbtTagType.List:
+                    case NbtTagType.Unknown:
+                        return false;
+                    default:
+                        return true;
+                }
+            }
+        }
+
+
         /// <summary> Name of this tag. Immutable, and set by the constructor. May be <c>null</c>. </summary>
         /// <exception cref="ArgumentNullException"> If <paramref name="value"/> is <c>null</c>, and <c>Parent</c> tag is an NbtCompound.
         /// Name of tags inside an <c>NbtCompound</c> may not be null. </exception>

@@ -71,7 +71,7 @@ namespace fNbt.Serialization {
 
             // serialize everything else
             NbtCompound compound = new NbtCompound( tagName );
-            foreach( PropertyInfo property in typeof( object ).GetProperties() ) {
+            foreach( PropertyInfo property in value.GetType().GetProperties() ) {
                 if( !property.CanRead || Attribute.IsDefined( property, typeof( NbtIgnoreAttribute ) ) ) {
                     continue;
                 }
@@ -114,62 +114,87 @@ namespace fNbt.Serialization {
         }
 
 
-        public object Deserialize( NbtTag value ) {
-            if( value is NbtByte ) {
-                return ( (NbtByte)value ).Value;
-            } else if( value is NbtByteArray ) {
-                return ( (NbtByteArray)value ).Value;
-            } else if( value is NbtDouble ) {
-                return ( (NbtDouble)value ).Value;
-            } else if( value is NbtFloat ) {
-                return ( (NbtFloat)value ).Value;
-            } else if( value is NbtInt ) {
-                return ( (NbtInt)value ).Value;
-            } else if( value is NbtIntArray ) {
-                return ( (NbtIntArray)value ).Value;
-            } else if( value is NbtLong ) {
-                return ( (NbtLong)value ).Value;
-            } else if( value is NbtShort ) {
-                return ( (NbtShort)value ).Value;
-            } else if( value is NbtString ) {
-                return ( (NbtString)value ).Value;
-            } else if( value is NbtCompound ) {
-                var compound = value as NbtCompound;
-
-                List<PropertyInfo> properties = new List<PropertyInfo>();
-                foreach( PropertyInfo p in typeof( object ).GetProperties() ) {
-                    if( Attribute.GetCustomAttributes( p, typeof( NbtIgnoreAttribute ) ).Length == 0 ) {
-                        properties.Add( p );
-                    }
-                }
-
-                var resultObject = Activator.CreateInstance( Type );
-                foreach( var property in properties ) {
-                    if( !property.CanWrite ) {
-                        continue;
-                    }
-                    string name = property.Name;
-                    Attribute[] nameAttributes = Attribute.GetCustomAttributes( property, typeof( TagNameAttribute ) );
-
-                    if( nameAttributes.Length != 0 ) {
-                        name = ( (TagNameAttribute)nameAttributes[0] ).Name;
-                    }
-
-                    var node = compound.Get<NbtTag>( name );
-                    if( node == null ) continue;
-                    object data = Deserialize( node );
-
-                    if( property.PropertyType == typeof( bool ) && data is byte ) {
-                        data = (byte)data == 1;
-                    }
-
-                    property.SetValue( resultObject, data, null );
-                }
-
+        public object Deserialize( NbtTag tag, Type type ) {
+            // custom deserialization
+            if( typeof( INbtSerializable ).IsAssignableFrom( type ) ) {
+                INbtSerializable resultObject = (INbtSerializable)Activator.CreateInstance( type );
+                resultObject.Deserialize( tag );
                 return resultObject;
             }
 
-            throw new NotSupportedException( "The node type '" + value.GetType() + "' is not supported." );
+            // deserialize value types (including primitives, Strings, ByteArrays, and IntArrays)
+            if( tag.HasValue ) {
+                return DeserializeTagValue( tag );
+            }
+
+            // deserialize lists
+            NbtList list = tag as NbtList;
+            if( list != null ) {
+                IList resultObject = (IList)Activator.CreateInstance( type );
+                foreach( NbtTag childTag in list ) {
+                    if( childTag.HasValue ) {
+                        resultObject.Add( DeserializeTagValue( childTag ) );
+                    } else {
+                        throw new NotSupportedException(
+                            "List deserialization is only supported for lists of value tags." );
+                    }
+                }
+                return resultObject;
+            }
+
+            // deserializing compounds
+            NbtCompound compound = tag as NbtCompound;
+            if( compound != null ) {
+                object resultObject = Activator.CreateInstance( type );
+                foreach( PropertyInfo property in type.GetProperties() ) {
+                    if( !property.CanWrite || Attribute.IsDefined( property, typeof( NbtIgnoreAttribute ) ) ) {
+                        continue;
+                    }
+
+                    string name;
+                    Attribute[] nameAttributes = Attribute.GetCustomAttributes( property, typeof( TagNameAttribute ) );
+                    if( nameAttributes.Length != 0 ) {
+                        name = ( (TagNameAttribute)nameAttributes[0] ).Name;
+                    } else {
+                        name = property.Name;
+                    }
+
+                    NbtTag node = compound.Get( name );
+                    if( node == null ) continue;
+
+                    property.SetValue( resultObject, DeserializeTagValue( tag ), null );
+                }
+                return resultObject;
+
+            }
+
+            throw new NotSupportedException( "Could not deserialize tag " + tag );
+        }
+
+
+        object DeserializeTagValue( NbtTag tag ) {
+            switch( tag.TagType ) {
+                case NbtTagType.Byte:
+                    return tag.ByteValue;
+                case NbtTagType.ByteArray:
+                    return tag.ByteArrayValue;
+                case NbtTagType.Double:
+                    return tag.DoubleValue;
+                case NbtTagType.Float:
+                    return tag.FloatValue;
+                case NbtTagType.Int:
+                    return tag.IntValue;
+                case NbtTagType.IntArray:
+                    return tag.IntArrayValue;
+                case NbtTagType.Long:
+                    return tag.LongValue;
+                case NbtTagType.Short:
+                    return tag.ShortValue;
+                case NbtTagType.String:
+                    return tag.StringValue;
+                default:
+                    throw new NotSupportedException( "Could not deserialize tag " + tag );
+            }
         }
     }
 }
