@@ -25,11 +25,11 @@ applications that use fNBT; they are only used for testing.
 
 
 ==== DOWNLOAD =================================================================
- Compiled binary:  http://fcraft.net/libnbt/LibNbt2012_v0.5.0.zip
+ Compiled binary:  http://fcraft.net/fnbt/fNBT_v0.5.0.zip
 
  Amalgamation (single source file):
-    Non-annotated: http://fcraft.net/libnbt/LibNbt2012_v0.5.0.cs
-        Annotated: http://fcraft.net/libnbt/LibNbt2012_v0.5.0_Annotated.cs
+    Non-annotated: http://fcraft.net/fnbt/fNBT_v0.5.0.cs
+        Annotated: http://fcraft.net/fnbt/fNBT_v0.5.0_Annotated.cs
                    (using JetBrains.Annotations, for ReSharper)
 
 
