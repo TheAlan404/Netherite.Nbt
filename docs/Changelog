@@ -1,3 +1,12 @@
+0.5.0 (fNBT)
+- Added NbtReader, for linearly reading NBT streams, similarly to XmlReader.
+- License changed from LGPL to to 3-Clause BSD, since none of the original
+	libnbt source code remains.
+- API additions:
+	New NbtCompound method: 	bool TryGet(string,out NbtTag)
+	New NbtCompound overload: 	NbtTag Get(string)
+	New NbtTag property: 		bool HasValue
+
 0.4.1 (LibNbt2012)
 - Added a way to set up default indent for NbtTag.ToString() methods, using
 	NbtTag.DefaultIndentString static property.
