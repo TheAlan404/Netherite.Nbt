@@ -1,45 +1,43 @@
-Current released version is 0.4.1 (24 December 2012).
-
 Named Binary Tag (NBT) is a structured binary file format used by Minecraft.
-LibNbt2012 is a small library, written in C# for .NET 2.0+. It provides
-functionality to create, load, traverse, modify, and save NBT files and
-streams.
+fNBT is a small library, written in C# for .NET 2.0+. It provides functionality
+to create, load, traverse, modify, and save NBT files and streams.
 
-LibNbt2012 is based on Erik Davidson's (aphistic's) original LibNbt library,
-rewritten by Matvei Stefarov (fragmer) for improved performance, ease of use,
-and reliability.
+Current released version is 0.5.0 (17 March 2013).
 
-Note that LibNbt.Test.dll and nunit.framework.dll do NOT need to be bundled
-with applications that use LibNbt2012; they are only used for testing.
+fNBT is based in part on Erik Davidson's (aphistic's) original LibNbt library,
+now completely rewritten by Matvei Stefarov (fragmer).
+
+Note that fNBT.Test.dll and nunit.framework.dll do NOT need to be bundled with
+applications that use fNBT; they are only used for testing.
 
 
 ==== FEATURES =================================================================
-- Can load and save uncompressed, GZip-, and ZLib-compressed files/streams.
-- Can easy create, traverse, and modify NBT documents.
+- Load and save uncompressed, GZip-, and ZLib-compressed files/streams.
+- Easily create, traverse, and modify NBT documents.
 - Simple indexer-based syntax for accessing compound, list, and nested tags.
 - Shortcut properties to access tags' values without unnecessary type casts.
-- Compound tags implement ICollection<T> and List tags implement IList<T>,
-    for easy traversal and LINQ integration.
+- Compound tags implement ICollection<T> and List tags implement IList<T>, for
+    easy traversal and LINQ integration.
 - Good performance and low memory overhead.
 - Built-in pretty printing of individual tags or whole files.
-- Every class and method are fully documented and unit-tested.
+- Every class and method are fully documented, annotated, and unit-tested.
 - Can work with both big-endian and little-endian NBT data and systems.
 
 
 ==== DOWNLOAD =================================================================
- Compiled binary - under LGPL license:
-                    http://fcraft.net/libnbt/LibNbt2012_v0.4.1.zip
+ Compiled binary:  http://fcraft.net/libnbt/LibNbt2012_v0.5.0.zip
 
- Amalgamation (single source file) - under 3-clause BSD license:
-         Annotated: http://fcraft.net/libnbt/LibNbt2012_v0.4.1.cs
-     Non-annotated: http://fcraft.net/libnbt/LibNbt2012_v0.4.1_Annotated.cs
+ Amalgamation (single source file):
+    Non-annotated: http://fcraft.net/libnbt/LibNbt2012_v0.5.0.cs
+        Annotated: http://fcraft.net/libnbt/LibNbt2012_v0.5.0_Annotated.cs
+                   (using JetBrains.Annotations, for ReSharper)
 
 
 ==== EXAMPLES =================================================================
 - Loading a gzipped file:
-    NbtFile myFile = new NbtFile();
+    var myFile = new NbtFile();
     myFile.LoadFromFile("somefile.nbt.gz");
-    NbtTag myCompoundTag = myFile.RootTag;
+    var myCompoundTag = myFile.RootTag;
 
 - Accessing tags (long/strongly-typed style):
     int intVal = myCompoundTag.Get<NbtInt>("intTagsName").Value;
@@ -68,15 +66,15 @@ with applications that use LibNbt2012; they are only used for testing.
     }
 
 - Constructing a new document
-    NbtCompound serverInfo = new NbtCompound("Server");
+    var serverInfo = new NbtCompound("Server");
     serverInfo.Add( new NbtString("Name", "BestServerEver") );
     serverInfo.Add( new NbtInt("Players", 15) );
     serverInfo.Add( new NbtInt("MaxPlayers", 20) );
-    NbtFile serverFile = new NbtFile(serverInfo);
+    var serverFile = new NbtFile(serverInfo);
     serverFile.SaveToFile( "server.nbt", NbtCompression.None );
 
 - Constructing using collection initializer notation:
-    NbtCompound compound = new NbtCompound("root"){
+    var compound = new NbtCompound("root"){
         new NbtInt("someInt", 123),
         new NbtList("byteList") {
             new NbtByte(1),
@@ -88,17 +86,19 @@ with applications that use LibNbt2012; they are only used for testing.
         }
     };
 
-- Pretty-printing file structure
+- Pretty-printing file structure:
     Console.WriteLine( myFile.ToString("\t") );
     Console.WriteLine( myRandomTag.ToString("    ") );
 
+- Check out unit tests in fNbt.Test for more examples.
+
 
 ==== REFERENCE ================================================================
-Online reference can be found at http://www.fcraft.net/libnbt/v0.4.1/
+Online reference can be found at http://www.fcraft.net/libnbt/v0.5.0/
 
 
 ==== LICENSING ================================================================
-fNbt v0.5.0+ are licensed under BSD-3clause license. See ./docs/LICENSE
+fNbt v0.5.0+ is licensed under BSD-3clause license. See ./docs/LICENSE
 LibNbt2012 up to and including v0.4.1 kept LibNbt's original license (LGPLv3).
 LibNbt2012 makes use of the NUnit framework (www.nunit.org)
 
