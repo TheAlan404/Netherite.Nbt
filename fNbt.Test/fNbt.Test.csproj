@@ -45,7 +45,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompoundTests.cs" />
-    <Compile Include="NbtSerializerTests.cs" />
     <Compile Include="NbtReaderTests.cs" />
     <Compile Include="NonSeekableStream.cs" />
     <Compile Include="TagSelectorTests.cs" />
