@@ -94,7 +94,7 @@ applications that use fNBT; they are only used for testing.
 
 
 ==== REFERENCE ================================================================
-Online reference can be found at http://www.fcraft.net/libnbt/v0.5.0/
+Online reference can be found at http://www.fcraft.net/fnbt/v0.5.0/
 
 
 ==== LICENSING ================================================================
