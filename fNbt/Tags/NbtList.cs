@@ -106,7 +106,7 @@ namespace fNbt {
         /// <summary> Creates an NbtList with the given name, empty contents, and an explicitly specified ListType. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         /// <param name="givenListType"> Name to assign to this tag.
-        /// If givenListType is Unknown, ListType will be infered from the first tag added to this NbtList. </param>
+        /// If givenListType is Unknown, ListType will be inferred from the first tag added to this NbtList. </param>
         /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
         public NbtList( [CanBeNull] string tagName, NbtTagType givenListType )
             : this( tagName, null, givenListType ) {}
@@ -577,9 +577,13 @@ namespace fNbt {
 
 
         // Hiding NbtTag[string]:NbtTag
-        new NbtTag this[string tagName] {
-            get { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
-            set { throw new InvalidOperationException( "Integer indexers only work on NbtList tags." ); }
+        new NbtTag this[ string tagName ] {
+            get {
+                throw new InvalidOperationException( "String indexers only work on NbtCompound tags." );
+            }
+            set {
+                throw new InvalidOperationException( "String indexers only work on NbtCompound tags." );
+            }
         }
 
 

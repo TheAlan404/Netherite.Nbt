@@ -154,7 +154,7 @@ namespace fNbt {
 
 
         /// <summary> Gets whether this NbtReader instance is in state of error.
-        /// No further reading can be done from this instance if a parse error occured. </summary>
+        /// No further reading can be done from this instance if a parse error occurred. </summary>
         public bool IsInErrorState {
             get { return (state == NbtParseState.Error); }
         }
@@ -162,7 +162,7 @@ namespace fNbt {
 
         /// <summary> Reads the next tag from the stream. </summary>
         /// <returns> true if the next tag was read successfully; false if there are no more tags to read. </returns>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         public bool ReadToFollowing() {
             switch( state ) {
@@ -393,7 +393,7 @@ namespace fNbt {
         /// Returns false if are no more tags to read (end of stream is reached). </summary>
         /// <param name="tagName"> Name of the tag. May be null (to look for next unnamed tag). </param>
         /// <returns> <c>true</c> if a matching tag is found; otherwise <c>false</c>. </returns>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="InvalidOperationException"> If NbtReader cannot recover from a previous parsing error. </exception>
         public bool ReadToFollowing( [CanBeNull] string tagName ) {
             while( ReadToFollowing() ) {
@@ -409,7 +409,7 @@ namespace fNbt {
         /// If a matching child tag is not found, the NbtReader is positioned on the end tag. </summary>
         /// <param name="tagName"> Name of the tag you wish to move to. May be null (to look for next unnamed tag). </param>
         /// <returns> <c>true</c> if a matching descendant tag is found; otherwise <c>false</c>. </returns>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         public bool ReadToDescendant( [CanBeNull] string tagName ) {
             if( state == NbtParseState.Error ) {
@@ -432,7 +432,7 @@ namespace fNbt {
         /// <summary> Advances the NbtReader to the next sibling tag, skipping any child tags.
         /// If there are no more siblings, NbtReader is positioned on the tag following the last of this tag's descendants. </summary>
         /// <returns> <c>true</c> if a sibling element is found; otherwise <c>false</c>. </returns>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         public bool ReadToNextSibling() {
             if( state == NbtParseState.Error ) {
@@ -456,7 +456,7 @@ namespace fNbt {
         /// If a matching sibling tag is not found, NbtReader is positioned on the tag following the last siblings. </summary>
         /// <param name="tagName"> The name of the sibling tag you wish to move to. </param>
         /// <returns> <c>true</c> if a matching sibling element is found; otherwise <c>false</c>. </returns>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="InvalidOperationException"> If NbtReader cannot recover from a previous parsing error. </exception>
         public bool ReadToNextSibling( [CanBeNull] string tagName ) {
             while( ReadToNextSibling() ) {
@@ -469,9 +469,9 @@ namespace fNbt {
 
 
         /// <summary> Skips current tag, its value/descendants, and any following siblings.
-        /// In other words, reads until parent tag's subling. </summary>
+        /// In other words, reads until parent tag's sibling. </summary>
         /// <returns> Total number of tags that were skipped. Returns 0 if end of the stream is reached. </returns>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         public int Skip() {
             if( state == NbtParseState.Error ) {
@@ -492,7 +492,7 @@ namespace fNbt {
         /// and constructs an NbtTag object of the appropriate type. </summary>
         /// <returns> Constructed NbtTag object;
         /// <c>null</c> if <c>SkipEndTags</c> is <c>true</c> and trying to read an End tag. </returns>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         /// <exception cref="EndOfStreamException"> End of stream has been reached (no more tags can be read). </exception>
         /// <exception cref="InvalidOperationException"> Tag value has already been read, and CacheTagValues is false. </exception>
@@ -622,7 +622,7 @@ namespace fNbt {
         /// Tag value should be convertible to this type. </typeparam>
         /// <returns> Tag value converted to the requested type. </returns>
         /// <exception cref="EndOfStreamException"> End of stream has been reached (no more tags can be read). </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="InvalidOperationException"> Value has already been read, or there is no value to read. </exception>
         /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         /// <exception cref="InvalidCastException"> Tag value cannot be converted to the requested type. </exception>
@@ -635,7 +635,7 @@ namespace fNbt {
         /// Cannot be called for tags that do not have a single-object value (compound, list, and end tags). </summary>
         /// <returns> Tag value converted to the requested type. </returns>
         /// <exception cref="EndOfStreamException"> End of stream has been reached (no more tags can be read). </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="InvalidOperationException"> Value has already been read, or there is no value to read. </exception>
         /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         public object ReadValue() {
@@ -719,7 +719,7 @@ namespace fNbt {
         /// <exception cref="EndOfStreamException"> End of stream has been reached (no more tags can be read). </exception>
         /// <exception cref="InvalidOperationException"> Current tag is not of type List. </exception>
         /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         public T[] ReadListAsArray<T>() {
             if( state == NbtParseState.AtStreamEnd ) {
                 throw new EndOfStreamException();

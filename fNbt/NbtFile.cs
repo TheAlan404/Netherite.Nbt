@@ -114,7 +114,7 @@ namespace fNbt {
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         public NbtFile( [NotNull] string fileName )
             : this() {
@@ -135,7 +135,7 @@ namespace fNbt {
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         public int LoadFromFile( [NotNull] string fileName ) {
             return LoadFromFile( fileName, NbtCompression.AutoDetect, null );
@@ -153,7 +153,7 @@ namespace fNbt {
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         public int LoadFromFile( [NotNull] string fileName, NbtCompression compression,
                                  [CanBeNull] TagSelector selector ) {
@@ -183,7 +183,7 @@ namespace fNbt {
         /// if the sum of <paramref name="index"/> and <paramref name="length"/> is greater than the length of <paramref name="buffer"/>. </exception>
         /// <exception cref="EndOfStreamException"> If NBT stream extends beyond the given <paramref name="length"/>. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected or decompressing failed. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         public int LoadFromBuffer( [NotNull] byte[] buffer, int index, int length, NbtCompression compression,
                                    [CanBeNull] TagSelector selector ) {
             if( buffer == null )
@@ -210,7 +210,7 @@ namespace fNbt {
         /// if the sum of <paramref name="index"/> and <paramref name="length"/> is greater than the length of <paramref name="buffer"/>. </exception>
         /// <exception cref="EndOfStreamException"> If NBT stream extends beyond the given <paramref name="length"/>. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected or decompressing failed. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         public int LoadFromBuffer( [NotNull] byte[] buffer, int index, int length, NbtCompression compression ) {
             if( buffer == null )
                 throw new ArgumentNullException( "buffer" );
@@ -234,7 +234,7 @@ namespace fNbt {
         /// <exception cref="NotSupportedException"> If <paramref name="compression"/> is set to AutoDetect, but the stream is not seekable. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         public int LoadFromStream( [NotNull] Stream stream, NbtCompression compression,
                                    [CanBeNull] TagSelector selector ) {
             if( stream == null )
@@ -297,7 +297,7 @@ namespace fNbt {
         /// <exception cref="NotSupportedException"> If <paramref name="compression"/> is set to AutoDetect, but the stream is not seekable. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         public int LoadFromStream( [NotNull] Stream stream, NbtCompression compression ) {
             if( stream == null )
                 throw new ArgumentNullException( "stream" );
@@ -550,7 +550,7 @@ namespace fNbt {
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         [NotNull]
         public static string ReadRootTagName( [NotNull] string fileName ) {
@@ -569,7 +569,7 @@ namespace fNbt {
         /// <exception cref="FileNotFoundException"> If given file was not found. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         [NotNull]
         public static string ReadRootTagName( [NotNull] string fileName, NbtCompression compression, bool bigEndian,
@@ -601,7 +601,7 @@ namespace fNbt {
         /// <exception cref="NotSupportedException"> If compression is set to AutoDetect, but the stream is not seekable. </exception>
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
-        /// <exception cref="NbtFormatException"> If an error occured while parsing data in NBT format. </exception>
+        /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         [NotNull]
         public static string ReadRootTagName( [NotNull] Stream stream, NbtCompression compression, bool bigEndian,
                                               int bufferSize ) {
@@ -671,7 +671,7 @@ namespace fNbt {
         /// <summary> Prints contents of the root tag, and any child tags, to a string.
         /// Indents the string using multiples of the given indentation string. </summary>
         /// <param name="indentString"> String to be used for indentation. </param>
-        /// <returns> A string representing contants of this tag, and all child tags (if any). </returns>
+        /// <returns> A string representing contents of this tag, and all child tags (if any). </returns>
         /// <exception cref="ArgumentNullException"> <paramref name="indentString"/> is <c>null</c>. </exception>
         public string ToString( [NotNull] string indentString ) {
             return RootTag.ToString( indentString );
