@@ -93,7 +93,7 @@ namespace fNbt {
         internal abstract void SkipTag( NbtBinaryReader readStream );
 
 
-        internal abstract void WriteTag( [NotNull] NbtBinaryWriter writeReader, bool writeName );
+        internal abstract void WriteTag( [NotNull] NbtBinaryWriter writeReader );
 
 
         // WriteData does not write the tag's ID byte or the name

@@ -511,7 +511,7 @@ namespace fNbt {
                     int checksum;
                     using( var compressStream = new ZLibStream( stream, CompressionMode.Compress, true ) ) {
                         BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
-                        RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ), true );
+                        RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ) );
                         bufferedStream.Flush();
                         checksum = compressStream.Checksum;
                     }
@@ -527,13 +527,13 @@ namespace fNbt {
                     using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
                         // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
                         BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
-                        RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ), true );
+                        RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ) );
                         bufferedStream.Flush();
                     }
                     break;
 
                 case NbtCompression.None:
-                    RootTag.WriteTag( new NbtBinaryWriter( stream, BigEndian ), true );
+                    RootTag.WriteTag( new NbtBinaryWriter( stream, BigEndian ) );
                     break;
             }
 
