@@ -6,8 +6,11 @@ using JetBrains.Annotations;
 namespace fNbt {
     /// <summary> Represents a complete NBT file. </summary>
     public sealed class NbtFile {
-        // buffer used to avoid frequent reads from / writes to compressed streams
-        const int WriteBufferSize = 8192;
+        // Size of buffers that are used to avoid frequent reads from / writes to compressed streams
+        const int WriteBufferSize = 8 * 1024;
+
+        // Size of buffers used for reading to/from files
+        const int FileStreamBufferSize = 64 * 1024;
 
         /// <summary> Gets the file name used for most recent loading/saving of this file.
         /// May be <c>null</c>, if this <c>NbtFile</c> instance has not been loaded from, or saved to, a file. </summary>
@@ -46,7 +49,8 @@ namespace fNbt {
         public bool BigEndian { get; set; }
 
 
-        /// <summary> Gets or sets the default value of <c>BufferSize</c> property. Default is 8192. </summary>
+        /// <summary> Gets or sets the default value of <c>BufferSize</c> property. Default is 8192. 
+        /// Set to 0 to disable buffering by default. </summary>
         /// <exception cref="ArgumentOutOfRangeException"> value is negative. </exception>
         public static int DefaultBufferSize {
             get {
@@ -59,7 +63,7 @@ namespace fNbt {
             }
         }
 
-        static int defaultBufferSize;
+        static int defaultBufferSize = 8 * 1024;
 
 
         /// <summary> Gets or sets the size of internal buffer used for reading files and streams.
@@ -155,12 +159,17 @@ namespace fNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
-        public int LoadFromFile( [NotNull] string fileName, NbtCompression compression,
-                                 [CanBeNull] TagSelector selector ) {
+        public int LoadFromFile( [NotNull] string fileName, NbtCompression compression, [CanBeNull] TagSelector selector ) {
             if( fileName == null )
                 throw new ArgumentNullException( "fileName" );
 
-            using( FileStream readFileStream = File.OpenRead( fileName ) ) {
+            using(
+                FileStream readFileStream = new FileStream( fileName,
+                                                            FileMode.Open,
+                                                            FileAccess.Read,
+                                                            FileShare.Read,
+                                                            FileStreamBufferSize,
+                                                            FileOptions.SequentialScan ) ) {
                 LoadFromStream( readFileStream, compression, selector );
                 FileName = fileName;
                 return (int)readFileStream.Position;
@@ -349,7 +358,7 @@ namespace fNbt {
         }
 
 
-        static NbtCompression DetectCompression( Stream stream ) {
+        static NbtCompression DetectCompression( [NotNull] Stream stream ) {
             NbtCompression compression;
             if( !stream.CanSeek ) {
                 throw new NotSupportedException( "Cannot auto-detect compression on a stream that's not seekable." );
@@ -364,12 +373,12 @@ namespace fNbt {
                     break;
 
                 case 0x1F:
-                    // gzip magic number
+                    // GZip magic number
                     compression = NbtCompression.GZip;
                     break;
 
                 case 0x78:
-                    // zlib header
+                    // ZLib header
                     compression = NbtCompression.ZLib;
                     break;
 
@@ -419,7 +428,13 @@ namespace fNbt {
             if( fileName == null )
                 throw new ArgumentNullException( "fileName" );
 
-            using( FileStream saveFile = File.Create( fileName ) ) {
+            using(
+                FileStream saveFile = new FileStream( fileName,
+                                                      FileMode.Create,
+                                                      FileAccess.Write,
+                                                      FileShare.None,
+                                                      FileStreamBufferSize,
+                                                      FileOptions.SequentialScan ) ) {
                 return SaveToStream( saveFile, compression );
             }
         }
@@ -458,6 +473,7 @@ namespace fNbt {
         /// <exception cref="UnauthorizedAccessException"> Specified file is read-only, or a permission issue occurred. </exception>
         /// <exception cref="NbtFormatException"> If one of the NbtCompound tags contained unnamed tags;
         /// or if an NbtList tag had Unknown list type and no elements. </exception>
+        [NotNull]
         public byte[] SaveToBuffer( NbtCompression compression ) {
             using( MemoryStream ms = new MemoryStream() ) {
                 SaveToStream( ms, compression );
@@ -525,7 +541,7 @@ namespace fNbt {
 
                 case NbtCompression.GZip:
                     using( var compressStream = new GZipStream( stream, CompressionMode.Compress, true ) ) {
-                        // use a buffered stream to avoid gzipping in small increments (which has a lot of overhead)
+                        // use a buffered stream to avoid GZipping in small increments (which has a lot of overhead)
                         BufferedStream bufferedStream = new BufferedStream( compressStream, WriteBufferSize );
                         RootTag.WriteTag( new NbtBinaryWriter( bufferedStream, BigEndian ) );
                         bufferedStream.Flush();
@@ -673,6 +689,7 @@ namespace fNbt {
         /// <param name="indentString"> String to be used for indentation. </param>
         /// <returns> A string representing contents of this tag, and all child tags (if any). </returns>
         /// <exception cref="ArgumentNullException"> <paramref name="indentString"/> is <c>null</c>. </exception>
+        [NotNull]
         public string ToString( [NotNull] string indentString ) {
             return RootTag.ToString( indentString );
         }

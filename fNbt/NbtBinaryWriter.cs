@@ -8,6 +8,8 @@ namespace fNbt {
     /// while taking care of endianness and string encoding. </summary>
     sealed class NbtBinaryWriter : BinaryWriter {
         readonly bool bigEndian;
+        readonly byte[] stringConversionBuffer = new byte[256];
+        const int MaxBufferedStringLength = 64;
 
 
         public NbtBinaryWriter( [NotNull] Stream input, bool bigEndian )
@@ -73,11 +75,16 @@ namespace fNbt {
         public override void Write( string value ) {
             if( value == null )
                 throw new ArgumentNullException( "value" );
-            var bytes = Encoding.UTF8.GetBytes( value );
-            Write( (short)bytes.Length );
-            Write( bytes );
+            if( value.Length > MaxBufferedStringLength ) {
+                byte[] bytes = Encoding.UTF8.GetBytes( value );
+                Write( (short)bytes.Length );
+                BaseStream.Write( bytes, 0, bytes.Length );
+            } else {
+                int byteCount = Encoding.UTF8.GetBytes( value, 0, value.Length, stringConversionBuffer, 0 );
+                Write( (short)byteCount );
+                BaseStream.Write( stringConversionBuffer, 0, byteCount );
+            }
         }
-
 
 
         public static short Swap( short v ) {

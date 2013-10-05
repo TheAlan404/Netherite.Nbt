@@ -396,11 +396,6 @@ namespace fNbt {
             }
         }
 
-        static string defaultIndentString;
-
-
-        static NbtTag() {
-            DefaultIndentString = "  ";
-        }
+        static string defaultIndentString = "  ";
     }
 }
