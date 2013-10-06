@@ -167,9 +167,10 @@ namespace fNbt {
         public bool ReadToFollowing() {
             switch( state ) {
                 case NbtParseState.AtStreamBeginning:
+                    // set state to error in case reader.ReadTagType throws.
+                    state = NbtParseState.Error;
                     // read first tag, make sure it's a compound
                     if( reader.ReadTagType() != NbtTagType.Compound ) {
-                        state = NbtParseState.Error;
                         throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
                     }
                     Depth = 1;
@@ -305,6 +306,7 @@ namespace fNbt {
                     break;
 
                 default:
+                    state = NbtParseState.Error;
                     throw new NbtFormatException( "Trying to read tag of unknown type." );
             }
         }
