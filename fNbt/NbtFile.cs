@@ -23,7 +23,7 @@ namespace fNbt {
         public NbtCompression FileCompression { get; private set; }
 
 
-        /// <summary> Root tag of this file. Must be a named CompoundTag. Defaults to <c>null</c>. </summary>
+        /// <summary> Root tag of this file. Must be a named CompoundTag. Defaults to an empty-named tag. </summary>
         /// <exception cref="ArgumentException"> If given tag is unnamed. </exception>
         [NotNull]
         public NbtCompound RootTag {
@@ -39,6 +39,7 @@ namespace fNbt {
             }
         }
 
+        [NotNull]
         NbtCompound rootTag;
 
 
@@ -507,10 +508,6 @@ namespace fNbt {
                     break;
                 default:
                     throw new ArgumentOutOfRangeException( "compression" );
-            }
-
-            if( rootTag == null ) {
-                throw new NbtFormatException( "Cannot save NbtFile: No root tag." );
             }
 
             if( rootTag.Name == null ) {
