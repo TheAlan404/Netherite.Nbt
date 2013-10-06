@@ -86,16 +86,6 @@ namespace fNbt {
         #endregion
 
 
-        /// <summary> Returns a String that represents the current NbtString object.
-        /// Format: TAG_String("Name"): Value </summary>
-        /// <returns> A String that represents the current NbtString object. </returns>
-        public override string ToString() {
-            var sb = new StringBuilder();
-            PrettyPrint( sb, null, 0 );
-            return sb.ToString();
-        }
-
-
         internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
             for( int i = 0; i < indentLevel; i++ ) {
                 sb.Append( indentString );

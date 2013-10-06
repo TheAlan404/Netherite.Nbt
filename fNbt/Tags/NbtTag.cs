@@ -36,6 +36,7 @@ namespace fNbt {
         /// <summary> Name of this tag. Immutable, and set by the constructor. May be <c>null</c>. </summary>
         /// <exception cref="ArgumentNullException"> If <paramref name="value"/> is <c>null</c>, and <c>Parent</c> tag is an NbtCompound.
         /// Name of tags inside an <c>NbtCompound</c> may not be null. </exception>
+        /// <exception cref="ArgumentException"> If this tag resides in an <c>NbtCompound</c>, and a sibling tag with the name already exists. </exception>
         [CanBeNull]
         public string Name {
             get {
@@ -358,9 +359,7 @@ namespace fNbt {
         /// Indents the string using multiples of the given indentation string. </summary>
         /// <returns> A string representing contents of this tag, and all child tags (if any). </returns>
         public override string ToString() {
-            StringBuilder sb = new StringBuilder();
-            PrettyPrint( sb, DefaultIndentString, 0 );
-            return sb.ToString();
+            return ToString( DefaultIndentString );
         }
 
 
@@ -379,7 +378,7 @@ namespace fNbt {
         }
 
 
-        internal abstract void PrettyPrint( StringBuilder sb, string indentString, int indentLevel );
+        internal abstract void PrettyPrint( [NotNull] StringBuilder sb, [NotNull] string indentString, int indentLevel );
 
 
         /// <summary> String to use for indentation in NbtTag's and NbtFile's ToString() methods by default. </summary>
