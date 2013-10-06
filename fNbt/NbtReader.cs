@@ -88,6 +88,13 @@ namespace fNbt {
             }
         }
 
+        /// <summary> Whether this reader has reached the end of stream. </summary>
+        public bool IsAtStreamEnd {
+            get {
+                return state == NbtParseState.AtStreamEnd;
+            }
+        }
+
 
         /// <summary> Whether the current tag is a Compound. </summary>
         public bool IsCompound {
@@ -727,16 +734,20 @@ namespace fNbt {
                 throw new EndOfStreamException();
             } else if( state == NbtParseState.Error ) {
                 throw new InvalidReaderStateException( ErroneousStateError );
-            }
-            if( TagType != NbtTagType.List ) {
+            } else if( state == NbtParseState.AtListBeginning ) {
+                GoDown();
+                ListIndex = 0;
+                TagType = ListType;
+                state = NbtParseState.InList;
+            }else if( state != NbtParseState.InList){
                 throw new InvalidOperationException( "ReadListAsArray may only be used on List tags." );
             }
 
-            int elementsToRead = TagLength - ListIndex;
+            int elementsToRead = ParentTagLength - ListIndex;
 
             if( ListType == NbtTagType.Byte && typeof( T ) == typeof( byte ) ) {
-                TagsRead += TagLength;
-                ListIndex = TagLength - 1;
+                TagsRead += elementsToRead;
+                ListIndex = ParentTagLength - 1;
                 return (T[])(object)reader.ReadBytes( elementsToRead );
             }
 
@@ -788,7 +799,7 @@ namespace fNbt {
                     throw new InvalidOperationException( "ReadListAsArray may only be used on lists of value types." );
             }
             TagsRead += elementsToRead;
-            ListIndex = TagLength - 1;
+            ListIndex = ParentTagLength - 1;
             return result;
         }
 
