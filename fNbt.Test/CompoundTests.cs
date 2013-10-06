@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 
@@ -16,25 +18,25 @@ namespace fNbt.Test {
 
         [Test]
         public void InitializingCompoundFromCollectionTest() {
-            NbtTag[] allNamed = new NbtTag[] {
+            NbtTag[] allNamed = {
                 new NbtShort( "allNamed1", 1 ),
                 new NbtLong( "allNamed2", 2 ),
                 new NbtInt( "allNamed3", 3 )
             };
 
-            NbtTag[] someUnnamed = new NbtTag[] {
+            NbtTag[] someUnnamed = {
                 new NbtInt( "someUnnamed1", 1 ),
                 new NbtInt( 2 ),
                 new NbtInt( "someUnnamed3", 3 )
             };
 
-            NbtTag[] someNull = new NbtTag[] {
+            NbtTag[] someNull = {
                 new NbtInt( "someNull1", 1 ),
                 null,
                 new NbtInt( "someNull3", 3 )
             };
 
-            NbtTag[] dupeNames = new NbtTag[] {
+            NbtTag[] dupeNames = {
                 new NbtInt( "dupeNames1", 1 ),
                 new NbtInt( "dupeNames2", 2 ),
                 new NbtInt( "dupeNames1", 3 )
@@ -201,17 +203,55 @@ namespace fNbt.Test {
             // add range with duplicates
             Assert.Throws<ArgumentException>( () => compound.AddRange( testThings ) );
 
+            // check ToNameArray and ToArray, which are provided for .NET 2.0 users' convenience
+            CollectionAssert.AreEqual( compound.Names, compound.ToNameArray() );
+            CollectionAssert.AreEqual( compound.Tags, compound.ToArray() );
+        }
 
+
+        [Test]
+        public void InterfaceImplementations() {
+            NbtTag[] tagList = {
+                new NbtByte( "First", 1 ), new NbtShort( "Second", 2 ), new NbtInt( "Third", 3 ),
+                new NbtLong( "Fourth", 4L )
+            };
+
+            // test NbtCompound(IEnumerable<NbtTag>) constructor
+            NbtCompound comp = new NbtCompound( tagList );
+
+            // test .Names and .Tags collections
+            CollectionAssert.AreEquivalent( comp.Names,
+                                            new[] {
+                                                "First", "Second", "Third", "Fourth"
+                                            } );
+            CollectionAssert.AreEquivalent( comp.Tags, tagList );
+
+            // test ICollection and ICollection<NbtTag> boilerplate properties
+            ICollection<NbtTag> iGenCollection = comp;
+            Assert.IsFalse( iGenCollection.IsReadOnly );
+            ICollection iCollection = comp;
+            Assert.NotNull( iCollection.SyncRoot );
+            Assert.IsFalse( iCollection.IsSynchronized );
+
+            // test CopyTo()
+            NbtTag[] tags = new NbtTag[iCollection.Count];
+            iCollection.CopyTo( tags, 0 );
+            CollectionAssert.AreEquivalent( tags, comp );
+
+            // test GetEnumerator()
+            List<NbtTag> enumeratedTags = new List<NbtTag>();
+            IEnumerator<NbtTag> tagEnum = comp.GetEnumerator();
+            while( tagEnum.MoveNext() ) {
+                enumeratedTags.Add( tagEnum.Current );
+            }
+            CollectionAssert.AreEquivalent( enumeratedTags, tagList );
         }
 
 
         [TearDown]
         public void CompoundTestsTearDown() {
             if( Directory.Exists( TempDir ) ) {
-                foreach( var file in Directory.GetFiles( TempDir ) ) {
-                    File.Delete( file );
-                }
-                Directory.Delete( TempDir );
+                Directory.Delete( TempDir, true );
             }
         }
     }

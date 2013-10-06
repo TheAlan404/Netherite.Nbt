@@ -23,6 +23,34 @@ namespace fNbt.Test {
                                      tag => tag.Name != "listTest (long)" );
             Assert.IsFalse( loadedFile.RootTag.Contains( "listTest (long)" ) );
             Assert.IsTrue( loadedFile.RootTag.Contains( "byteTest" ) );
+
+            loadedFile.LoadFromFile( "TestFiles/bigtest.nbt",
+                                     NbtCompression.None,
+                                     tag => false );
+            Assert.AreEqual( loadedFile.RootTag.Count, 0 );
+        }
+
+
+        [Test]
+        public void SkippingLists() {
+            NbtFile file = new NbtFile( ListTests.MakeListTest() );
+            byte[] savedFile = file.SaveToBuffer( NbtCompression.None );
+            file.LoadFromBuffer( savedFile, 0, savedFile.Length, NbtCompression.None, tag => false );
+            Assert.AreEqual( file.RootTag.Count, 0 );
+        }
+
+
+        [Test]
+        public void SkippingValuesInCompoundTest() {
+            NbtCompound root = NbtReaderTests.MakeValueTest();
+            NbtCompound nestedComp = NbtReaderTests.MakeValueTest();
+            nestedComp.Name = "NestedComp";
+            root.Add( nestedComp );
+
+            NbtFile file = new NbtFile( root );
+            byte[] savedFile = file.SaveToBuffer( NbtCompression.None );
+            file.LoadFromBuffer( savedFile, 0, savedFile.Length, NbtCompression.None, tag => false );
+            Assert.AreEqual( file.RootTag.Count, 0 );
         }
     }
 }

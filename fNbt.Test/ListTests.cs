@@ -9,6 +9,80 @@ namespace fNbt.Test {
     public sealed class ListTests {
         const string TempDir = "TestTemp";
 
+
+        public static NbtCompound MakeListTest() {
+            return new NbtCompound( "Root" ) {
+                new NbtList( "ByteList" ) {
+                    new NbtByte( 100 ),
+                    new NbtByte( 20 ),
+                    new NbtByte( 3 )
+                },
+                new NbtList( "DoubleList" ) {
+                    new NbtDouble( 1d ),
+                    new NbtDouble( 2000d ),
+                    new NbtDouble( -3000000d )
+                },
+                new NbtList( "FloatList" ) {
+                    new NbtFloat( 1f ),
+                    new NbtFloat( 2000f ),
+                    new NbtFloat( -3000000f )
+                },
+                new NbtList( "IntList" ) {
+                    new NbtInt( 1 ),
+                    new NbtInt( 2000 ),
+                    new NbtInt( -3000000 )
+                },
+                new NbtList( "LongList" ) {
+                    new NbtLong( 1L ),
+                    new NbtLong( 2000L ),
+                    new NbtLong( -3000000L )
+                },
+                new NbtList( "ShortList" ) {
+                    new NbtShort( 1 ),
+                    new NbtShort( 200 ),
+                    new NbtShort( -30000 )
+                },
+                new NbtList( "StringList" ) {
+                    new NbtString( "one" ),
+                    new NbtString( "two thousand" ),
+                    new NbtString( "negative three million" )
+                },
+                new NbtList( "CompoundList" ) {
+                    new NbtCompound(),
+                    new NbtCompound(),
+                    new NbtCompound()
+                },
+                new NbtList( "ListList" ) {
+                    new NbtList( NbtTagType.List ),
+                    new NbtList( NbtTagType.List ),
+                    new NbtList( NbtTagType.List )
+                },
+                new NbtList( "ByteArrayList" ) {
+                    new NbtByteArray( new byte[] {
+                        1, 2, 3
+                    } ),
+                    new NbtByteArray( new byte[] {
+                        11, 12, 13
+                    } ),
+                    new NbtByteArray( new byte[] {
+                        21, 22, 23
+                    } )
+                },
+                new NbtList( "IntArrayList" ) {
+                    new NbtIntArray( new[] {
+                        1, -2, 3
+                    } ),
+                    new NbtIntArray( new[] {
+                        1000, -2000, 3000
+                    } ),
+                    new NbtIntArray( new[] {
+                        1000000, -2000000, 3000000
+                    } )
+                }
+            };
+        }
+
+
         [SetUp]
         public void ListTestsSetup() {
             Directory.CreateDirectory( TempDir );
@@ -169,7 +243,7 @@ namespace fNbt.Test {
 
 
         [Test]
-        public void Serializing() {
+        public void Serializing1() {
             string fileName = Path.Combine( TempDir, "NbtListType.nbt" );
             const NbtTagType expectedListType = NbtTagType.Int;
             const int elements = 10;
@@ -203,6 +277,14 @@ namespace fNbt.Test {
             for( int i = 0; i < elements; i++ ) {
                 Assert.AreEqual( readList.Get<NbtInt>( i ).Value, writtenList.Get<NbtInt>( i ).Value );
             }
+        }
+
+
+        [Test]
+        public void Serializing2() {
+            NbtFile testFile = new NbtFile( MakeListTest() );
+            byte[] buffer = testFile.SaveToBuffer( NbtCompression.None );
+            testFile.LoadFromBuffer( buffer, 0, buffer.Length, NbtCompression.None );
         }
 
 
