@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 
@@ -10,6 +12,51 @@ namespace fNbt.Test {
         [SetUp]
         public void ListTestsSetup() {
             Directory.CreateDirectory( TempDir );
+        }
+
+
+        [Test]
+        public void InterfaceImplementation() {
+            List<NbtTag> referenceList = new List<NbtTag>();
+            referenceList.Add( new NbtInt(1) );
+            referenceList.Add( new NbtInt(2) );
+            referenceList.Add( new NbtInt(3) );
+            NbtInt testTag = new NbtInt(4);
+
+            NbtList originalList = new NbtList( referenceList );
+            IList iList = originalList;
+            CollectionAssert.AreEqual( referenceList, iList );
+
+            referenceList.Add( testTag );
+            iList.Add( testTag );
+            CollectionAssert.AreEqual( referenceList, iList );
+            Assert.AreEqual( referenceList.IndexOf( testTag ), iList.IndexOf( testTag ) );
+            Assert.IsTrue( iList.Contains( testTag ) );
+            iList.Remove( testTag );
+            Assert.IsFalse( iList.Contains( testTag ) );
+            iList.Insert( 0, testTag );
+            Assert.AreEqual( iList.IndexOf( testTag ), 0 );
+            iList.RemoveAt( 0 );
+            Assert.IsFalse( iList.Contains( testTag ) );
+
+            Assert.IsFalse( iList.IsFixedSize );
+            Assert.IsFalse( iList.IsReadOnly );
+            Assert.IsFalse( iList.IsSynchronized );
+            Assert.NotNull( iList.SyncRoot );
+
+            NbtInt[] exportTest = new NbtInt[iList.Count];
+            iList.CopyTo( exportTest, 0 );
+            CollectionAssert.AreEqual( iList, exportTest );
+            for( int i = 0; i < iList.Count; i++ ) {
+                Assert.AreEqual( iList[i], originalList[i] );
+            }
+
+            IList<NbtTag> iGenericList = originalList;
+            Assert.IsFalse( iGenericList.IsReadOnly );
+
+            iList.Clear();
+            Assert.AreEqual( iList.Count, 0 );
+            Assert.AreEqual( iList.IndexOf( testTag ), -1 );
         }
 
 
@@ -92,6 +139,9 @@ namespace fNbt.Test {
         [Test]
         public void ChangingListTagType() {
             var list = new NbtList();
+
+            // changing list type to an out-of-range type
+            Assert.Throws<ArgumentOutOfRangeException>( () => list.ListType = (NbtTagType)200 );
 
             // changing type of an empty list
             Assert.DoesNotThrow( () => list.ListType = NbtTagType.Unknown );
