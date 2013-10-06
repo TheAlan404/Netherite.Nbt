@@ -8,8 +8,8 @@ namespace fNbt {
     /// while taking care of endianness and string encoding. </summary>
     sealed class NbtBinaryWriter : BinaryWriter {
         readonly bool bigEndian;
-        readonly byte[] stringConversionBuffer = new byte[256];
-        const int MaxBufferedStringLength = 64;
+        byte[] stringConversionBuffer = new byte[128];
+        const int MaxBufferedStringLength = 32;
 
 
         public NbtBinaryWriter( [NotNull] Stream input, bool bigEndian )

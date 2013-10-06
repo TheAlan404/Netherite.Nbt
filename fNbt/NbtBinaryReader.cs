@@ -11,7 +11,7 @@ namespace fNbt {
                         doubleBuffer = new byte[sizeof( double )];
 
         byte[] seekBuffer;
-        const int SeekBufferSize = 64 * 1024;
+        const int SeekBufferSize = 8 * 1024;
         readonly bool bigEndian;
 
 
