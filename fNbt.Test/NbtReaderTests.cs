@@ -261,5 +261,30 @@ namespace fNbt.Test {
             Assert.IsTrue( reader.ReadToFollowing() ); // string
             Assert.AreEqual( reader.ReadValue(), "23" );
         }
+
+
+        [Test]
+        public void ErrorTest() {
+            NbtCompound root = new NbtCompound( "root" );
+            byte[] testData = new NbtFile( root ).SaveToBuffer( NbtCompression.None );
+            // corrupt the data
+            testData[0] = 123;
+            NbtReader reader = new NbtReader( new MemoryStream( testData ) );
+            Assert.Throws<NbtFormatException>( () => reader.ReadToFollowing() );
+            Assert.Throws<InvalidReaderStateException>( () => reader.ReadToFollowing() );
+        }
+
+
+        [Test]
+        public void NonSeekableStreamSkip() {
+            byte[] fileBytes = File.ReadAllBytes( "TestFiles/bigtest.nbt" );
+            using( MemoryStream ms = new MemoryStream( fileBytes ) ) {
+                using( NonSeekableStream nss = new NonSeekableStream( ms ) ) {
+                    NbtReader reader = new NbtReader( nss );
+                    reader.ReadToFollowing();
+                    reader.Skip();
+                }
+            }
+        }
     }
 }
