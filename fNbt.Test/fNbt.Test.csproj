@@ -8,8 +8,8 @@
     <ProjectGuid>{8DD93C35-682E-4C62-9012-EF15C80FFFEA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LibNbt.Test</RootNamespace>
-    <AssemblyName>LibNbt.Test</AssemblyName>
+    <RootNamespace>fNbt.Test</RootNamespace>
+    <AssemblyName>fNbt.Test</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
