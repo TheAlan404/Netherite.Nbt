@@ -156,6 +156,43 @@ namespace fNbt.Test {
         }
 
 
+        [Test]
+        public void NestedListAndCompoundTest() {
+            byte[] data;
+            {
+                NbtCompound root = new NbtCompound( "Root" );
+                NbtList outerList = new NbtList( "OuterList", NbtTagType.Compound );
+                NbtCompound outerCompound = new NbtCompound();
+                NbtList innerList = new NbtList( "InnerList", NbtTagType.Compound );
+                NbtCompound innerCompound = new NbtCompound();
+
+                innerList.Add( innerCompound );
+                outerCompound.Add( innerList );
+                outerList.Add( outerCompound );
+                root.Add( outerList );
+
+                NbtFile file = new NbtFile( root );
+                data = file.SaveToBuffer( NbtCompression.None );
+            }
+            {
+                NbtFile file = new NbtFile();
+                file.LoadFromBuffer( data, 0, data.Length, NbtCompression.None );
+                Assert.AreEqual( file.RootTag.Get<NbtList>( "OuterList" ).Count, 1 );
+                Assert.AreEqual( file.RootTag.Get<NbtList>( "OuterList" ).Get<NbtCompound>( 0 ).Name, null );
+                Assert.AreEqual(
+                    file.RootTag.Get<NbtList>( "OuterList" ).Get<NbtCompound>( 0 ).Get<NbtList>( "InnerList" ).Count,
+                    1 );
+                Assert.AreEqual(
+                    file.RootTag.Get<NbtList>( "OuterList" )
+                        .Get<NbtCompound>( 0 )
+                        .Get<NbtList>( "InnerList" )
+                        .Get<NbtCompound>( 0 )
+                        .Name,
+                    null );
+            }
+        }
+
+
         [TearDown]
         public void ListTestsTearDown() {
             if( Directory.Exists( TempDir ) ) {
