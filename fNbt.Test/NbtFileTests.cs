@@ -298,6 +298,17 @@ namespace fNbt.Test {
             AssertNbtBigFile( loadedFile );
         }
 
+        [Test]
+        public void ReloadUncompressedLittleEndian() {
+            NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" ) {
+                BigEndian = false
+            };
+            int bytesWritten = loadedFile.SaveToFile( "TestTemp/bigtest.nbt", NbtCompression.None );
+            int bytesRead = loadedFile.LoadFromFile( "TestTemp/bigtest.nbt", NbtCompression.AutoDetect, null);
+            Assert.AreEqual( bytesWritten, bytesRead );
+            AssertNbtBigFile( loadedFile );
+        }
+
 
         [Test]
         public void ReloadGZip() {
@@ -337,13 +348,40 @@ namespace fNbt.Test {
         [Test]
         public void PrettyPrint() {
             NbtFile loadedFile = new NbtFile( "TestFiles/bigtest.nbt" );
-            Console.WriteLine( loadedFile.RootTag.ToString( "   " ) );
+            Assert.AreEqual( loadedFile.ToString(), loadedFile.RootTag.ToString() );
+            Assert.AreEqual( loadedFile.ToString( "   " ), loadedFile.RootTag.ToString( "   " ) );
+            Assert.Throws<ArgumentNullException>( () => loadedFile.ToString( null ) );
+            Assert.Throws<ArgumentNullException>( () => NbtTag.DefaultIndentString = null );
         }
 
 
         [Test]
         public void ReadRootTag() {
-            Assert.AreEqual( NbtFile.ReadRootTagName( "TestFiles/test.nbt" ), "hello world" );
+            Assert.Throws<ArgumentNullException>( () => NbtFile.ReadRootTagName( null ) );
+            Assert.Throws<FileNotFoundException>( () => NbtFile.ReadRootTagName( "NonExistentFile" ) );
+
+            ReadRootTagFromStream( "TestFiles/bigtest.nbt", NbtCompression.None );
+            ReadRootTagFromStream( "TestFiles/bigtest.nbt.gz", NbtCompression.GZip );
+            ReadRootTagFromStream( "TestFiles/bigtest.nbt.z", NbtCompression.ZLib );
+        }
+
+
+        void ReadRootTagFromStream( String fileName, NbtCompression compression ) {
+            Assert.Throws<ArgumentOutOfRangeException>( () => NbtFile.ReadRootTagName( fileName, compression, true, -1 ) );
+
+            Assert.AreEqual( NbtFile.ReadRootTagName( fileName ), "Level" );
+            Assert.AreEqual( NbtFile.ReadRootTagName( fileName, compression, true, 0 ), "Level" );
+
+            byte[] fileBytes = File.ReadAllBytes( fileName );
+            using( MemoryStream ms = new MemoryStream( fileBytes ) ) {
+                using( NonSeekableStream nss = new NonSeekableStream( ms ) ) {
+                    Assert.Throws<ArgumentNullException>(
+                        () => NbtFile.ReadRootTagName( (Stream)null, compression, true, 0 ) );
+                    Assert.Throws<ArgumentOutOfRangeException>(
+                        () => NbtFile.ReadRootTagName( nss, compression, true, -1 ) );
+                    NbtFile.ReadRootTagName( nss, compression, true, 0 );
+                }
+            }
         }
 
 
