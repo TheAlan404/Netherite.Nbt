@@ -739,7 +739,7 @@ namespace fNbt {
                 ListIndex = 0;
                 TagType = ListType;
                 state = NbtParseState.InList;
-            }else if( state != NbtParseState.InList){
+            }else if( state != NbtParseState.InList ) {
                 throw new InvalidOperationException( "ReadListAsArray may only be used on List tags." );
             }
 
@@ -826,19 +826,36 @@ namespace fNbt {
         bool cacheTagValues;
 
 
+        /// <summary> Returns a String that represents the tag currently being read by this NbtReader instance.
+        /// Prints current tag's depth, ordinal number, type, name, and size (for arrays and lists). Does not print value.
+        /// Indents the tag according default indentation (NbtTag.DefaultIndentString). </summary>
         public override string ToString() {
-            return ToString( false );
+            return ToString( false, NbtTag.DefaultIndentString );
+        }
+
+
+        /// <summary> Returns a String that represents the tag currently being read by this NbtReader instance.
+        /// Prints current tag's depth, ordinal number, type, name, size (for arrays and lists), and optionally value.
+        /// Indents the tag according default indentation (NbtTag.DefaultIndentString). </summary>
+        /// <param name="includeValue"> If set to <c>true</c>, also reads and prints the current tag's value. 
+        /// Note that unless CacheTagValues is set to <c>true</c>, you can only read every tag's value ONCE. </param>
+        public string ToString( bool includeValue ) {
+            return ToString( includeValue, NbtTag.DefaultIndentString );
         }
 
 
         /// <summary> Returns a String that represents the current NbtReader object.
         /// Prints current tag's depth, ordinal number, type, name, size (for arrays and lists), and optionally value. </summary>
+        /// <param name="indentString"> String to be used for indentation. May be empty string, but may not be <c>null</c>. </param>
         /// <param name="includeValue"> If set to <c>true</c>, also reads and prints the current tag's value. </param>
-        /// <returns></returns>
-        public string ToString( bool includeValue ) {
+        public string ToString( bool includeValue, [NotNull] string indentString ) {
+            if( indentString == null )
+                throw new ArgumentNullException( "indentString" );
             StringBuilder sb = new StringBuilder();
-            sb.Append( '\t', Depth )
-              .Append( '#' )
+            for( int i = 0; i < Depth; i++ ) {
+                sb.Append( indentString );
+            }
+            sb.Append( '#' )
               .Append( TagsRead )
               .Append( ". " )
               .Append( TagType );
@@ -852,7 +869,7 @@ namespace fNbt {
                   .Append( TagLength )
                   .Append( ']' );
             }
-            sb.Append( '\t' )
+            sb.Append( ' ' )
               .Append( TagName );
             if( includeValue &&
                 ( atValue || HasValue && cacheTagValues ) &&
