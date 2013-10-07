@@ -8,7 +8,7 @@ namespace fNbt {
     /// while taking care of endianness and string encoding. </summary>
     sealed class NbtBinaryWriter : BinaryWriter {
         readonly bool bigEndian;
-        byte[] stringConversionBuffer = new byte[128];
+        readonly byte[] stringConversionBuffer = new byte[128];
         const int MaxBufferedStringLength = 32;
 
 

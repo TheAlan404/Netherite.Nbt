@@ -729,18 +729,23 @@ namespace fNbt {
         /// <exception cref="InvalidOperationException"> Current tag is not of type List. </exception>
         /// <exception cref="InvalidReaderStateException"> If NbtReader cannot recover from a previous parsing error. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
+        [NotNull]
         public T[] ReadListAsArray<T>() {
-            if( state == NbtParseState.AtStreamEnd ) {
-                throw new EndOfStreamException();
-            } else if( state == NbtParseState.Error ) {
-                throw new InvalidReaderStateException( ErroneousStateError );
-            } else if( state == NbtParseState.AtListBeginning ) {
-                GoDown();
-                ListIndex = 0;
-                TagType = ListType;
-                state = NbtParseState.InList;
-            }else if( state != NbtParseState.InList ) {
-                throw new InvalidOperationException( "ReadListAsArray may only be used on List tags." );
+            switch( state ) {
+                case NbtParseState.AtStreamEnd:
+                    throw new EndOfStreamException();
+                case NbtParseState.Error:
+                    throw new InvalidReaderStateException( ErroneousStateError );
+                case NbtParseState.AtListBeginning:
+                    GoDown();
+                    ListIndex = 0;
+                    TagType = ListType;
+                    state = NbtParseState.InList;
+                    break;
+                case NbtParseState.InList:
+                    break;
+                default:
+                    throw new InvalidOperationException( "ReadListAsArray may only be used on List tags." );
             }
 
             int elementsToRead = ParentTagLength - ListIndex;
