@@ -27,7 +27,7 @@ namespace fNbt {
         }
 
         [NotNull]
-        string stringVal;
+        string stringVal = "";
 
 
         /// <summary> Creates an unnamed NbtString tag with the default value (empty string). </summary>
