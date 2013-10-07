@@ -54,11 +54,7 @@ namespace fNbt {
                 if( parentAsCompound != null ) {
                     if( value == null ) {
                         throw new ArgumentNullException( "value", "Name of tags inside an NbtCompound may not be null." );
-                    } else if( parentAsCompound.Contains( value ) ) {
-                        throw new ArgumentException(
-                            "Cannot rename: a tag with the name already exists in this tag's parent NbtCompound.",
-                            "value" );
-                    } else if( name != null ) {
+                    }else if( name != null ) {
                         parentAsCompound.RenameTag( name, value );
                     }
                 }

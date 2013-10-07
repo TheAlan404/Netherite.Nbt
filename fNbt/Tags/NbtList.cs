@@ -574,17 +574,6 @@ namespace fNbt {
         #endregion
 
 
-        // Hiding NbtTag[string]:NbtTag
-        new NbtTag this[ string tagName ] {
-            get {
-                throw new InvalidOperationException( "String indexers only work on NbtCompound tags." );
-            }
-            set {
-                throw new InvalidOperationException( "String indexers only work on NbtCompound tags." );
-            }
-        }
-
-
         internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
             for( int i = 0; i < indentLevel; i++ ) {
                 sb.Append( indentString );
