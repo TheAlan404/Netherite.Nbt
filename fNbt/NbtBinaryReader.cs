@@ -12,12 +12,13 @@ namespace fNbt {
 
         byte[] seekBuffer;
         const int SeekBufferSize = 8 * 1024;
-        readonly bool bigEndian;
+        readonly bool swapNeeded;
+        readonly byte[] stringConversionBuffer = new byte[64];
 
 
         public NbtBinaryReader( [NotNull] Stream input, bool bigEndian )
             : base( input ) {
-            this.bigEndian = bigEndian;
+            swapNeeded = (BitConverter.IsLittleEndian == bigEndian);
         }
 
 
@@ -31,7 +32,7 @@ namespace fNbt {
 
 
         public override short ReadInt16() {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 return NbtBinaryWriter.Swap( base.ReadInt16() );
             } else {
                 return base.ReadInt16();
@@ -40,7 +41,7 @@ namespace fNbt {
 
 
         public override int ReadInt32() {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 return NbtBinaryWriter.Swap( base.ReadInt32() );
             } else {
                 return base.ReadInt32();
@@ -49,7 +50,7 @@ namespace fNbt {
 
 
         public override long ReadInt64() {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 return NbtBinaryWriter.Swap( base.ReadInt64() );
             } else {
                 return base.ReadInt64();
@@ -58,7 +59,7 @@ namespace fNbt {
 
 
         public override float ReadSingle() {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 BaseStream.Read( floatBuffer, 0, sizeof( float ) );
                 Array.Reverse( floatBuffer );
                 return BitConverter.ToSingle( floatBuffer, 0 );
@@ -68,7 +69,7 @@ namespace fNbt {
 
 
         public override double ReadDouble() {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 BaseStream.Read( doubleBuffer, 0, sizeof( double ) );
                 Array.Reverse( doubleBuffer );
                 return BitConverter.ToDouble( doubleBuffer, 0 );
@@ -82,8 +83,13 @@ namespace fNbt {
             if( length < 0 ) {
                 throw new NbtFormatException( "Negative string length given!" );
             }
-            byte[] stringData = ReadBytes( length );
-            return Encoding.UTF8.GetString( stringData );
+            if( length < stringConversionBuffer.Length ) {
+                BaseStream.Read( stringConversionBuffer, 0, length );
+                return Encoding.UTF8.GetString( stringConversionBuffer, 0, length );
+            } else {
+                byte[] stringData = ReadBytes( length );
+                return Encoding.UTF8.GetString( stringData );
+            }
         }
 
 

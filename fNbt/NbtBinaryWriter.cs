@@ -7,14 +7,14 @@ namespace fNbt {
     /// <summary> BinaryWriter wrapper that takes care of writing primitives to an NBT stream,
     /// while taking care of endianness and string encoding. </summary>
     sealed class NbtBinaryWriter : BinaryWriter {
-        readonly bool bigEndian;
-        readonly byte[] stringConversionBuffer = new byte[128];
-        const int MaxBufferedStringLength = 32;
+        readonly bool swapNeeded;
+        readonly byte[] stringConversionBuffer = new byte[64];
+        const int MaxBufferedStringLength = 16;
 
 
         public NbtBinaryWriter( [NotNull] Stream input, bool bigEndian )
             : base( input ) {
-            this.bigEndian = bigEndian;
+            swapNeeded = (BitConverter.IsLittleEndian == bigEndian);
         }
 
 
@@ -24,7 +24,7 @@ namespace fNbt {
 
 
         public override void Write( short value ) {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 base.Write( Swap( value ) );
             } else {
                 base.Write( value );
@@ -33,7 +33,7 @@ namespace fNbt {
 
 
         public override void Write( int value ) {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 base.Write( Swap( value ) );
             } else {
                 base.Write( value );
@@ -42,7 +42,7 @@ namespace fNbt {
 
 
         public override void Write( long value ) {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 base.Write( Swap( value ) );
             } else {
                 base.Write( value );
@@ -51,7 +51,7 @@ namespace fNbt {
 
 
         public override void Write( float value ) {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 byte[] floatBytes = BitConverter.GetBytes( value );
                 Array.Reverse( floatBytes );
                 Write( floatBytes );
@@ -62,7 +62,7 @@ namespace fNbt {
 
 
         public override void Write( double value ) {
-            if( BitConverter.IsLittleEndian == bigEndian ) {
+            if( swapNeeded ) {
                 byte[] doubleBytes = BitConverter.GetBytes( value );
                 Array.Reverse( doubleBytes );
                 Write( doubleBytes );
