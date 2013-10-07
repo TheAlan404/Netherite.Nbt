@@ -13,8 +13,7 @@ namespace fNbt {
         int listIndex;
         int listSize;
         bool done;
-        readonly Stack<NbtWriterNode> nodes = new Stack<NbtWriterNode>();
-        Dictionary<string, bool> usedNames = new Dictionary<string, bool>();
+        Stack<NbtWriterNode> nodes;
 
 
         public NbtWriter( [NotNull] Stream stream, [NotNull] String rootTagName )
@@ -22,7 +21,8 @@ namespace fNbt {
 
 
         public NbtWriter( [NotNull] Stream stream, [NotNull] String rootTagName, bool bigEndian ) {
-            if( rootTagName == null ) throw new ArgumentNullException( "rootTagName" );
+            if( rootTagName == null )
+                throw new ArgumentNullException( "rootTagName" );
             writer = new NbtBinaryWriter( stream, bigEndian );
             writer.Write( (byte)NbtTagType.Compound );
             writer.Write( rootTagName );
@@ -32,12 +32,14 @@ namespace fNbt {
 
 
         void GoDown( NbtTagType thisType ) {
+            if( nodes == null ) {
+                nodes = new Stack<NbtWriterNode>();
+            }
             NbtWriterNode newNode = new NbtWriterNode {
                 ParentType = parentType,
                 ListType = listType,
                 ListSize = listSize,
-                ListIndex = listIndex,
-                UsedNames = usedNames
+                ListIndex = listIndex
             };
             nodes.Push( newNode );
             Depth++;
@@ -46,12 +48,11 @@ namespace fNbt {
             listType = NbtTagType.Unknown;
             listSize = 0;
             listIndex = 0;
-            usedNames = new Dictionary<string, bool>();
         }
 
 
         void GoUp() {
-            if( nodes.Count == 0 ) {
+            if( nodes == null || nodes.Count == 0 ) {
                 done = true;
             } else {
                 NbtWriterNode oldNode = nodes.Pop();
@@ -59,7 +60,6 @@ namespace fNbt {
                 listType = oldNode.ListType;
                 listSize = oldNode.ListSize;
                 listIndex = oldNode.ListIndex;
-                usedNames = oldNode.UsedNames;
             }
             Depth--;
         }
@@ -83,7 +83,7 @@ namespace fNbt {
 
 
         public void EndCompound() {
-            if( parentType != NbtTagType.Compound ) {
+            if( parentType != NbtTagType.Compound || done ) {
                 throw new NbtFormatException( "Not currently in a compound." );
             }
             GoUp();
@@ -92,6 +92,9 @@ namespace fNbt {
 
 
         public void BeginList( NbtTagType type, int size ) {
+            if( size < 0 ) {
+                throw new ArgumentOutOfRangeException( "size", "List size may not be negative." );
+            }
             EnforceConstraints( null, NbtTagType.List );
             GoDown( NbtTagType.List );
             listType = type;
@@ -103,6 +106,9 @@ namespace fNbt {
 
 
         public void BeginList( [NotNull] String tagName, NbtTagType type, int size ) {
+            if( size < 0 ) {
+                throw new ArgumentOutOfRangeException( "size", "List size may not be negative." );
+            }
             EnforceConstraints( tagName, NbtTagType.List );
             GoDown( NbtTagType.List );
             listType = type;
@@ -116,11 +122,11 @@ namespace fNbt {
 
 
         public void EndList() {
-            if( parentType != NbtTagType.List ) {
+            if( parentType != NbtTagType.List || done ) {
                 throw new NbtFormatException( "Not currently in a list." );
-            }
-            if( listIndex < listSize ) {
-                throw new NbtFormatException( "List not filled yet!" );
+            } else if( listIndex < listSize ) {
+                throw new NbtFormatException( "Cannot end list: not all list elements have been written yet. " +
+                                              "Expected: " + listSize + ", written: " + listIndex );
             }
             GoUp();
         }
@@ -259,6 +265,8 @@ namespace fNbt {
 
 
         public void WriteString( [NotNull] String value ) {
+            if( value == null )
+                throw new ArgumentNullException( "value" );
             EnforceConstraints( null, NbtTagType.String );
             writer.Write( value );
         }
@@ -301,21 +309,16 @@ namespace fNbt {
             }
             if( parentType == NbtTagType.List ) {
                 if( name != null ) {
-                    throw new NbtFormatException( "Expecting an unnamed tag" );
-                }
-                if( listType != desiredType ) {
-                    throw new NbtFormatException( "Expecting only tags of type " + listType );
-                }
-                if( listIndex >= listSize ) {
-                    throw new NbtFormatException( "List index exceeded." );
+                    throw new NbtFormatException( "Expecting an unnamed tag." );
+                } else if( listType != desiredType ) {
+                    throw new NbtFormatException( "Unexpected tag type (expected: " + listType + ", given: " +
+                                                  desiredType );
+                } else if( listIndex >= listSize ) {
+                    throw new NbtFormatException( "Given list size exceeded." );
                 }
                 listIndex++;
             } else if( name == null ) {
-                throw new NbtFormatException( "Expecting a named tag" );
-            } else if( usedNames.ContainsKey( name ) ) {
-                throw new NbtFormatException( "Duplicate tag name" );
-            } else {
-                usedNames.Add( name, true );
+                throw new NbtFormatException( "Expecting a named tag." );
             }
         }
     }

@@ -6,6 +6,5 @@ namespace fNbt {
         public NbtTagType ListType;
         public int ListSize;
         public int ListIndex;
-        public Dictionary<string, bool> UsedNames;
     }
 }
