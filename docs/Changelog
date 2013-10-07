@@ -1,31 +1,42 @@
+0.5.1 (fNBT)
+- Fixed ToString() methods of NbtReader and some NbtTags not respecting the
+    NbtTag.DefaultIndentString setting.
+- Fixed being able to add a Compound tag to itself.
+- Fixed NbtString value defaulting to null, instead of an empty string.
+- Fixed a number of bugs in NbtReader.ReadListAsArray<T>().
+- API additions:
+    New NbtReader property:     bool IsAtStreamEnd
+    New NbtReader overload:     string ToString(bool,string)
+- Expanded unit test coverage.
+
 0.5.0 (fNBT)
 - Added NbtReader, for linearly reading NBT streams, similarly to XmlReader.
 - API additions:
-	New NbtCompound method: 	bool TryGet(string,out NbtTag)
-	New NbtCompound overload: 	NbtTag Get(string)
-	New NbtTag property: 		bool HasValue
+    New NbtCompound method:     bool TryGet(string,out NbtTag)
+    New NbtCompound overload:   NbtTag Get(string)
+    New NbtTag property:        bool HasValue
 - License changed from LGPL to to 3-Clause BSD, since none of the original
-	libnbt source code remains.
+    libnbt source code remains.
 
 0.4.1 (LibNbt2012)
 - Added a way to set up default indent for NbtTag.ToString() methods, using
-	NbtTag.DefaultIndentString static property.
+    NbtTag.DefaultIndentString static property.
 - Added a way to control/disable buffering when reading tags, using properties
-	NbtFile.DefaultBufferSize (static) and "nbtFile.BufferSize" (instance).
+    NbtFile.DefaultBufferSize (static) and "nbtFile.BufferSize" (instance).
 - Simplified renaming tags. Instead of using NbtFile.RenameRootTag or
-	NbtCompound.RenameTag, you can now set tag's Name property directly. It
-	will check parent tag automatically, and throw ArgumentException or
-	ArgumentNullException is renaming is not possible.
+    NbtCompound.RenameTag, you can now set tag's Name property directly. It
+    will check parent tag automatically, and throw ArgumentException or
+    ArgumentNullException is renaming is not possible.
 - NbtFile() constructor now initializes RootTag to an empty NbtCompound("").
 - Added LoadFro* overloads that do not require a TagSelector parameter.
 
 0.4.0 (LibNbt2012)
 - Changed the way NbtFiles are constructed. Data is not loaded in the
-	constructor itself any more, use LoadFrom* method.
+    constructor itself any more, use LoadFrom* method.
 - Added a way to load NBT data directly from byte arrays, and to save them to
-	byte arrays.
+    byte arrays.
 - All LoadFrom-/SaveTo- methods now return an int, indicating the number of
-	bytes read/written.
+    bytes read/written.
 - Updated NbtFile to override ToString.
 - Added a way to control endianness when reading/writing NBT files.
 
@@ -43,12 +54,12 @@
 
 0.3.1 (LibNbt2012)
 - Added indexers to NbtTag base class, to make nested compound/list tags easier
-	to work with.
+    to work with.
 - Added shortcut properties for getting tag values.
 - Added a ToArray<T>() overload to NbtList, to automate casting to a specific
-	tag type.
+    tag type.
 - Improved .ToString() pretty-printing, now with consistent and configurable
-	indentation.
+    indentation.
 
 0.3.0 (LibNbt2012)
 - Auto-detection of NBT file compression.
@@ -68,7 +79,7 @@
 - Implemented tag queries.
 - Created unit tests for the larger portions of the code.
 - Marked tag constructors that take only tag values as obsolete, use the
-	constructor that has name and value instead.
+    constructor that has name and value instead.
 
 0.1.2 (libnbt)
 - Added a GetTagType() function to the tag classes.
