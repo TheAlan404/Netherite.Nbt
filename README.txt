@@ -2,12 +2,12 @@ Named Binary Tag (NBT) is a structured binary file format used by Minecraft.
 fNBT is a small library, written in C# for .NET 2.0+. It provides functionality
 to create, load, traverse, modify, and save NBT files and streams.
 
-Current released version is 0.5.0 (17 March 2013).
+Current released version is 0.5.1 (7 October 2013).
 
 fNBT is based in part on Erik Davidson's (aphistic's) original LibNbt library,
 now completely rewritten by Matvei Stefarov (fragmer).
 
-Note that fNBT.Test.dll and nunit.framework.dll do NOT need to be bundled with
+Note that fNbt.Test.dll and nunit.framework.dll do NOT need to be bundled with
 applications that use fNBT; they are only used for testing.
 
 
@@ -25,11 +25,11 @@ applications that use fNBT; they are only used for testing.
 
 
 ==== DOWNLOAD =================================================================
- Compiled binary:  http://fcraft.net/fnbt/fNbt_v0.5.0.zip
+ Compiled binary:  http://fcraft.net/fnbt/fNbt_v0.5.1.zip
 
  Amalgamation (single source file):
-    Non-annotated: http://fcraft.net/fnbt/fNbt_v0.5.0.cs
-        Annotated: http://fcraft.net/fnbt/fNbt_v0.5.0_Annotated.cs
+    Non-annotated: http://fcraft.net/fnbt/fNbt_v0.5.1.cs
+        Annotated: http://fcraft.net/fnbt/fNbt_v0.5.1_Annotated.cs
                    (using JetBrains.Annotations, for ReSharper)
 
 
@@ -94,7 +94,7 @@ applications that use fNBT; they are only used for testing.
 
 
 ==== REFERENCE ================================================================
-Online reference can be found at http://www.fcraft.net/fnbt/v0.5.0/
+Online reference can be found at http://www.fcraft.net/fnbt/v0.5.1/
 
 
 ==== LICENSING ================================================================
