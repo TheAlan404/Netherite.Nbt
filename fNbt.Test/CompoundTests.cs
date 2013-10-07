@@ -81,13 +81,22 @@ namespace fNbt.Test {
             Assert.AreEqual( parent["Child"]["NestedChildList"], nestedChildList );
             Assert.AreEqual( parent["Child"]["NestedChildList"][0], nestedInt );
 
-            // Accessing nested compound tags using Get<T>
+            // Accessing nested compound tags using Get and Get<T>
             Assert.AreEqual( parent.Get<NbtCompound>( "Child" ).Get<NbtCompound>( "NestedChild" ), nestedChild );
             Assert.AreEqual( parent.Get<NbtCompound>( "Child" ).Get<NbtList>( "NestedChildList" ), nestedChildList );
             Assert.AreEqual( parent.Get<NbtCompound>( "Child" ).Get<NbtList>( "NestedChildList" )[0], nestedInt );
+            Assert.AreEqual( (parent.Get( "Child" ) as NbtCompound).Get( "NestedChild" ), nestedChild );
+            Assert.AreEqual( (parent.Get( "Child" ) as NbtCompound).Get( "NestedChildList" ), nestedChildList );
+            Assert.AreEqual( (parent.Get( "Child" ) as NbtCompound).Get( "NestedChildList" )[0], nestedInt );
 
             // Accessing with Get<T> and an invalid given type
             Assert.Throws<InvalidCastException>( () => parent.Get<NbtInt>( "Child" ) );
+
+            // Using TryGet and TryGet<T>
+            NbtTag dummyTag;
+            Assert.IsTrue( parent.TryGet( "Child", out dummyTag ) );
+            NbtCompound dummyCompoundTag;
+            Assert.IsTrue( parent.TryGet( "Child", out dummyCompoundTag ) );
 
             // Trying to use integer indexers on non-NbtList tags
             Assert.Throws<InvalidOperationException>( () => parent[0] = nestedInt );
@@ -112,6 +121,24 @@ namespace fNbt.Test {
             Assert.Throws<ArgumentOutOfRangeException>( () => nestedInt = childList.Get<NbtInt>( -1 ) );
             Assert.Throws<ArgumentOutOfRangeException>( () => nestedInt = (NbtInt)childList[childList.Count] );
             Assert.Throws<ArgumentOutOfRangeException>( () => nestedInt = childList.Get<NbtInt>( childList.Count ) );
+
+            // Using setter correctly
+            parent["NewChild"] = new NbtByte( "NewChild" );
+
+            // Using setter incorrectly
+            object dummyObject;
+            Assert.Throws<ArgumentNullException>( () => parent["Child"] = null );
+            Assert.NotNull( parent["Child"] );
+            Assert.Throws<ArgumentException>( () => parent["Child"] = new NbtByte( "NotChild" ) );
+            Assert.Throws<InvalidOperationException>( () => dummyObject = parent[0] );
+            Assert.Throws<InvalidOperationException>( () => parent[0] = new NbtByte("NewerChild") );
+
+            // Try adding tag to self
+            NbtCompound selfTest = new NbtCompound( "SelfTest" );
+            Assert.Throws<ArgumentException>( () => selfTest["SelfTest"] = selfTest );
+
+            // Try adding a tag that already has a parent
+            Assert.Throws<ArgumentException>( () => selfTest[child.Name] = child );
         }
 
 
@@ -121,7 +148,7 @@ namespace fNbt.Test {
             compound.Add( new NbtInt( "SameName", 1 ) );
             var tagToRename = new NbtInt( "DifferentName", 1 );
             compound.Add( tagToRename );
-            Assert.DoesNotThrow( () => tagToRename.Name = "SomeOtherName" );
+            tagToRename.Name = "SomeOtherName";
             Assert.Throws<ArgumentException>( () => tagToRename.Name = "SameName" );
             Assert.Throws<ArgumentNullException>( () => tagToRename.Name = null );
         }
@@ -240,9 +267,8 @@ namespace fNbt.Test {
 
             // test GetEnumerator()
             List<NbtTag> enumeratedTags = new List<NbtTag>();
-            IEnumerator<NbtTag> tagEnum = comp.GetEnumerator();
-            while( tagEnum.MoveNext() ) {
-                enumeratedTags.Add( tagEnum.Current );
+            foreach( NbtTag tag in comp ) {
+                enumeratedTags.Add( tag );
             }
             CollectionAssert.AreEquivalent( enumeratedTags, tagList );
         }

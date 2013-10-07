@@ -7,9 +7,6 @@ using NUnit.Framework;
 namespace fNbt.Test {
     [TestFixture]
     public sealed class ListTests {
-        const string TempDir = "TestTemp";
-
-
         public static NbtCompound MakeListTest() {
             return new NbtCompound( "Root" ) {
                 new NbtList( "ByteList" ) {
@@ -81,13 +78,6 @@ namespace fNbt.Test {
                 }
             };
         }
-
-
-        [SetUp]
-        public void ListTestsSetup() {
-            Directory.CreateDirectory( TempDir );
-        }
-
 
         [Test]
         public void InterfaceImplementation() {
@@ -169,6 +159,13 @@ namespace fNbt.Test {
                 new NbtByte( 2 ),
                 new NbtInt( 3 )
             } ) );
+
+            // using AddRange
+            Assert.DoesNotThrow( () => new NbtList().AddRange( new NbtTag[] {
+                new NbtInt( 1 ),
+                new NbtInt( 2 ),
+                new NbtInt( 3 )
+            } ) );
         }
 
 
@@ -182,10 +179,13 @@ namespace fNbt.Test {
 
             NbtList list = new NbtList( "Test1", sameTags );
 
-            // testing enumerator
+            // testing enumerator, Contains, and IndexOf
             int j = 0;
             foreach( NbtTag tag in list ) {
-                Assert.AreEqual( tag, sameTags[j++] );
+                Assert.IsTrue( list.Contains( sameTags[j] ) );
+                Assert.AreEqual( tag, sameTags[j] );
+                Assert.AreEqual( list.IndexOf(tag), j );
+                j++;
             }
 
             // adding an item of correct type
@@ -244,7 +244,7 @@ namespace fNbt.Test {
 
         [Test]
         public void Serializing1() {
-            string fileName = Path.Combine( TempDir, "NbtListType.nbt" );
+            // check the basics of saving/loading
             const NbtTagType expectedListType = NbtTagType.Int;
             const int elements = 10;
 
@@ -257,10 +257,11 @@ namespace fNbt.Test {
             writtenFile.RootTag.Add( writtenList );
 
             // test saving
-            writtenFile.SaveToFile( fileName, NbtCompression.GZip );
+            byte[] data = writtenFile.SaveToBuffer( NbtCompression.None );
 
             // test loading
-            NbtFile readFile = new NbtFile( fileName );
+            NbtFile readFile = new NbtFile();
+            readFile.LoadFromBuffer( data, 0, data.Length, NbtCompression.None );
 
             // check contents of loaded file
             Assert.NotNull( readFile.RootTag );
@@ -282,6 +283,7 @@ namespace fNbt.Test {
 
         [Test]
         public void Serializing2() {
+            // check saving/loading lists of all possible value types
             NbtFile testFile = new NbtFile( MakeListTest() );
             byte[] buffer = testFile.SaveToBuffer( NbtCompression.None );
             testFile.LoadFromBuffer( buffer, 0, buffer.Length, NbtCompression.None );
@@ -321,17 +323,6 @@ namespace fNbt.Test {
                         .Get<NbtCompound>( 0 )
                         .Name,
                     null );
-            }
-        }
-
-
-        [TearDown]
-        public void ListTestsTearDown() {
-            if( Directory.Exists( TempDir ) ) {
-                foreach( var file in Directory.GetFiles( TempDir ) ) {
-                    File.Delete( file );
-                }
-                Directory.Delete( TempDir );
             }
         }
     }

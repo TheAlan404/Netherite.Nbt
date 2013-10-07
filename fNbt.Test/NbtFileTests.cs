@@ -316,7 +316,11 @@ namespace fNbt.Test {
                 using( NonSeekableStream nss = new NonSeekableStream( ms ) ) {
                     int bytesWritten = loadedFile.SaveToStream( nss, NbtCompression.None );
                     ms.Position = 0;
-                    int bytesRead = loadedFile.LoadFromStream( nss, NbtCompression.None, null );
+                    Assert.Throws<NotSupportedException>( () => loadedFile.LoadFromStream( nss, NbtCompression.AutoDetect ) );
+                    ms.Position = 0;
+                    Assert.Throws<InvalidDataException>( () => loadedFile.LoadFromStream( nss, NbtCompression.ZLib ) );
+                    ms.Position = 0;
+                    int bytesRead = loadedFile.LoadFromStream( nss, NbtCompression.None );
                     Assert.AreEqual( bytesWritten, bytesRead );
                     AssertNbtBigFile( loadedFile );
                 }
@@ -340,6 +344,18 @@ namespace fNbt.Test {
             using( MemoryStream ms = new MemoryStream( fileBytes ) ) {
                 file.LoadFromStream( ms, compression );
             }
+        }
+
+
+        [Test]
+        public void SaveToBuffer() {
+            NbtCompound littleTag = new NbtCompound( "Root" );
+            NbtFile testFile = new NbtFile( littleTag );
+
+            byte[] buffer1 = testFile.SaveToBuffer( NbtCompression.None );
+            byte[] buffer2 = new byte[buffer1.Length];
+            Assert.AreEqual( testFile.SaveToBuffer( buffer2, 0, NbtCompression.None ), buffer2.Length );
+            CollectionAssert.AreEqual( buffer1, buffer2 );
         }
 
 
