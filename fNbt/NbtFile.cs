@@ -309,53 +309,7 @@ namespace fNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         public int LoadFromStream( [NotNull] Stream stream, NbtCompression compression ) {
-            if( stream == null )
-                throw new ArgumentNullException( "stream" );
-
-            FileName = null;
-            FileCompression = compression;
-
-            // detect compression, based on the first byte
-            if( compression == NbtCompression.AutoDetect ) {
-                compression = DetectCompression( stream );
-            }
-
-            long startPosition = stream.Position;
-
-            switch( compression ) {
-                case NbtCompression.GZip:
-                    using( var decStream = new GZipStream( stream, CompressionMode.Decompress, true ) ) {
-                        if( bufferSize > 0 ) {
-                            LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), null );
-                        } else {
-                            LoadFromStreamInternal( decStream, null );
-                        }
-                    }
-                    break;
-
-                case NbtCompression.None:
-                    LoadFromStreamInternal( stream, null );
-                    break;
-
-                case NbtCompression.ZLib:
-                    if( stream.ReadByte() != 0x78 ) {
-                        throw new InvalidDataException( "Incorrect ZLib header. Expected 0x78 0x9C" );
-                    }
-                    stream.ReadByte();
-                    using( var decStream = new DeflateStream( stream, CompressionMode.Decompress, true ) ) {
-                        if( bufferSize > 0 ) {
-                            LoadFromStreamInternal( new BufferedStream( decStream, bufferSize ), null );
-                        } else {
-                            LoadFromStreamInternal( decStream, null );
-                        }
-                    }
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException( "compression" );
-            }
-
-            return (int)( stream.Position - startPosition );
+            return LoadFromStream( stream, compression, null );
         }
 
 
@@ -392,9 +346,6 @@ namespace fNbt {
 
 
         void LoadFromStreamInternal( [NotNull] Stream stream, [CanBeNull] TagSelector tagSelector ) {
-            if( stream == null )
-                throw new ArgumentNullException( "stream" );
-
             // Make sure the first byte in this file is the tag for a TAG_Compound
             if( stream.ReadByte() != (int)NbtTagType.Compound ) {
                 throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
@@ -618,9 +569,7 @@ namespace fNbt {
         [NotNull]
         public static string ReadRootTagName( [NotNull] Stream stream, NbtCompression compression, bool bigEndian,
                                               int bufferSize ) {
-            if( stream == null ) {
-                throw new ArgumentNullException( "stream" );
-            }
+            if( stream == null ) throw new ArgumentNullException( "stream" );
             if( bufferSize < 0 ) {
                 throw new ArgumentOutOfRangeException( "bufferSize", bufferSize, "DefaultBufferSize cannot be negative." );
             }
@@ -663,13 +612,11 @@ namespace fNbt {
 
         [NotNull]
         static string GetRootNameInternal( [NotNull] Stream stream, bool bigEndian ) {
-            if( stream == null )
-                throw new ArgumentNullException( "stream" );
-            NbtBinaryReader reader = new NbtBinaryReader( stream, bigEndian );
-
-            if( reader.ReadTagType() != NbtTagType.Compound ) {
+            if( stream == null ) throw new ArgumentNullException( "stream" );
+            if( stream.ReadByte() != (int)NbtTagType.Compound ) {
                 throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
             }
+            NbtBinaryReader reader = new NbtBinaryReader( stream, bigEndian );
 
             return reader.ReadString();
         }
