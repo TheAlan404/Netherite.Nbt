@@ -158,32 +158,6 @@ namespace fNbt {
         }
 
 
-        /// <summary> Copies all tags in this NbtCompound to an array. </summary>
-        /// <returns> Array of NbtTags. </returns>
-        [NotNull, Pure]
-        public NbtTag[] ToArray() {
-            NbtTag[] array = new NbtTag[tags.Count];
-            int i = 0;
-            foreach( NbtTag tag in tags.Values ) {
-                array[i++] = tag;
-            }
-            return array;
-        }
-
-
-        /// <summary> Copies names of all tags in this NbtCompound to an array. </summary>
-        /// <returns> Array of strings (tag names). </returns>
-        [NotNull, Pure]
-        public string[] ToNameArray() {
-            string[] array = new string[tags.Count];
-            int i = 0;
-            foreach( NbtTag tag in tags.Values ) {
-                array[i++] = tag.Name;
-            }
-            return array;
-        }
-
-
         /// <summary> Adds all tags from the specified collection to this NbtCompound. </summary>
         /// <param name="newTags"> The collection whose elements should be added to this NbtCompound. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="newTags"/> is <c>null</c>, or one of the tags in newTags is <c>null</c>. </exception>
