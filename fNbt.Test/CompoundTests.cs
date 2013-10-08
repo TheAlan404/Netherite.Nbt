@@ -7,15 +7,6 @@ using NUnit.Framework;
 namespace fNbt.Test {
     [TestFixture]
     public sealed class CompoundTests {
-        const string TempDir = "TestTemp";
-
-
-        [SetUp]
-        public void CompoundTestsSetup() {
-            Directory.CreateDirectory( TempDir );
-        }
-
-
         [Test]
         public void InitializingCompoundFromCollectionTest() {
             NbtTag[] allNamed = {
@@ -63,18 +54,23 @@ namespace fNbt.Test {
 
         [Test]
         public void GettersAndSetters() {
-            NbtCompound parent = new NbtCompound( "Parent" );
-            NbtCompound child = new NbtCompound( "Child" );
+            // construct a document for us to test.
             NbtCompound nestedChild = new NbtCompound( "NestedChild" );
-            NbtList childList = new NbtList( "ChildList" );
-            NbtList nestedChildList = new NbtList( "NestedChildList" );
-            childList.Add( new NbtInt( 1 ) );
             NbtInt nestedInt = new NbtInt( 1 );
-            nestedChildList.Add( nestedInt );
-            parent.Add( child );
-            parent.Add( childList );
-            child.Add( nestedChild );
-            child.Add( nestedChildList );
+            NbtList nestedChildList = new NbtList( "NestedChildList" ) {
+                nestedInt
+            };
+            NbtCompound child = new NbtCompound( "Child" ) {
+                nestedChild,
+                nestedChildList
+            };
+            NbtList childList = new NbtList( "ChildList" ) {
+                new NbtInt( 1 )
+            };
+            NbtCompound parent = new NbtCompound( "Parent" ) {
+                child,
+                childList
+            };
 
             // Accessing nested compound tags using indexers
             Assert.AreEqual( parent["Child"]["NestedChild"], nestedChild );
@@ -144,23 +140,33 @@ namespace fNbt.Test {
 
         [Test]
         public void Renaming() {
-            NbtCompound compound = new NbtCompound();
-            compound.Add( new NbtInt( "SameName", 1 ) );
             var tagToRename = new NbtInt( "DifferentName", 1 );
-            compound.Add( tagToRename );
+            NbtCompound compound = new NbtCompound {
+                new NbtInt( "SameName", 1 ),
+                tagToRename
+            };
+
+            // proper renaming, should not throw
             tagToRename.Name = "SomeOtherName";
+
+            // attempting to use a duplicate name
             Assert.Throws<ArgumentException>( () => tagToRename.Name = "SameName" );
+
+            // assigning a null name to a tag inside a compound; should throw
             Assert.Throws<ArgumentNullException>( () => tagToRename.Name = null );
+
+            // assigning a null name to a tag inside a compound; should not throw
+            compound.Remove( tagToRename );
+            tagToRename.Name = null;
         }
 
 
         [Test]
         public void AddingAndRemoving() {
-            NbtCompound test = new NbtCompound();
-
-            NbtInt foo =  new NbtInt( "Foo" );
-
-            test.Add( foo );
+            NbtInt foo = new NbtInt( "Foo" );
+            NbtCompound test = new NbtCompound {
+                foo
+            };
 
             // adding duplicate object
             Assert.Throws<ArgumentException>( () => test.Add( foo ) );
@@ -217,7 +223,7 @@ namespace fNbt.Test {
 
         [Test]
         public void UtilityMethods() {
-            NbtTag[] testThings = new NbtTag[] {
+            NbtTag[] testThings = {
                 new NbtShort( "Name1", 1 ),
                 new NbtInt( "Name2", 2 ),
                 new NbtLong( "Name3", 3 )
@@ -229,10 +235,6 @@ namespace fNbt.Test {
 
             // add range with duplicates
             Assert.Throws<ArgumentException>( () => compound.AddRange( testThings ) );
-
-            // check ToNameArray and ToArray, which are provided for .NET 2.0 users' convenience
-            CollectionAssert.AreEqual( compound.Names, compound.ToNameArray() );
-            CollectionAssert.AreEqual( compound.Tags, compound.ToArray() );
         }
 
 
@@ -271,14 +273,6 @@ namespace fNbt.Test {
                 enumeratedTags.Add( tag );
             }
             CollectionAssert.AreEquivalent( enumeratedTags, tagList );
-        }
-
-
-        [TearDown]
-        public void CompoundTestsTearDown() {
-            if( Directory.Exists( TempDir ) ) {
-                Directory.Delete( TempDir, true );
-            }
         }
     }
 }
