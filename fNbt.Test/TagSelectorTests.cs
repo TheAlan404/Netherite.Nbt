@@ -33,7 +33,7 @@ namespace fNbt.Test {
 
         [Test]
         public void SkippingLists() {
-            NbtFile file = new NbtFile( ListTests.MakeListTest() );
+            NbtFile file = new NbtFile( TestFiles.MakeListTest() );
             byte[] savedFile = file.SaveToBuffer( NbtCompression.None );
             file.LoadFromBuffer( savedFile, 0, savedFile.Length, NbtCompression.None, tag => false );
             Assert.AreEqual( file.RootTag.Count, 0 );
@@ -42,8 +42,8 @@ namespace fNbt.Test {
 
         [Test]
         public void SkippingValuesInCompoundTest() {
-            NbtCompound root = NbtReaderTests.MakeValueTest();
-            NbtCompound nestedComp = NbtReaderTests.MakeValueTest();
+            NbtCompound root = TestFiles.MakeValueTest();
+            NbtCompound nestedComp = TestFiles.MakeValueTest();
             nestedComp.Name = "NestedComp";
             root.Add( nestedComp );
 

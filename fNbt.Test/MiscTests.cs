@@ -9,7 +9,7 @@ namespace fNbt.Test {
         [Test]
         public void ByteArrayIndexerTest() {
             // test getting/settings values of byte array tag via indexer
-            NbtByteArray byteArray = new NbtByteArray("Test");
+            NbtByteArray byteArray = new NbtByteArray( "Test" );
             CollectionAssert.AreEqual( byteArray.Value, new byte[0] );
             byteArray.Value = new byte[] {
                 1, 2, 3
@@ -20,6 +20,7 @@ namespace fNbt.Test {
             byteArray[0] = 4;
             Assert.AreEqual( byteArray[0], 4 );
         }
+
 
         [Test]
         public void IntArrayIndexerTest() {
@@ -59,9 +60,9 @@ namespace fNbt.Test {
                 new NbtCompound( "Compound" ) {
                     new NbtCompound( "InsideCompound" )
                 },
-                new NbtList("List"){
-                    new NbtCompound{
-                        new NbtInt("InsideCompoundAndList")
+                new NbtList( "List" ) {
+                    new NbtCompound {
+                        new NbtInt( "InsideCompoundAndList" )
                     }
                 }
             };

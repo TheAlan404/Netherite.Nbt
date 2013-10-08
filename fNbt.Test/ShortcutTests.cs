@@ -111,7 +111,7 @@ namespace fNbt.Test {
         [Test]
         public void NbtIntArrayTest() {
             object dummy;
-            int[] ints = new[] { 1111, 2222, 3333, 4444, 5555 };
+            int[] ints = { 1111, 2222, 3333, 4444, 5555 };
             NbtTag test = new NbtIntArray( ints );
             Assert.Throws<InvalidCastException>( () => dummy = test.ByteArrayValue );
             Assert.Throws<InvalidCastException>( () => dummy = test.ByteValue );

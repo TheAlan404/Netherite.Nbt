@@ -7,117 +7,66 @@ using NUnit.Framework;
 namespace fNbt.Test {
     [TestFixture]
     public sealed class ListTests {
-        public static NbtCompound MakeListTest() {
-            return new NbtCompound( "Root" ) {
-                new NbtList( "ByteList" ) {
-                    new NbtByte( 100 ),
-                    new NbtByte( 20 ),
-                    new NbtByte( 3 )
-                },
-                new NbtList( "DoubleList" ) {
-                    new NbtDouble( 1d ),
-                    new NbtDouble( 2000d ),
-                    new NbtDouble( -3000000d )
-                },
-                new NbtList( "FloatList" ) {
-                    new NbtFloat( 1f ),
-                    new NbtFloat( 2000f ),
-                    new NbtFloat( -3000000f )
-                },
-                new NbtList( "IntList" ) {
-                    new NbtInt( 1 ),
-                    new NbtInt( 2000 ),
-                    new NbtInt( -3000000 )
-                },
-                new NbtList( "LongList" ) {
-                    new NbtLong( 1L ),
-                    new NbtLong( 2000L ),
-                    new NbtLong( -3000000L )
-                },
-                new NbtList( "ShortList" ) {
-                    new NbtShort( 1 ),
-                    new NbtShort( 200 ),
-                    new NbtShort( -30000 )
-                },
-                new NbtList( "StringList" ) {
-                    new NbtString( "one" ),
-                    new NbtString( "two thousand" ),
-                    new NbtString( "negative three million" )
-                },
-                new NbtList( "CompoundList" ) {
-                    new NbtCompound(),
-                    new NbtCompound(),
-                    new NbtCompound()
-                },
-                new NbtList( "ListList" ) {
-                    new NbtList( NbtTagType.List ),
-                    new NbtList( NbtTagType.List ),
-                    new NbtList( NbtTagType.List )
-                },
-                new NbtList( "ByteArrayList" ) {
-                    new NbtByteArray( new byte[] {
-                        1, 2, 3
-                    } ),
-                    new NbtByteArray( new byte[] {
-                        11, 12, 13
-                    } ),
-                    new NbtByteArray( new byte[] {
-                        21, 22, 23
-                    } )
-                },
-                new NbtList( "IntArrayList" ) {
-                    new NbtIntArray( new[] {
-                        1, -2, 3
-                    } ),
-                    new NbtIntArray( new[] {
-                        1000, -2000, 3000
-                    } ),
-                    new NbtIntArray( new[] {
-                        1000000, -2000000, 3000000
-                    } )
-                }
-            };
-        }
 
         [Test]
         public void InterfaceImplementation() {
-            List<NbtTag> referenceList = new List<NbtTag>();
-            referenceList.Add( new NbtInt(1) );
-            referenceList.Add( new NbtInt(2) );
-            referenceList.Add( new NbtInt(3) );
+            // prepare our test lists
+            List<NbtTag> referenceList = new List<NbtTag> {
+                new NbtInt( 1 ),
+                new NbtInt( 2 ),
+                new NbtInt( 3 )
+            };
             NbtInt testTag = new NbtInt(4);
-
             NbtList originalList = new NbtList( referenceList );
+
+            // check IList implementations
             IList iList = originalList;
             CollectionAssert.AreEqual( referenceList, iList );
 
+            // check IList.Add
             referenceList.Add( testTag );
             iList.Add( testTag );
             CollectionAssert.AreEqual( referenceList, iList );
+
+            // check IList.IndexOf
             Assert.AreEqual( referenceList.IndexOf( testTag ), iList.IndexOf( testTag ) );
+
+            // check IList.Contains
             Assert.IsTrue( iList.Contains( testTag ) );
+
+            // check IList.Remove
             iList.Remove( testTag );
             Assert.IsFalse( iList.Contains( testTag ) );
+
+            // check IList.Insert
             iList.Insert( 0, testTag );
             Assert.AreEqual( iList.IndexOf( testTag ), 0 );
+
+            // check IList.RemoveAt
             iList.RemoveAt( 0 );
             Assert.IsFalse( iList.Contains( testTag ) );
 
+            // check misc IList properties
             Assert.IsFalse( iList.IsFixedSize );
             Assert.IsFalse( iList.IsReadOnly );
             Assert.IsFalse( iList.IsSynchronized );
             Assert.NotNull( iList.SyncRoot );
 
+            // check IList.CopyTo
             NbtInt[] exportTest = new NbtInt[iList.Count];
             iList.CopyTo( exportTest, 0 );
             CollectionAssert.AreEqual( iList, exportTest );
+
+            // check IList.this[int]
             for( int i = 0; i < iList.Count; i++ ) {
                 Assert.AreEqual( iList[i], originalList[i] );
             }
 
+            // check IList<NbtTag>.IsReadOnly
             IList<NbtTag> iGenericList = originalList;
             Assert.IsFalse( iGenericList.IsReadOnly );
 
+            // check IList.Clear
             iList.Clear();
             Assert.AreEqual( iList.Count, 0 );
             Assert.AreEqual( iList.IndexOf( testTag ), -1 );
@@ -127,17 +76,12 @@ namespace fNbt.Test {
         [Test]
         public void InitializingListFromCollection() {
             // auto-detecting list type
-            Assert.DoesNotThrow( () => new NbtList( "Test1", new NbtTag[] {
+            NbtList test1 = new NbtList( "Test1", new NbtTag[] {
                 new NbtInt( 1 ),
                 new NbtInt( 2 ),
                 new NbtInt( 3 )
-            } ) );
-
-            Assert.AreEqual( new NbtList( "Test1", new NbtTag[] {
-                new NbtInt( 1 ),
-                new NbtInt( 2 ),
-                new NbtInt( 3 )
-            } ).ListType, NbtTagType.Int );
+            } );
+            Assert.AreEqual( test1.ListType, NbtTagType.Int );
 
             // correct explicitly-given list type
             Assert.DoesNotThrow( () => new NbtList( "Test2", new NbtTag[] {
@@ -179,7 +123,7 @@ namespace fNbt.Test {
 
             NbtList list = new NbtList( "Test1", sameTags );
 
-            // testing enumerator, Contains, and IndexOf
+            // testing enumerator, indexer, Contains, and IndexOf
             int j = 0;
             foreach( NbtTag tag in list ) {
                 Assert.IsTrue( list.Contains( sameTags[j] ) );
@@ -284,7 +228,7 @@ namespace fNbt.Test {
         [Test]
         public void Serializing2() {
             // check saving/loading lists of all possible value types
-            NbtFile testFile = new NbtFile( MakeListTest() );
+            NbtFile testFile = new NbtFile( TestFiles.MakeListTest() );
             byte[] buffer = testFile.SaveToBuffer( NbtCompression.None );
             testFile.LoadFromBuffer( buffer, 0, buffer.Length, NbtCompression.None );
         }
