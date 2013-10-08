@@ -297,6 +297,16 @@ namespace fNbt.Test {
                     reader.ReadAsTag();
                 }
             }
+
+            // read a bunch of lists as tags
+            {
+                byte[] testData = new NbtFile( ListTests.MakeListTest() ).SaveToBuffer( NbtCompression.None );
+                NbtReader reader = new NbtReader( new MemoryStream( testData ) );
+                reader.ReadToFollowing(); // skip root
+                while( !reader.IsAtStreamEnd ) {
+                    reader.ReadAsTag();
+                }
+            }
         }
 
 
