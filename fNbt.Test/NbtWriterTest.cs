@@ -7,6 +7,7 @@ namespace fNbt.Test {
     class NbtWriterTest {
         [Test]
         public void ValueTest() {
+            // write one named tag for every value type, and read it back
             using( MemoryStream ms = new MemoryStream() ) {
                 NbtWriter writer = new NbtWriter( ms, "root" ); {
                     writer.WriteByte( "byte", 1 );
@@ -32,7 +33,7 @@ namespace fNbt.Test {
 
         [Test]
         public void CompoundListTest() {
-            // test various combinations of compound tags and list tags
+            // test writing various combinations of compound tags and list tags
             const string testString = "Come on and slam, and welcome to the jam.";
             using( MemoryStream ms = new MemoryStream() ) {
                 NbtWriter writer = new NbtWriter( ms, "Test" ); {
@@ -170,9 +171,10 @@ namespace fNbt.Test {
         public void ErrorTest() {
             using( MemoryStream ms = new MemoryStream() ) {
 
-                // null stream or root name
+                // null constructor parameters, or a non-writable stream
                 Assert.Throws<ArgumentNullException>( () => new NbtWriter( null, "root" ) );
                 Assert.Throws<ArgumentNullException>( () => new NbtWriter( ms, null ) );
+                Assert.Throws<ArgumentException>( () => new NbtWriter( new NonWritableStream(), "root" ) );
 
                 NbtWriter writer = new NbtWriter( ms, "root" ); {
                     // use negative list size
@@ -229,6 +231,20 @@ namespace fNbt.Test {
                     // write tag after finishing
                     Assert.Throws<NbtFormatException>( () => writer.WriteTag( new NbtInt() ) );
                 }
+            }
+        }
+
+        class NonWritableStream : MemoryStream {
+            public override bool CanWrite {
+                get {
+                    return false;
+                }
+            }
+            public override void WriteByte( byte value ) {
+                throw new NotSupportedException();
+            }
+            public override void Write( byte[] buffer, int offset, int count ) {
+                throw new NotSupportedException();
             }
         }
     }

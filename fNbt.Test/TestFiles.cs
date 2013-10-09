@@ -89,7 +89,7 @@ namespace fNbt.Test {
 
 
         // creates a file with lots of compounds and lists, used to test NbtReader compliance
-        public static Stream MakeTest() {
+        public static Stream MakeReaderTest() {
             NbtCompound root = new NbtCompound( "root" ) {
                 new NbtInt( "first" ),
                 new NbtInt( "second" ),

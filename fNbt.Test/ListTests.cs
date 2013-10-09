@@ -60,6 +60,7 @@ namespace fNbt.Test {
             // check IList.this[int]
             for( int i = 0; i < iList.Count; i++ ) {
                 Assert.AreEqual( iList[i], originalList[i] );
+                iList[i] = new NbtInt( i );
             }
 
             // check IList<NbtTag>.IsReadOnly
@@ -70,6 +71,35 @@ namespace fNbt.Test {
             iList.Clear();
             Assert.AreEqual( iList.Count, 0 );
             Assert.AreEqual( iList.IndexOf( testTag ), -1 );
+        }
+
+
+        [Test]
+        public void IndexerTest() {
+            NbtList secondList = new NbtList {
+                new NbtByte()
+            };
+
+            NbtList testList = new NbtList();
+            // Trying to set an out-of-range element
+            Assert.Throws<ArgumentOutOfRangeException>( () => testList[0] = new NbtByte( 1 ) );
+
+            // Make sure that setting did not affect ListType
+            Assert.AreEqual( testList.ListType, NbtTagType.Unknown );
+            Assert.AreEqual( testList.Count, 0 );
+            testList.Add( new NbtByte( 1 ) );
+
+            // set a tag to null
+            Assert.Throws<ArgumentNullException>( () => testList[0] = null );
+
+            // set a tag to itself
+            Assert.Throws<ArgumentException>( () => testList[0] = testList );
+
+            // give a named tag where an unnamed tag was expected
+            Assert.Throws<ArgumentException>( () => testList[0] = new NbtByte( "NamedTag" ) );
+
+            // give an unnamed tag that already has a parent
+            Assert.Throws<ArgumentException>( () => testList[0] = secondList[0] );
         }
 
 
@@ -151,6 +181,22 @@ namespace fNbt.Test {
             Assert.IsTrue( list.Remove( sameTags[0] ) );
             list.RemoveAt( 0 );
             Assert.Throws<ArgumentOutOfRangeException>( () => list.RemoveAt( 10 ) );
+
+            // Test some failure scenarios for Add:
+            // adding a list to itself
+            NbtList loopList = new NbtList();
+            Assert.AreEqual( loopList.ListType, NbtTagType.Unknown );
+            Assert.Throws<ArgumentException>( () => loopList.Add( loopList ) );
+
+            // adding same tag to multiple lists
+            Assert.Throws<ArgumentException>( () => loopList.Add( list[0] ) );
+
+            // adding null tag
+            Assert.Throws<ArgumentNullException>( () => loopList.Add( null ) );
+
+            // make sure that all those failed adds didn't affect the tag
+            Assert.AreEqual( loopList.Count, 0 );
+            Assert.AreEqual( loopList.ListType, NbtTagType.Unknown );
         }
 
 

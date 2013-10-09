@@ -46,11 +46,23 @@ namespace fNbt.Test {
             Assert.AreEqual( reader.ReadValue(), 6d );
             Assert.AreEqual( reader.ReadValue(), 6d );
             Assert.IsTrue( reader.ReadToFollowing() ); // byteArray
-            CollectionAssert.AreEqual( (byte[])reader.ReadValue(), new byte[] { 10, 11, 12 } );
-            CollectionAssert.AreEqual( (byte[])reader.ReadValue(), new byte[] { 10, 11, 12 } );
+            CollectionAssert.AreEqual( (byte[])reader.ReadValue(),
+                                       new byte[] {
+                                           10, 11, 12
+                                       } );
+            CollectionAssert.AreEqual( (byte[])reader.ReadValue(),
+                                       new byte[] {
+                                           10, 11, 12
+                                       } );
             Assert.IsTrue( reader.ReadToFollowing() ); // intArray
-            CollectionAssert.AreEqual( (int[])reader.ReadValue(), new[] { 20, 21, 22 } );
-            CollectionAssert.AreEqual( (int[])reader.ReadValue(), new[] { 20, 21, 22 } );
+            CollectionAssert.AreEqual( (int[])reader.ReadValue(),
+                                       new[] {
+                                           20, 21, 22
+                                       } );
+            CollectionAssert.AreEqual( (int[])reader.ReadValue(),
+                                       new[] {
+                                           20, 21, 22
+                                       } );
             Assert.IsTrue( reader.ReadToFollowing() ); // string
             Assert.AreEqual( reader.ReadValue(), "123" );
             Assert.AreEqual( reader.ReadValue(), "123" );
@@ -84,7 +96,7 @@ namespace fNbt.Test {
 
         [Test]
         public void PropertiesTest() {
-            NbtReader reader = new NbtReader( TestFiles.MakeTest() );
+            NbtReader reader = new NbtReader( TestFiles.MakeReaderTest() );
             Assert.AreEqual( reader.Depth, 0 );
             Assert.AreEqual( reader.TagsRead, 0 );
 
@@ -177,7 +189,7 @@ namespace fNbt.Test {
 
         [Test]
         public void ReadToSiblingTest() {
-            NbtReader reader = new NbtReader( TestFiles.MakeTest() );
+            NbtReader reader = new NbtReader( TestFiles.MakeReaderTest() );
             Assert.IsTrue( reader.ReadToFollowing() );
             Assert.AreEqual( reader.TagName, "root" );
             Assert.IsTrue( reader.ReadToFollowing() );
@@ -194,7 +206,7 @@ namespace fNbt.Test {
 
         [Test]
         public void ReadToDescendantTest() {
-            NbtReader reader = new NbtReader( TestFiles.MakeTest() );
+            NbtReader reader = new NbtReader( TestFiles.MakeReaderTest() );
             Assert.IsTrue( reader.ReadToDescendant( "third-comp" ) );
             Assert.AreEqual( reader.TagName, "third-comp" );
             Assert.IsTrue( reader.ReadToDescendant( "inComp2" ) );
@@ -209,7 +221,7 @@ namespace fNbt.Test {
 
         [Test]
         public void SkipTest() {
-            NbtReader reader = new NbtReader( TestFiles.MakeTest() );
+            NbtReader reader = new NbtReader( TestFiles.MakeReaderTest() );
             reader.ReadToFollowing(); // at root
             reader.ReadToFollowing(); // at first
             reader.ReadToFollowing(); // at second
@@ -224,44 +236,53 @@ namespace fNbt.Test {
 
 
         [Test]
-        public void ReadAsTagTest() {
-            // read the whole thing as tag
-            {
-                NbtFile file = new NbtFile( TestFiles.MakeValueTest() );
-                using( MemoryStream ms = new MemoryStream( file.SaveToBuffer( NbtCompression.None ) ) ) {
-                    NbtReader reader = new NbtReader( ms );
-                    NbtCompound tag = (NbtCompound)reader.ReadAsTag();
-                    TestFiles.AssertValueTest( new NbtFile( tag ) );
-                }
-            }
-
+        public void ReadAsTagTest1() {
             // read various lists/compounds as tags
-            {
-                NbtReader reader = new NbtReader( TestFiles.MakeTest() );
-                reader.ReadToFollowing(); // skip root
-                while( !reader.IsAtStreamEnd ) {
-                    reader.ReadAsTag();
-                }
+            NbtReader reader = new NbtReader( TestFiles.MakeReaderTest() );
+            reader.ReadToFollowing(); // skip root
+            while( !reader.IsAtStreamEnd ) {
+                reader.ReadAsTag();
             }
+        }
 
+
+        [Test]
+        public void ReadAsTagTest2() {
+            // read the whole thing as one tag
+            byte[] testData = new NbtFile( TestFiles.MakeValueTest() ).SaveToBuffer( NbtCompression.None );
+            NbtReader reader = new NbtReader( new MemoryStream( testData ) );
+            NbtCompound root = (NbtCompound)reader.ReadAsTag();
+            TestFiles.AssertValueTest( new NbtFile( root ) );
+        }
+
+
+        [Test]
+        public void ReadAsTagTest3() {
             // read values as tags
-            {
-                byte[] testData = new NbtFile( TestFiles.MakeValueTest() ).SaveToBuffer( NbtCompression.None );
-                NbtReader reader = new NbtReader( new MemoryStream( testData ) );
-                reader.ReadToFollowing(); // skip root
-                while( !reader.IsAtStreamEnd ) {
-                    reader.ReadAsTag();
-                }
+            byte[] testData = new NbtFile( TestFiles.MakeValueTest() ).SaveToBuffer( NbtCompression.None );
+            NbtReader reader = new NbtReader( new MemoryStream( testData ) );
+            NbtCompound root = new NbtCompound( "root" );
+
+            // skip root
+            reader.ReadToFollowing();
+            reader.ReadToFollowing();
+
+            while( !reader.IsAtStreamEnd ) {
+                root.Add( reader.ReadAsTag() );
             }
 
+            TestFiles.AssertValueTest( new NbtFile( root ) );
+        }
+
+
+        [Test]
+        public void ReadAsTagTest4() {
             // read a bunch of lists as tags
-            {
-                byte[] testData = new NbtFile( TestFiles.MakeListTest() ).SaveToBuffer( NbtCompression.None );
-                NbtReader reader = new NbtReader( new MemoryStream( testData ) );
-                reader.ReadToFollowing(); // skip root
-                while( !reader.IsAtStreamEnd ) {
-                    reader.ReadAsTag();
-                }
+            byte[] testData = new NbtFile( TestFiles.MakeListTest() ).SaveToBuffer( NbtCompression.None );
+            NbtReader reader = new NbtReader( new MemoryStream( testData ) );
+            //reader.ReadToFollowing(); // skip root
+            while( !reader.IsAtStreamEnd ) {
+                Console.WriteLine( reader.ReadAsTag() );
             }
         }
 
@@ -282,57 +303,43 @@ namespace fNbt.Test {
             reader.ReadToFollowing( "ByteList" );
             byte[] bytes = reader.ReadListAsArray<byte>();
             CollectionAssert.AreEqual( bytes,
-                                       new byte[] {
-                                           100, 20, 3
-                                       } );
+                                       new byte[] { 100, 20, 3 } );
 
             // test double values
             reader.ReadToFollowing( "DoubleList" );
             double[] doubles = reader.ReadListAsArray<double>();
             CollectionAssert.AreEqual( doubles,
-                                       new[] {
-                                           1d, 2000d, -3000000d
-                                       } );
+                                       new[] { 1d, 2000d, -3000000d } );
 
             // test float values
             reader.ReadToFollowing( "FloatList" );
             float[] floats = reader.ReadListAsArray<float>();
             CollectionAssert.AreEqual( floats,
-                                       new[] {
-                                           1f, 2000f, -3000000f
-                                       } );
+                                       new[] { 1f, 2000f, -3000000f } );
 
             // test int values
             reader.ReadToFollowing( "IntList" );
             int[] ints = reader.ReadListAsArray<int>();
             CollectionAssert.AreEqual( ints,
-                                       new[] {
-                                           1, 2000, -3000000
-                                       } );
+                                       new[] { 1, 2000, -3000000 } );
 
             // test long values
             reader.ReadToFollowing( "LongList" );
             long[] longs = reader.ReadListAsArray<long>();
             CollectionAssert.AreEqual( longs,
-                                       new[] {
-                                           1L, 2000L, -3000000L
-                                       } );
+                                       new[] { 1L, 2000L, -3000000L } );
 
             // test short values
             reader.ReadToFollowing( "ShortList" );
             short[] shorts = reader.ReadListAsArray<short>();
             CollectionAssert.AreEqual( shorts,
-                                       new short[] {
-                                           1, 200, -30000
-                                       } );
+                                       new short[] { 1, 200, -30000 } );
 
             // test short values
             reader.ReadToFollowing( "StringList" );
             string[] strings = reader.ReadListAsArray<string>();
             CollectionAssert.AreEqual( strings,
-                                       new[] {
-                                           "one", "two thousand", "negative three million"
-                                       } );
+                                       new[] { "one", "two thousand", "negative three million" } );
 
             // try reading list of compounds (should fail)
             reader.ReadToFollowing( "CompoundList" );
@@ -383,9 +390,15 @@ namespace fNbt.Test {
             Assert.IsTrue( reader.ReadToFollowing() ); // double
             Assert.AreEqual( reader.ReadValue(), 6d );
             Assert.IsTrue( reader.ReadToFollowing() ); // byteArray
-            CollectionAssert.AreEqual( (byte[])reader.ReadValue(), new byte[] { 10, 11, 12 } );
+            CollectionAssert.AreEqual( (byte[])reader.ReadValue(),
+                                       new byte[] {
+                                           10, 11, 12
+                                       } );
             Assert.IsTrue( reader.ReadToFollowing() ); // intArray
-            CollectionAssert.AreEqual( (int[])reader.ReadValue(), new[] { 20, 21, 22 } );
+            CollectionAssert.AreEqual( (int[])reader.ReadValue(),
+                                       new[] {
+                                           20, 21, 22
+                                       } );
             Assert.IsTrue( reader.ReadToFollowing() ); // string
             Assert.AreEqual( reader.ReadValue(), "123" );
         }
@@ -411,9 +424,15 @@ namespace fNbt.Test {
             Assert.IsTrue( reader.ReadToFollowing() ); // double
             Assert.AreEqual( reader.ReadValueAs<double>(), 6d );
             Assert.IsTrue( reader.ReadToFollowing() ); // byteArray
-            CollectionAssert.AreEqual( reader.ReadValueAs<byte[]>(), new byte[] { 10, 11, 12 } );
+            CollectionAssert.AreEqual( reader.ReadValueAs<byte[]>(),
+                                       new byte[] {
+                                           10, 11, 12
+                                       } );
             Assert.IsTrue( reader.ReadToFollowing() ); // intArray
-            CollectionAssert.AreEqual( reader.ReadValueAs<int[]>(), new[] { 20, 21, 22 } );
+            CollectionAssert.AreEqual( reader.ReadValueAs<int[]>(),
+                                       new[] {
+                                           20, 21, 22
+                                       } );
             Assert.IsTrue( reader.ReadToFollowing() ); // string
             Assert.AreEqual( reader.ReadValueAs<string>(), "123" );
         }
@@ -423,6 +442,10 @@ namespace fNbt.Test {
         public void ErrorTest() {
             NbtCompound root = new NbtCompound( "root" );
             byte[] testData = new NbtFile( root ).SaveToBuffer( NbtCompression.None );
+
+            // creating NbtReader without a stream, or with a non-readable stream
+            Assert.Throws<ArgumentNullException>( () => new NbtReader( null ) );
+            Assert.Throws<ArgumentException>( () => new NbtReader( new NonReadableStream() ) );
 
             // corrupt the data
             testData[0] = 123;
@@ -457,6 +480,21 @@ namespace fNbt.Test {
                     reader.ReadToFollowing();
                     reader.Skip();
                 }
+            }
+        }
+
+
+        class NonReadableStream : MemoryStream {
+            public override bool CanRead {
+                get { return false; }
+            }
+
+            public override int ReadByte() {
+                throw new NotSupportedException();
+            }
+
+            public override int Read( byte[] buffer, int offset, int count ) {
+                throw new NotSupportedException();
             }
         }
     }
