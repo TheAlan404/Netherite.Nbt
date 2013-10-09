@@ -4,8 +4,9 @@ using System.IO;
 using JetBrains.Annotations;
 
 namespace fNbt {
+    /// <summary> Slim writer for NBT tags.</summary>
     public sealed class NbtWriter {
-        public int Depth { get; private set; }
+        const int MaxStreamCopyBufferSize = 8 * 1024;
 
         readonly BinaryWriter writer;
         NbtTagType listType;
@@ -27,7 +28,6 @@ namespace fNbt {
             writer.Write( (byte)NbtTagType.Compound );
             writer.Write( rootTagName );
             parentType = NbtTagType.Compound;
-            Depth = 1;
         }
 
 
@@ -42,7 +42,6 @@ namespace fNbt {
                 ListIndex = listIndex
             };
             nodes.Push( newNode );
-            Depth++;
 
             parentType = thisType;
             listType = NbtTagType.Unknown;
@@ -61,7 +60,6 @@ namespace fNbt {
                 listSize = oldNode.ListSize;
                 listIndex = oldNode.ListIndex;
             }
-            Depth--;
         }
 
 
@@ -150,23 +148,69 @@ namespace fNbt {
         }
 
 
-        public void WriteByteArray( [NotNull] byte[] value ) {
-            if( value == null )
-                throw new ArgumentNullException( "value" );
-            EnforceConstraints( null, NbtTagType.ByteArray );
-            writer.Write( value.Length );
-            writer.Write( value, 0, value.Length );
+        public void WriteByteArray( [NotNull] byte[] data ) {
+            if( data == null )
+                throw new ArgumentNullException( "data" );
+            WriteByteArray( data, 0, data.Length );
         }
 
 
-        public void WriteByteArray( [NotNull] String tagName, [NotNull] byte[] value ) {
-            if( value == null )
-                throw new ArgumentNullException( "value" );
+        public void WriteByteArray( [NotNull] byte[] data, int offset, int count ) {
+            CheckArray( data, offset, count );
+            EnforceConstraints( null, NbtTagType.ByteArray );
+            writer.Write( data.Length );
+            writer.Write( data, 0, data.Length );
+        }
+
+
+        public void WriteByteArray( [NotNull] String tagName, [NotNull] byte[] data ) {
+            if( data == null )
+                throw new ArgumentNullException( "data" );
+            WriteByteArray( tagName, data, 0, data.Length );
+        }
+
+
+        public void WriteByteArray( [NotNull] String tagName, [NotNull] byte[] data, int offset, int count ) {
+            CheckArray( data, offset, count );
             EnforceConstraints( tagName, NbtTagType.ByteArray );
             writer.Write( (byte)NbtTagType.ByteArray );
             writer.Write( tagName );
-            writer.Write( value.Length );
-            writer.Write( value, 0, value.Length );
+            writer.Write( count );
+            writer.Write( data, offset, count );
+        }
+
+
+        public void WriteByteArray( [NotNull] String tagName, Stream dataSource, int count ) {
+            if( dataSource == null ) {
+                throw new ArgumentNullException( "dataSource" );
+            } else if( count < 0 ) {
+                throw new ArgumentOutOfRangeException( "count", "count may not be negative" );
+            }
+            int bufferSize = Math.Min( count, MaxStreamCopyBufferSize );
+            byte[] streamCopyBuffer = new byte[bufferSize];
+            WriteByteArray( tagName, dataSource, count, streamCopyBuffer );
+        }
+
+
+        public void WriteByteArray( [NotNull] String tagName, Stream dataSource, int count, byte[] buffer ) {
+            if( dataSource == null ) {
+                throw new ArgumentNullException( "dataSource" );
+            } else if( !dataSource.CanRead ) {
+                throw new ArgumentException( "Given stream does not support reading.", "dataSource" );
+            } else if( count < 0 ) {
+                throw new ArgumentOutOfRangeException( "count", "count may not be negative" );
+            }
+            EnforceConstraints( tagName, NbtTagType.ByteArray );
+            writer.Write( (byte)NbtTagType.ByteArray );
+            writer.Write( tagName );
+            writer.Write( count );
+            int bytesWritten = 0;
+            while( bytesWritten < count ) {
+                int bytesToRead = Math.Min( count - bytesWritten, buffer.Length );
+                int bytesRead = dataSource.Read( buffer, 0, bytesToRead );
+                writer.BaseStream.Write( buffer, 0, bytesRead );
+                bytesWritten += bytesRead;
+            }
         }
 
 
@@ -212,26 +256,38 @@ namespace fNbt {
         }
 
 
-        public void WriteIntArray( [NotNull] int[] value ) {
-            if( value == null )
-                throw new ArgumentNullException( "value" );
+        public void WriteIntArray( [NotNull] int[] data ) {
+            if( data == null )
+                throw new ArgumentNullException( "data" );
+            WriteIntArray( data, 0, data.Length );
+        }
+
+
+        public void WriteIntArray( [NotNull] int[] data, int offset, int count ) {
+            CheckArray( data, offset, count );
             EnforceConstraints( null, NbtTagType.IntArray );
-            writer.Write( value.Length );
-            for( int i = 0; i < value.Length; i++ ) {
-                writer.Write( value[i] );
+            writer.Write( count );
+            for( int i = offset; i < count; i++ ) {
+                writer.Write( data[i] );
             }
         }
 
 
-        public void WriteIntArray( [NotNull] String tagName, [NotNull] int[] value ) {
-            if( value == null )
-                throw new ArgumentNullException( "value" );
+        public void WriteIntArray( [NotNull] String tagName, [NotNull] int[] data ) {
+            if( data == null )
+                throw new ArgumentNullException( "data" );
+            WriteIntArray( tagName, data, 0, data.Length );
+        }
+
+
+        public void WriteIntArray( [NotNull] String tagName, [NotNull] int[] data, int offset, int count ) {
+            CheckArray( data, offset, count );
             EnforceConstraints( tagName, NbtTagType.IntArray );
             writer.Write( (byte)NbtTagType.IntArray );
             writer.Write( tagName );
-            writer.Write( value.Length );
-            for( int i = 0; i < value.Length; i++ ) {
-                writer.Write( value[i] );
+            writer.Write( count );
+            for( int i = offset; i < count; i++ ) {
+                writer.Write( data[i] );
             }
         }
 
@@ -319,6 +375,19 @@ namespace fNbt {
                 listIndex++;
             } else if( name == null ) {
                 throw new NbtFormatException( "Expecting a named tag." );
+            }
+        }
+
+
+        static void CheckArray( [NotNull] Array data, int offset, int count ) {
+            if( data == null ) {
+                throw new ArgumentNullException( "data" );
+            } else if( offset < 0 ) {
+                throw new ArgumentOutOfRangeException( "offset", "offset may not be negative." );
+            } else if( count < 0 ) {
+                throw new ArgumentOutOfRangeException( "count", "count may not be negative." );
+            } else if( (data.Length - offset) < count ) {
+                throw new ArgumentException( "count may not be greater than offset subtracted from the array length." );
             }
         }
     }
