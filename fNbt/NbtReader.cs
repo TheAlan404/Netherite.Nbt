@@ -323,7 +323,6 @@ namespace fNbt {
 
         // Goes one step down the NBT file's hierarchy, preserving current state
         void GoDown() {
-            //Console.WriteLine( "GoDown @ " + state );
             NbtReaderNode newNode = new NbtReaderNode {
                 ListIndex = ListIndex,
                 ParentTagLength = ParentTagLength,
@@ -345,7 +344,6 @@ namespace fNbt {
 
         // Goes one step up the NBT file's hierarchy, restoring previous state
         void GoUp() {
-            //Console.WriteLine( "GoUp @ " + state );
             NbtReaderNode oldNode = nodes.Pop();
 
             ParentName = oldNode.ParentName;
@@ -540,35 +538,29 @@ namespace fNbt {
                 throw new InvalidOperationException( NoValueToReadError );
             }
 
-            //Console.WriteLine( this + " ~ " + Depth );
             int startingDepth = Depth;
-            int lastDepth = Depth;
+            int parentDepth = Depth;
 
             do {
-                bool end = !ReadToFollowing();
-                //Console.WriteLine( this + " ~ "+Depth);
-                if( end || Depth < lastDepth ) {
-                    // Going up the file tree, or end of document: wrap up
-                    while( Depth < lastDepth && parent.Parent != null ) {
-                        //Console.WriteLine( "Depth=" + Depth + "  ld=" + lastDepth + "  p=" + parent.Name );
-                        parent = parent.Parent;
-                        lastDepth--;
-                    }
-                    //Console.WriteLine( "HALT Depth=" + Depth + "  ld=" + lastDepth + "  p=" + parent.Name );
+                ReadToFollowing();
+                // Going up the file tree, or end of document: wrap up
+                while( Depth <= parentDepth && parent.Parent != null ) {
+                    parent = parent.Parent;
+                    parentDepth--;
                 }
-                if( end || Depth <= startingDepth ) break;
+                if( Depth <= startingDepth ) break;
 
-                lastDepth = Depth;
                 NbtTag thisTag;
                 if( TagType == NbtTagType.Compound ) {
                     thisTag = new NbtCompound( TagName );
                     AddToParent( thisTag, parent );
                     parent = thisTag;
-                    lastDepth++;
+                    parentDepth = Depth;
                 } else if( TagType == NbtTagType.List ) {
                     thisTag = new NbtList( TagName, ListType );
                     AddToParent( thisTag, parent );
                     parent = thisTag;
+                    parentDepth = Depth;
                 } else {
                     thisTag = ReadValueAsTag();
                     AddToParent( thisTag, parent );
@@ -579,7 +571,7 @@ namespace fNbt {
         }
 
 
-        static void AddToParent( [NotNull] NbtTag thisTag, [NotNull] NbtTag parent ) {
+        void AddToParent( [NotNull] NbtTag thisTag, [NotNull] NbtTag parent ) {
             NbtList parentAsList = parent as NbtList;
             if( parentAsList != null ) {
                 parentAsList.Add( thisTag );
