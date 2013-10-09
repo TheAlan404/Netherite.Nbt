@@ -10,7 +10,7 @@ namespace fNbt {
     public class NbtReader {
         NbtParseState state = NbtParseState.AtStreamBeginning;
         readonly NbtBinaryReader reader;
-        readonly Stack<NbtReaderNode> nodes = new Stack<NbtReaderNode>();
+        Stack<NbtReaderNode> nodes;
         readonly long streamStartOffset;
         bool atValue;
         object valueCache;
@@ -323,6 +323,8 @@ namespace fNbt {
 
         // Goes one step down the NBT file's hierarchy, preserving current state
         void GoDown() {
+            if( nodes == null )
+                nodes = new Stack<NbtReaderNode>();
             NbtReaderNode newNode = new NbtReaderNode {
                 ListIndex = ListIndex,
                 ParentTagLength = ParentTagLength,
