@@ -60,6 +60,7 @@ namespace fNbt {
         /// <exception cref="ArgumentException"> If given tags are of mixed types. </exception>
         public NbtList( [NotNull] IEnumerable<NbtTag> tags )
             : this( null, tags, NbtTagType.Unknown ) {
+            // the base constructor will allow null "tags," but we don't want that in this constructor
             if( tags == null )
                 throw new ArgumentNullException( "tags" );
         }
@@ -83,6 +84,7 @@ namespace fNbt {
         /// <exception cref="ArgumentException"> If given tags are of mixed types. </exception>
         public NbtList( [CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags )
             : this( tagName, tags, NbtTagType.Unknown ) {
+            // the base constructor will allow null "tags," but we don't want that in this constructor
             if( tags == null )
                 throw new ArgumentNullException( "tags" );
         }
@@ -98,6 +100,7 @@ namespace fNbt {
         /// <exception cref="ArgumentException"> If given tags do not match <paramref name="givenListType"/>, or are of mixed types. </exception>
         public NbtList( [NotNull] IEnumerable<NbtTag> tags, NbtTagType givenListType )
             : this( null, tags, givenListType ) {
+            // the base constructor will allow null "tags," but we don't want that in this constructor
             if( tags == null )
                 throw new ArgumentNullException( "tags" );
         }
@@ -416,14 +419,18 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If <paramref name="newTag"/> does not match ListType. </exception>
         public void Add( [NotNull] NbtTag newTag ) {
-            if( newTag == null )
+            if( newTag == null ) {
                 throw new ArgumentNullException( "newTag" );
+            } else if( newTag.Parent != null ) {
+                throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
+            } else if( newTag == this ) {
+                throw new ArgumentException( "A list tag may only be added to itself." );
+            }
             if( listType == NbtTagType.Unknown ) {
                 listType = newTag.TagType;
             } else if( newTag.TagType != listType ) {
-                throw new ArgumentException( "Items in this list must be of type " + listType + ". Given type: " + newTag.TagType );
-            } else if( newTag.Parent != null ) {
-                throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
+                throw new ArgumentException( "Items in this list must be of type " + listType + ". Given type: " +
+                                             newTag.TagType );
             }
             tags.Add( newTag );
             newTag.Parent = this;
@@ -500,14 +507,12 @@ namespace fNbt {
 
         #region Implementation of IList and ICollection
 
-        void IList.Remove( object value ) {
-            NbtTag val = (NbtTag)value;
-            if( tags.Remove( val ) ) {
-                val.Parent = null;
-            }
+        void IList.Remove( [NotNull] object value ) {
+            Remove( (NbtTag)value );
         }
 
 
+        [NotNull]
         object IList.this[ int tagIndex ] {
             get {
                 return tags[tagIndex];
@@ -518,23 +523,23 @@ namespace fNbt {
         }
 
 
-        int IList.Add( object value ) {
+        int IList.Add( [NotNull] object value ) {
             Add( (NbtTag)value );
             return ( tags.Count - 1 );
         }
 
 
-        bool IList.Contains( object value ) {
+        bool IList.Contains( [NotNull] object value ) {
             return tags.Contains( (NbtTag)value );
         }
 
 
-        int IList.IndexOf( object value ) {
+        int IList.IndexOf( [NotNull] object value ) {
             return tags.IndexOf( (NbtTag)value );
         }
 
 
-        void IList.Insert( int index, object value ) {
+        void IList.Insert( int index, [NotNull] object value ) {
             Insert( index, (NbtTag)value );
         }
 
