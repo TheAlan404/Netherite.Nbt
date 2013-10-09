@@ -19,7 +19,8 @@ namespace fNbt {
         /// <summary> Initializes a new instance of the NbtReader class. </summary>
         /// <param name="stream"> Stream to read from. </param>
         /// <remarks> Assumes that data in the stream is Big-Endian encoded. </remarks>
-        /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c> </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c>. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="stream"/> is not readable. </exception>
         public NbtReader( [NotNull] Stream stream )
             : this( stream, true ) {}
 
@@ -27,7 +28,8 @@ namespace fNbt {
         /// <summary> Initializes a new instance of the NbtReader class. </summary>
         /// <param name="stream"> Stream to read from. </param>
         /// <param name="bigEndian"> Whether NBT data is in Big-Endian encoding. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c> </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c>. </exception>
+        /// <exception cref="ArgumentException"> <paramref name="stream"/> is not readable. </exception>
         public NbtReader( [NotNull] Stream stream, bool bigEndian ) {
             if( stream == null ) throw new ArgumentNullException( "stream" );
             SkipEndTags = true;
