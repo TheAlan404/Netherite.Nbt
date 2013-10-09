@@ -155,10 +155,12 @@ namespace fNbt {
                     throw new ArgumentNullException( "value" );
                 } else if( value.Parent != null ) {
                     throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
+                } else if( value == this || value == Parent ) {
+                    throw new ArgumentException( "A list tag may not be added to itself or to its child tag." );
+                }else if( value.Name != null ) {
+                    throw new ArgumentException( "Named tag given. A list may only contain unnamed tags." );
                 }
-                if( listType == NbtTagType.Unknown ) {
-                    listType = value.TagType;
-                } else if( value.TagType != listType ) {
+                if( listType != NbtTagType.Unknown && value.TagType != listType ) {
                     throw new ArgumentException( "Items must be of type " + listType );
                 }
                 tags[tagIndex] = value;
@@ -228,7 +230,7 @@ namespace fNbt {
 
             int length = readStream.ReadInt32();
             if( length < 0 ) {
-                throw new NbtFormatException( "Negative count given in TAG_List" );
+                throw new NbtFormatException( "Negative list size given." );
             }
 
             for( int i = 0; i < length; i++ ) {
@@ -269,7 +271,7 @@ namespace fNbt {
                     break;
                 default:
                     // should never happen, since ListType is checked beforehand
-                    throw new NbtFormatException( "Unsupported tag type found in NBT_Compound" );
+                    throw new NbtFormatException( "Unsupported tag type found in a list: " + ListType );
                 }
                 newTag.Parent = this;
                 if( newTag.ReadTag( readStream ) ) {
@@ -286,7 +288,7 @@ namespace fNbt {
 
             int length = readStream.ReadInt32();
             if( length < 0 ) {
-                throw new NbtFormatException( "Negative count given in TAG_List" );
+                throw new NbtFormatException( "Negative list size given." );
             }
 
             switch( ListType ) {
@@ -423,17 +425,20 @@ namespace fNbt {
                 throw new ArgumentNullException( "newTag" );
             } else if( newTag.Parent != null ) {
                 throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
-            } else if( newTag == this ) {
-                throw new ArgumentException( "A list tag may only be added to itself." );
+            } else if( newTag == this || newTag == Parent ) {
+                throw new ArgumentException( "A list tag may not be added to itself or to its child tag." );
+            } else if( newTag.Name != null ) {
+                throw new ArgumentException( "Named tag given. A list may only contain unnamed tags." );
             }
-            if( listType == NbtTagType.Unknown ) {
-                listType = newTag.TagType;
-            } else if( newTag.TagType != listType ) {
+            if( listType != NbtTagType.Unknown && newTag.TagType != listType ) {
                 throw new ArgumentException( "Items in this list must be of type " + listType + ". Given type: " +
                                              newTag.TagType );
             }
             tags.Add( newTag );
             newTag.Parent = this;
+            if( listType == NbtTagType.Unknown ) {
+                listType = newTag.TagType;
+            }
         }
 
 
