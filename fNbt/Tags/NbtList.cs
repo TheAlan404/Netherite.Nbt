@@ -26,12 +26,16 @@ namespace fNbt {
                 return listType;
             }
             set {
-                if( !Enum.IsDefined( typeof( NbtTagType ), value ) ) {
+                if( value < NbtTagType.Byte || ( value > NbtTagType.IntArray && value != NbtTagType.Unknown ) ) {
                     throw new ArgumentOutOfRangeException( "value" );
                 }
-                foreach( var tag in tags ) {
-                    if( tag.TagType != value ) {
-                        throw new ArgumentException( "All list items must be of specified tag type." );
+                if( tags.Count > 0 ) {
+                    NbtTagType actualType = tags[0].TagType;
+                    if( actualType != value ) {
+                        String msg = String.Format( "Given NbtTagType ({0}) does not match actual element type ({1})",
+                                                    value,
+                                                    actualType );
+                        throw new ArgumentException( msg );
                     }
                 }
                 listType = value;
@@ -127,7 +131,8 @@ namespace fNbt {
             this.tags = new List<NbtTag>();
             listType = givenListType;
 
-            if( !Enum.IsDefined( typeof( NbtTagType ), givenListType ) ) {
+            if( givenListType < NbtTagType.Byte ||
+                ( givenListType > NbtTagType.IntArray && givenListType != NbtTagType.Unknown ) ) {
                 throw new ArgumentOutOfRangeException( "givenListType" );
             }
 
