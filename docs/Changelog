@@ -1,4 +1,16 @@
-0.5.1 (fNBT)
+0.6.0 (fNbt)
+- Raised .NET framework requirements from 2.0+ to 3.5+
+- Added NbtWriter, for linearly writing NBT streams, similarly to XmlWriter.
+    It enables high-performance writing, without creating temp NbtTag objects.
+- Fixed handling of lists-of-lists and lists-of-compound-tags in NbtReader.
+- Fixed being able to add an NbtList to itself.
+- API changes:
+    Removed NbtCompound.ToArray(), use NbtCompound.Tags.ToArray() instead.
+    Removed NbtCompound.ToNameArray(), use NbtCompound.Names.ToArray() instead.
+- Improved tag reading and writing performance.
+- Expanded unit test coverage.
+
+0.5.1 (fNbt)
 - Fixed ToString() methods of NbtReader and some NbtTags not respecting the
     NbtTag.DefaultIndentString setting.
 - Fixed being able to add a Compound tag to itself.
@@ -9,7 +21,7 @@
     New NbtReader overload:     string ToString(bool,string)
 - Expanded unit test coverage.
 
-0.5.0 (fNBT)
+0.5.0 (fNbt)
 - Added NbtReader, for linearly reading NBT streams, similarly to XmlReader.
 - API additions:
     New NbtCompound method:     bool TryGet(string,out NbtTag)
