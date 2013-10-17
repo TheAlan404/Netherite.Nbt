@@ -22,11 +22,34 @@ namespace fNbt.Test {
                 } writer.EndCompound();
                 writer.Finish();
 
-                ms.Seek( 0, SeekOrigin.Begin );
+                ms.Position = 0;
                 NbtFile file = new NbtFile();
                 file.LoadFromStream( ms, NbtCompression.None );
 
                 TestFiles.AssertValueTest( file );
+            }
+        }
+
+
+        [Test]
+        public void ByteArrayFromStream() {
+            byte[] data = new byte[64*1024];
+            for( int i = 0; i < data.Length; i++ ) {
+                data[i] = unchecked( (byte)i );
+            }
+
+            using( MemoryStream ms = new MemoryStream() ) {
+                NbtWriter writer = new NbtWriter( ms, "root" );{
+                    using( NonSeekableStream dataStream = new NonSeekableStream(new MemoryStream(data)) ) {
+                        writer.WriteByteArray( "byteArray", dataStream, data.Length );
+                    }
+                } writer.EndCompound();
+                writer.Finish();
+
+                ms.Position = 0;
+                NbtFile file = new NbtFile();
+                file.LoadFromStream( ms, NbtCompression.None );
+                CollectionAssert.AreEqual( file.RootTag["byteArray"].ByteArrayValue, data );
             }
         }
 
@@ -144,7 +167,7 @@ namespace fNbt.Test {
 
                 ms.Position = 0;
                 NbtReader reader = new NbtReader( ms );
-                NbtTag root = reader.ReadAsTag();
+                Assert.DoesNotThrow( () => reader.ReadAsTag() );
             }
         }
 
@@ -187,6 +210,9 @@ namespace fNbt.Test {
 
                     writer.BeginList( "list", NbtTagType.Int, 1 );
 
+                    // invalid list type
+                    Assert.Throws<ArgumentOutOfRangeException>( () => writer.BeginList( NbtTagType.End, 0 ) );
+
                     // call EndCompound when not in a compound
                     Assert.Throws<NbtFormatException>( writer.EndCompound );
 
@@ -222,6 +248,9 @@ namespace fNbt.Test {
                     Assert.Throws<ArgumentNullException>( () => writer.WriteByteArray( null ) );
                     Assert.Throws<ArgumentNullException>( () => writer.WriteIntArray( null ) );
 
+                    // trying to read from non-readable stream
+                    Assert.Throws<ArgumentException>( () => writer.WriteByteArray( "ByteStream", new NonReadableStream(), 0 ) );
+
                     // finish too early
                     Assert.Throws<NbtFormatException>( writer.Finish );
 
@@ -234,6 +263,7 @@ namespace fNbt.Test {
             }
         }
 
+
         class NonWritableStream : MemoryStream {
             public override bool CanWrite {
                 get {
@@ -244,6 +274,20 @@ namespace fNbt.Test {
                 throw new NotSupportedException();
             }
             public override void Write( byte[] buffer, int offset, int count ) {
+                throw new NotSupportedException();
+            }
+        }
+
+        class NonReadableStream : MemoryStream {
+            public override bool CanRead {
+                get {
+                    return false;
+                }
+            }
+            public override int ReadByte() {
+                throw new NotSupportedException();
+            }
+            public override int Read( byte[] buffer, int offset, int count ) {
                 throw new NotSupportedException();
             }
         }

@@ -197,6 +197,9 @@ namespace fNbt.Test {
             // make sure that all those failed adds didn't affect the tag
             Assert.AreEqual( loopList.Count, 0 );
             Assert.AreEqual( loopList.ListType, NbtTagType.Unknown );
+
+            // try creating a list with invalid tag type
+            Assert.Throws<ArgumentOutOfRangeException>( () => new NbtList( NbtTagType.End ) );
         }
 
 
