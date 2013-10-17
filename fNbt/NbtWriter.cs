@@ -96,45 +96,53 @@ namespace fNbt {
 
 
         /// <summary> Begins an unnamed list tag. </summary>
-        /// <param name="type"> Type of elements of this list. </param>
+        /// <param name="elementType"> Type of elements of this list. </param>
         /// <param name="size"> Number of elements in this list. Must not be negative. </param>
         /// <exception cref="NbtFormatException"> No more tags can be written -OR-
         /// a named list tag was expected -OR- a tag of a different type was expected -OR-
         /// the size of a parent list has been exceeded. </exception>
-        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="size"/> is negative. </exception>
-        public void BeginList( NbtTagType type, int size ) {
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="size"/> is negative -OR-
+        /// <paramref name="elementType"/> is not a valid NbtTagType. </exception>
+        public void BeginList( NbtTagType elementType, int size ) {
             if( size < 0 ) {
                 throw new ArgumentOutOfRangeException( "size", "List size may not be negative." );
             }
+            if( elementType < NbtTagType.Byte || elementType > NbtTagType.IntArray ) {
+                throw new ArgumentOutOfRangeException( "elementType" );
+            }
             EnforceConstraints( null, NbtTagType.List );
             GoDown( NbtTagType.List );
-            listType = type;
+            listType = elementType;
             listSize = size;
 
-            writer.Write( (byte)type );
+            writer.Write( (byte)elementType );
             writer.Write( size );
         }
 
 
         /// <summary> Begins an unnamed list tag. </summary>
         /// <param name="tagName"> Name to give to this compound tag. May not be null. </param>
-        /// <param name="type"> Type of elements of this list. </param>
+        /// <param name="elementType"> Type of elements of this list. </param>
         /// <param name="size"> Number of elements in this list. Must not be negative. </param>
         /// <exception cref="NbtFormatException"> No more tags can be written -OR-
         /// an unnamed list tag was expected -OR- a tag of a different type was expected. </exception>
-        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="size"/> is negative. </exception>
-        public void BeginList( [NotNull] String tagName, NbtTagType type, int size ) {
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="size"/> is negative -OR-
+        /// <paramref name="elementType"/> is not a valid NbtTagType. </exception>
+        public void BeginList( [NotNull] String tagName, NbtTagType elementType, int size ) {
             if( size < 0 ) {
                 throw new ArgumentOutOfRangeException( "size", "List size may not be negative." );
             }
+            if( elementType < NbtTagType.Byte || elementType > NbtTagType.IntArray ) {
+                throw new ArgumentOutOfRangeException( "elementType" );
+            }
             EnforceConstraints( tagName, NbtTagType.List );
             GoDown( NbtTagType.List );
-            listType = type;
+            listType = elementType;
             listSize = size;
 
             writer.Write( (byte)NbtTagType.List );
             writer.Write( tagName );
-            writer.Write( (byte)type );
+            writer.Write( (byte)elementType );
             writer.Write( size );
         }
 
