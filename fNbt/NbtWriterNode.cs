@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-
-namespace fNbt {
+﻿namespace fNbt {
+    // Represents state of a node in the NBT file tree, used by NbtWriter
     sealed class NbtWriterNode {
         public NbtTagType ParentType;
         public NbtTagType ListType;
