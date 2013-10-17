@@ -26,24 +26,13 @@ applications that use fNbt; they are only used for testing.
 
 
 ==== DOWNLOAD =================================================================
-Latest version of fNbt requires .NET Framework 3.5+ (Client or Full Profile).
+Latest version of fNbt requires .NET Framework 3.5+ (client or full profile).
 
  Compiled binary:  http://fcraft.net/fnbt/fNbt_v0.6.0.zip
 
  Amalgamation (single source file):
     Non-annotated: http://fcraft.net/fnbt/fNbt_v0.6.0.cs
         Annotated: http://fcraft.net/fnbt/fNbt_v0.6.0_Annotated.cs
-                   (using JetBrains.Annotations, for ReSharper)
-
-
-==== DOWNLOAD: OLD VERSION (.NET 2.0) =========================================
-If you need .NET 2.0 support, stick to using fNbt version 0.5.1:
-
- Compiled binary:  http://fcraft.net/fnbt/fNbt_v0.5.1.zip
-
- Amalgamation (single source file):
-    Non-annotated: http://fcraft.net/fnbt/fNbt_v0.5.1.cs
-        Annotated: http://fcraft.net/fnbt/fNbt_v0.5.1_Annotated.cs
                    (using JetBrains.Annotations, for ReSharper)
 
 
@@ -119,3 +108,15 @@ fNbt makes use of the NUnit testing framework (www.nunit.org)
 
 ==== VERSION HISTORY ==========================================================
 See ./docs/Changelog
+
+
+==== OLD VERSIONS =============================================================
+If you need .NET 2.0 support, stick to using fNbt version 0.5.1.
+Note that this 0.5.x branch of fNbt is no longer supported or updated.
+
+ Compiled binary:  http://fcraft.net/fnbt/fNbt_v0.5.1.zip
+
+ Amalgamation (single source file):
+    Non-annotated: http://fcraft.net/fnbt/fNbt_v0.5.1.cs
+        Annotated: http://fcraft.net/fnbt/fNbt_v0.5.1_Annotated.cs
+                   (using JetBrains.Annotations, for ReSharper)
