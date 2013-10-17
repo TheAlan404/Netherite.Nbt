@@ -54,7 +54,7 @@ namespace fNbt {
                 if( parentAsCompound != null ) {
                     if( value == null ) {
                         throw new ArgumentNullException( "value", "Name of tags inside an NbtCompound may not be null." );
-                    }else if( name != null ) {
+                    } else if( name != null ) {
                         parentAsCompound.RenameTag( name, value );
                     }
                 }
@@ -154,12 +154,12 @@ namespace fNbt {
         public short ShortValue {
             get {
                 switch( TagType ) {
-                case NbtTagType.Byte:
-                    return ( (NbtByte)this ).Value;
-                case NbtTagType.Short:
-                    return ( (NbtShort)this ).Value;
-                default:
-                    throw new InvalidCastException( "Cannot get ShortValue from " + GetCanonicalTagName( TagType ) );
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get ShortValue from " + GetCanonicalTagName( TagType ) );
                 }
             }
         }
@@ -171,14 +171,14 @@ namespace fNbt {
         public int IntValue {
             get {
                 switch( TagType ) {
-                case NbtTagType.Byte:
-                    return ( (NbtByte)this ).Value;
-                case NbtTagType.Short:
-                    return ( (NbtShort)this ).Value;
-                case NbtTagType.Int:
-                    return ( (NbtInt)this ).Value;
-                default:
-                    throw new InvalidCastException( "Cannot get IntValue from " + GetCanonicalTagName( TagType ) );
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get IntValue from " + GetCanonicalTagName( TagType ) );
                 }
             }
         }
@@ -190,16 +190,16 @@ namespace fNbt {
         public long LongValue {
             get {
                 switch( TagType ) {
-                case NbtTagType.Byte:
-                    return ( (NbtByte)this ).Value;
-                case NbtTagType.Short:
-                    return ( (NbtShort)this ).Value;
-                case NbtTagType.Int:
-                    return ( (NbtInt)this ).Value;
-                case NbtTagType.Long:
-                    return ( (NbtLong)this ).Value;
-                default:
-                    throw new InvalidCastException( "Cannot get LongValue from " + GetCanonicalTagName( TagType ) );
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value;
+                    case NbtTagType.Long:
+                        return ( (NbtLong)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get LongValue from " + GetCanonicalTagName( TagType ) );
                 }
             }
         }
@@ -211,20 +211,20 @@ namespace fNbt {
         public float FloatValue {
             get {
                 switch( TagType ) {
-                case NbtTagType.Byte:
-                    return ( (NbtByte)this ).Value;
-                case NbtTagType.Short:
-                    return ( (NbtShort)this ).Value;
-                case NbtTagType.Int:
-                    return ( (NbtInt)this ).Value;
-                case NbtTagType.Long:
-                    return ( (NbtLong)this ).Value;
-                case NbtTagType.Float:
-                    return ( (NbtFloat)this ).Value;
-                case NbtTagType.Double:
-                    return (float)( (NbtDouble)this ).Value;
-                default:
-                    throw new InvalidCastException( "Cannot get FloatValue from " + GetCanonicalTagName( TagType ) );
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value;
+                    case NbtTagType.Long:
+                        return ( (NbtLong)this ).Value;
+                    case NbtTagType.Float:
+                        return ( (NbtFloat)this ).Value;
+                    case NbtTagType.Double:
+                        return (float)( (NbtDouble)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get FloatValue from " + GetCanonicalTagName( TagType ) );
                 }
             }
         }
@@ -236,20 +236,20 @@ namespace fNbt {
         public double DoubleValue {
             get {
                 switch( TagType ) {
-                case NbtTagType.Byte:
-                    return ( (NbtByte)this ).Value;
-                case NbtTagType.Short:
-                    return ( (NbtShort)this ).Value;
-                case NbtTagType.Int:
-                    return ( (NbtInt)this ).Value;
-                case NbtTagType.Long:
-                    return ( (NbtLong)this ).Value;
-                case NbtTagType.Float:
-                    return ( (NbtFloat)this ).Value;
-                case NbtTagType.Double:
-                    return ( (NbtDouble)this ).Value;
-                default:
-                    throw new InvalidCastException( "Cannot get DoubleValue from " + GetCanonicalTagName( TagType ) );
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value;
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value;
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value;
+                    case NbtTagType.Long:
+                        return ( (NbtLong)this ).Value;
+                    case NbtTagType.Float:
+                        return ( (NbtFloat)this ).Value;
+                    case NbtTagType.Double:
+                        return ( (NbtDouble)this ).Value;
+                    default:
+                        throw new InvalidCastException( "Cannot get DoubleValue from " + GetCanonicalTagName( TagType ) );
                 }
             }
         }
@@ -290,22 +290,22 @@ namespace fNbt {
         public string StringValue {
             get {
                 switch( TagType ) {
-                case NbtTagType.String:
-                    return ( (NbtString)this ).Value;
-                case NbtTagType.Byte:
-                    return ( (NbtByte)this ).Value.ToString( CultureInfo.InvariantCulture );
-                case NbtTagType.Double:
-                    return ( (NbtDouble)this ).Value.ToString( CultureInfo.InvariantCulture );
-                case NbtTagType.Float:
-                    return ( (NbtFloat)this ).Value.ToString( CultureInfo.InvariantCulture );
-                case NbtTagType.Int:
-                    return ( (NbtInt)this ).Value.ToString( CultureInfo.InvariantCulture );
-                case NbtTagType.Long:
-                    return ( (NbtLong)this ).Value.ToString( CultureInfo.InvariantCulture );
-                case NbtTagType.Short:
-                    return ( (NbtShort)this ).Value.ToString( CultureInfo.InvariantCulture );
-                default:
-                    throw new InvalidCastException( "Cannot get StringValue from " + GetCanonicalTagName( TagType ) );
+                    case NbtTagType.String:
+                        return ( (NbtString)this ).Value;
+                    case NbtTagType.Byte:
+                        return ( (NbtByte)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Double:
+                        return ( (NbtDouble)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Float:
+                        return ( (NbtFloat)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Int:
+                        return ( (NbtInt)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Long:
+                        return ( (NbtLong)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    case NbtTagType.Short:
+                        return ( (NbtShort)this ).Value.ToString( CultureInfo.InvariantCulture );
+                    default:
+                        throw new InvalidCastException( "Cannot get StringValue from " + GetCanonicalTagName( TagType ) );
                 }
             }
         }
@@ -321,32 +321,32 @@ namespace fNbt {
         [CanBeNull]
         public static string GetCanonicalTagName( NbtTagType type ) {
             switch( type ) {
-            case NbtTagType.Byte:
-                return "TAG_Byte";
-            case NbtTagType.ByteArray:
-                return "TAG_Byte_Array";
-            case NbtTagType.Compound:
-                return "TAG_Compound";
-            case NbtTagType.Double:
-                return "TAG_Double";
-            case NbtTagType.End:
-                return "TAG_End";
-            case NbtTagType.Float:
-                return "TAG_Float";
-            case NbtTagType.Int:
-                return "TAG_Int";
-            case NbtTagType.IntArray:
-                return "TAG_Int_Array";
-            case NbtTagType.List:
-                return "TAG_List";
-            case NbtTagType.Long:
-                return "TAG_Long";
-            case NbtTagType.Short:
-                return "TAG_Short";
-            case NbtTagType.String:
-                return "TAG_String";
-            default:
-                return null;
+                case NbtTagType.Byte:
+                    return "TAG_Byte";
+                case NbtTagType.ByteArray:
+                    return "TAG_Byte_Array";
+                case NbtTagType.Compound:
+                    return "TAG_Compound";
+                case NbtTagType.Double:
+                    return "TAG_Double";
+                case NbtTagType.End:
+                    return "TAG_End";
+                case NbtTagType.Float:
+                    return "TAG_Float";
+                case NbtTagType.Int:
+                    return "TAG_Int";
+                case NbtTagType.IntArray:
+                    return "TAG_Int_Array";
+                case NbtTagType.List:
+                    return "TAG_List";
+                case NbtTagType.Long:
+                    return "TAG_Long";
+                case NbtTagType.Short:
+                    return "TAG_Short";
+                case NbtTagType.String:
+                    return "TAG_String";
+                default:
+                    return null;
             }
         }
 

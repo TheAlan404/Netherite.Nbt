@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
 namespace JetBrains.Annotations {
@@ -20,20 +21,18 @@ namespace JetBrains.Annotations {
     /// so the check for <c>null</c> is necessary before its usage. </summary>
     [AttributeUsage(
         AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Delegate |
-        AttributeTargets.Field,
-        AllowMultiple = false, Inherited = true )]
-    sealed class CanBeNullAttribute : Attribute {}
+        AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+    internal sealed class CanBeNullAttribute : Attribute {}
 
 
     /// <summary> Indicates that the value of marked element could never be <c>null</c>. </summary>
     [AttributeUsage(
         AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Delegate |
-        AttributeTargets.Field,
-        AllowMultiple = false, Inherited = true )]
-    sealed class NotNullAttribute : Attribute {}
+        AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+    internal sealed class NotNullAttribute : Attribute {}
 
 
     /// <summary> Indicates that method doesn't contain observable side effects. </summary>
     [AttributeUsage( AttributeTargets.Method, Inherited = true )]
-    sealed class PureAttribute : Attribute {}
+    internal sealed class PureAttribute : Attribute {}
 }

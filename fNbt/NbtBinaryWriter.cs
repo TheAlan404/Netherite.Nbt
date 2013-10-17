@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 namespace fNbt {
     /// <summary> BinaryWriter wrapper that takes care of writing primitives to an NBT stream,
     /// while taking care of endianness and string encoding. </summary>
-    sealed class NbtBinaryWriter : BinaryWriter {
+    internal sealed class NbtBinaryWriter : BinaryWriter {
         readonly bool swapNeeded;
         readonly byte[] stringConversionBuffer = new byte[64];
         const int MaxBufferedStringLength = 16;
@@ -14,7 +14,7 @@ namespace fNbt {
 
         public NbtBinaryWriter( [NotNull] Stream input, bool bigEndian )
             : base( input ) {
-            swapNeeded = (BitConverter.IsLittleEndian == bigEndian);
+            swapNeeded = ( BitConverter.IsLittleEndian == bigEndian );
         }
 
 

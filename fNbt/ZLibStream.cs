@@ -5,7 +5,7 @@ using System.IO.Compression;
 namespace fNbt {
     /// <summary> DeflateStream wrapper that calculates Adler32 checksum of the written data,
     /// to allow writing ZLib header (RFC-1950). </summary>
-    sealed class ZLibStream : DeflateStream {
+    internal sealed class ZLibStream : DeflateStream {
         int adler32A = 1,
             adler32B;
 

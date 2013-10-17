@@ -31,7 +31,8 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> <paramref name="stream"/> is not readable. </exception>
         public NbtReader( [NotNull] Stream stream, bool bigEndian ) {
-            if( stream == null ) throw new ArgumentNullException( "stream" );
+            if( stream == null )
+                throw new ArgumentNullException( "stream" );
             SkipEndTags = true;
             CacheTagValues = false;
             ParentTagType = NbtTagType.Unknown;
@@ -165,7 +166,9 @@ namespace fNbt {
         /// <summary> Gets whether this NbtReader instance is in state of error.
         /// No further reading can be done from this instance if a parse error occurred. </summary>
         public bool IsInErrorState {
-            get { return (state == NbtParseState.Error); }
+            get {
+                return ( state == NbtParseState.Error );
+            }
         }
 
 
@@ -280,13 +283,13 @@ namespace fNbt {
 
         void ReadTagHeader( bool readName ) {
             TagsRead++;
-            TagName = (readName ? reader.ReadString() : null);
+            TagName = ( readName ? reader.ReadString() : null );
 
             valueCache = null;
             TagLength = 0;
             atValue = false;
             ListType = NbtTagType.Unknown;
-            
+
             switch( TagType ) {
                 case NbtTagType.Byte:
                 case NbtTagType.Short:
@@ -550,7 +553,8 @@ namespace fNbt {
                     parent = parent.Parent;
                     parentDepth--;
                 }
-                if( Depth <= startingDepth ) break;
+                if( Depth <= startingDepth )
+                    break;
 
                 NbtTag thisTag;
                 if( TagType == NbtTagType.Compound ) {

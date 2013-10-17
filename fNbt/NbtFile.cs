@@ -245,8 +245,7 @@ namespace fNbt {
         /// <exception cref="EndOfStreamException"> If file ended earlier than expected. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
-        public int LoadFromStream( [NotNull] Stream stream, NbtCompression compression,
-                                   [CanBeNull] TagSelector selector ) {
+        public int LoadFromStream( [NotNull] Stream stream, NbtCompression compression, [CanBeNull] TagSelector selector ) {
             if( stream == null )
                 throw new ArgumentNullException( "stream" );
 
@@ -542,8 +541,7 @@ namespace fNbt {
                 throw new ArgumentNullException( "fileName" );
             }
             if( !File.Exists( fileName ) ) {
-                throw new FileNotFoundException( "Could not find the given NBT file.",
-                                                 fileName );
+                throw new FileNotFoundException( "Could not find the given NBT file.", fileName );
             }
             if( bufferSize < 0 ) {
                 throw new ArgumentOutOfRangeException( "bufferSize", bufferSize, "DefaultBufferSize cannot be negative." );
@@ -569,7 +567,8 @@ namespace fNbt {
         [NotNull]
         public static string ReadRootTagName( [NotNull] Stream stream, NbtCompression compression, bool bigEndian,
                                               int bufferSize ) {
-            if( stream == null ) throw new ArgumentNullException( "stream" );
+            if( stream == null )
+                throw new ArgumentNullException( "stream" );
             if( bufferSize < 0 ) {
                 throw new ArgumentOutOfRangeException( "bufferSize", bufferSize, "DefaultBufferSize cannot be negative." );
             }
@@ -612,7 +611,8 @@ namespace fNbt {
 
         [NotNull]
         static string GetRootNameInternal( [NotNull] Stream stream, bool bigEndian ) {
-            if( stream == null ) throw new ArgumentNullException( "stream" );
+            if( stream == null )
+                throw new ArgumentNullException( "stream" );
             if( stream.ReadByte() != (int)NbtTagType.Compound ) {
                 throw new NbtFormatException( "Given NBT stream does not start with a TAG_Compound" );
             }

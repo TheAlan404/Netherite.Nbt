@@ -162,7 +162,7 @@ namespace fNbt {
                     throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
                 } else if( value == this || value == Parent ) {
                     throw new ArgumentException( "A list tag may not be added to itself or to its child tag." );
-                }else if( value.Name != null ) {
+                } else if( value.Name != null ) {
                     throw new ArgumentException( "Named tag given. A list may only contain unnamed tags." );
                 }
                 if( listType != NbtTagType.Unknown && value.TagType != listType ) {
@@ -180,7 +180,8 @@ namespace fNbt {
         /// <returns> The tag with the specified key. </returns>
         /// <exception cref="ArgumentOutOfRangeException"> <paramref name="tagIndex"/> is not a valid index in the NbtList. </exception>
         /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
-        [NotNull, Pure]
+        [NotNull]
+        [Pure]
         public T Get<T>( int tagIndex ) where T : NbtTag {
             return (T)tags[tagIndex];
         }
@@ -201,7 +202,8 @@ namespace fNbt {
 
         /// <summary> Copies all tags in this NbtList to an array. </summary>
         /// <returns> Array of NbtTags. </returns>
-        [NotNull, Pure]
+        [NotNull]
+        [Pure]
         // ReSharper disable ReturnTypeCanBeEnumerable.Global
         public NbtTag[] ToArray() {
             // ReSharper restore ReturnTypeCanBeEnumerable.Global
@@ -213,7 +215,8 @@ namespace fNbt {
         /// <typeparam name="T"> Type to cast every member of NbtList to. Must derive from NbtTag. </typeparam>
         /// <returns> Array of NbtTags cast to the desired type. </returns>
         /// <exception cref="InvalidCastException"> If contents of this list cannot be cast to the given type. </exception>
-        [NotNull, Pure]
+        [NotNull]
+        [Pure]
         public T[] ToArray<T>() where T : NbtTag {
             T[] result = new T[tags.Count];
             for( int i = 0; i < result.Length; i++ ) {
@@ -241,42 +244,42 @@ namespace fNbt {
             for( int i = 0; i < length; i++ ) {
                 NbtTag newTag;
                 switch( ListType ) {
-                case NbtTagType.Byte:
-                    newTag = new NbtByte();
-                    break;
-                case NbtTagType.Short:
-                    newTag = new NbtShort();
-                    break;
-                case NbtTagType.Int:
-                    newTag = new NbtInt();
-                    break;
-                case NbtTagType.Long:
-                    newTag = new NbtLong();
-                    break;
-                case NbtTagType.Float:
-                    newTag = new NbtFloat();
-                    break;
-                case NbtTagType.Double:
-                    newTag = new NbtDouble();
-                    break;
-                case NbtTagType.ByteArray:
-                    newTag = new NbtByteArray();
-                    break;
-                case NbtTagType.String:
-                    newTag = new NbtString();
-                    break;
-                case NbtTagType.List:
-                    newTag = new NbtList();
-                    break;
-                case NbtTagType.Compound:
-                    newTag = new NbtCompound();
-                    break;
-                case NbtTagType.IntArray:
-                    newTag = new NbtIntArray();
-                    break;
-                default:
-                    // should never happen, since ListType is checked beforehand
-                    throw new NbtFormatException( "Unsupported tag type found in a list: " + ListType );
+                    case NbtTagType.Byte:
+                        newTag = new NbtByte();
+                        break;
+                    case NbtTagType.Short:
+                        newTag = new NbtShort();
+                        break;
+                    case NbtTagType.Int:
+                        newTag = new NbtInt();
+                        break;
+                    case NbtTagType.Long:
+                        newTag = new NbtLong();
+                        break;
+                    case NbtTagType.Float:
+                        newTag = new NbtFloat();
+                        break;
+                    case NbtTagType.Double:
+                        newTag = new NbtDouble();
+                        break;
+                    case NbtTagType.ByteArray:
+                        newTag = new NbtByteArray();
+                        break;
+                    case NbtTagType.String:
+                        newTag = new NbtString();
+                        break;
+                    case NbtTagType.List:
+                        newTag = new NbtList();
+                        break;
+                    case NbtTagType.Compound:
+                        newTag = new NbtCompound();
+                        break;
+                    case NbtTagType.IntArray:
+                        newTag = new NbtIntArray();
+                        break;
+                    default:
+                        // should never happen, since ListType is checked beforehand
+                        throw new NbtFormatException( "Unsupported tag type found in a list: " + ListType );
                 }
                 newTag.Parent = this;
                 if( newTag.ReadTag( readStream ) ) {
@@ -297,45 +300,45 @@ namespace fNbt {
             }
 
             switch( ListType ) {
-            case NbtTagType.Byte:
-                readStream.Skip( length );
-                break;
-            case NbtTagType.Short:
-                readStream.Skip( length * sizeof( short ) );
-                break;
-            case NbtTagType.Int:
-                readStream.Skip( length * sizeof( int ) );
-                break;
-            case NbtTagType.Long:
-                readStream.Skip( length * sizeof( long ) );
-                break;
-            case NbtTagType.Float:
-                readStream.Skip( length * sizeof( float ) );
-                break;
-            case NbtTagType.Double:
-                readStream.Skip( length * sizeof( double ) );
-                break;
-            default:
-                for( int i = 0; i < length; i++ ) {
-                    switch( listType ) {
-                    case NbtTagType.ByteArray:
-                        new NbtByteArray().SkipTag( readStream );
-                        break;
-                    case NbtTagType.String:
-                        readStream.SkipString();
-                        break;
-                    case NbtTagType.List:
-                        new NbtList().SkipTag( readStream );
-                        break;
-                    case NbtTagType.Compound:
-                        new NbtCompound().SkipTag( readStream );
-                        break;
-                    case NbtTagType.IntArray:
-                        new NbtIntArray().SkipTag( readStream );
-                        break;
+                case NbtTagType.Byte:
+                    readStream.Skip( length );
+                    break;
+                case NbtTagType.Short:
+                    readStream.Skip( length * sizeof( short ) );
+                    break;
+                case NbtTagType.Int:
+                    readStream.Skip( length * sizeof( int ) );
+                    break;
+                case NbtTagType.Long:
+                    readStream.Skip( length * sizeof( long ) );
+                    break;
+                case NbtTagType.Float:
+                    readStream.Skip( length * sizeof( float ) );
+                    break;
+                case NbtTagType.Double:
+                    readStream.Skip( length * sizeof( double ) );
+                    break;
+                default:
+                    for( int i = 0; i < length; i++ ) {
+                        switch( listType ) {
+                            case NbtTagType.ByteArray:
+                                new NbtByteArray().SkipTag( readStream );
+                                break;
+                            case NbtTagType.String:
+                                readStream.SkipString();
+                                break;
+                            case NbtTagType.List:
+                                new NbtList().SkipTag( readStream );
+                                break;
+                            case NbtTagType.Compound:
+                                new NbtCompound().SkipTag( readStream );
+                                break;
+                            case NbtTagType.IntArray:
+                                new NbtIntArray().SkipTag( readStream );
+                                break;
+                        }
                     }
-                }
-                break;
+                    break;
             }
         }
 
