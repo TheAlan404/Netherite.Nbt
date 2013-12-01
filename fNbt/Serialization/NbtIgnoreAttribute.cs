@@ -1,10 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace fNbt.Serialization
-{
-    public class NbtIgnoreAttribute : Attribute
-    {
-    }
+namespace fNbt.Serialization {
+    public class NbtIgnoreAttribute : Attribute {}
 }
