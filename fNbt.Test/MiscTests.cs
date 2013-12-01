@@ -6,7 +6,7 @@ namespace fNbt.Test {
         [Test]
         public void ByteArrayIndexerTest() {
             // test getting/settings values of byte array tag via indexer
-            NbtByteArray byteArray = new NbtByteArray( "Test" );
+            var byteArray = new NbtByteArray( "Test" );
             CollectionAssert.AreEqual( byteArray.Value, new byte[0] );
             byteArray.Value = new byte[] {
                 1, 2, 3
@@ -22,7 +22,7 @@ namespace fNbt.Test {
         [Test]
         public void IntArrayIndexerTest() {
             // test getting/settings values of int array tag via indexer
-            NbtIntArray byteArray = new NbtIntArray( "Test" );
+            var byteArray = new NbtIntArray( "Test" );
             CollectionAssert.AreEqual( byteArray.Value, new int[0] );
             byteArray.Value = new int[] {
                 1, 2000, -3000000
@@ -53,7 +53,7 @@ namespace fNbt.Test {
         [Test]
         public void PathTest() {
             // test NbtTag.Path property
-            NbtCompound testComp = new NbtCompound {
+            var testComp = new NbtCompound {
                 new NbtCompound( "Compound" ) {
                     new NbtCompound( "InsideCompound" )
                 },

@@ -84,8 +84,8 @@ namespace fNbt.Test {
         [Test]
         public void LoadingBigFileStream() {
             byte[] fileBytes = File.ReadAllBytes( TestFiles.Big );
-            using( MemoryStream ms = new MemoryStream( fileBytes ) ) {
-                using( NonSeekableStream nss = new NonSeekableStream( ms ) ) {
+            using( var ms = new MemoryStream( fileBytes ) ) {
+                using( var nss = new NonSeekableStream( ms ) ) {
                     var file = new NbtFile();
                     int length = file.LoadFromStream( nss, NbtCompression.None, null );
                     TestFiles.AssertNbtBigFile( file );
@@ -109,7 +109,7 @@ namespace fNbt.Test {
         [Test]
         public void TestNbtSmallFileSavingUncompressedStream() {
             NbtFile file = TestFiles.MakeSmallFile();
-            MemoryStream nbtStream = new MemoryStream();
+            var nbtStream = new MemoryStream();
             file.SaveToStream( nbtStream, NbtCompression.None );
             FileStream testFileStream = File.OpenRead( TestFiles.Small );
             FileAssert.AreEqual( testFileStream, nbtStream );
@@ -128,7 +128,7 @@ namespace fNbt.Test {
 
 
         void ReloadFileInternal( String fileName, NbtCompression compression, bool bigEndian ) {
-            NbtFile loadedFile = new NbtFile( Path.Combine( TestFiles.DirName, fileName ) );
+            var loadedFile = new NbtFile( Path.Combine( TestFiles.DirName, fileName ) );
             loadedFile.BigEndian = bigEndian;
             int bytesWritten = loadedFile.SaveToFile( Path.Combine( TestDirName, fileName ), compression );
             int bytesRead = loadedFile.LoadFromFile( Path.Combine(TestDirName,fileName), NbtCompression.AutoDetect, null );
@@ -139,9 +139,9 @@ namespace fNbt.Test {
 
         [Test]
         public void ReloadNonSeekableStream() {
-            NbtFile loadedFile = new NbtFile(TestFiles.Big );
-            using( MemoryStream ms = new MemoryStream() ) {
-                using( NonSeekableStream nss = new NonSeekableStream( ms ) ) {
+            var loadedFile = new NbtFile(TestFiles.Big );
+            using( var ms = new MemoryStream() ) {
+                using( var nss = new NonSeekableStream( ms ) ) {
                     int bytesWritten = loadedFile.SaveToStream( nss, NbtCompression.None );
                     ms.Position = 0;
                     Assert.Throws<NotSupportedException>( () => loadedFile.LoadFromStream( nss, NbtCompression.AutoDetect ) );
@@ -167,9 +167,9 @@ namespace fNbt.Test {
 
 
         void LoadFromStreamInternal( String fileName, NbtCompression compression ) {
-            NbtFile file = new NbtFile();
+            var file = new NbtFile();
             byte[] fileBytes = File.ReadAllBytes( fileName );
-            using( MemoryStream ms = new MemoryStream( fileBytes ) ) {
+            using( var ms = new MemoryStream( fileBytes ) ) {
                 file.LoadFromStream( ms, compression );
             }
         }
@@ -177,11 +177,11 @@ namespace fNbt.Test {
 
         [Test]
         public void SaveToBuffer() {
-            NbtCompound littleTag = new NbtCompound( "Root" );
-            NbtFile testFile = new NbtFile( littleTag );
+            var littleTag = new NbtCompound( "Root" );
+            var testFile = new NbtFile( littleTag );
 
             byte[] buffer1 = testFile.SaveToBuffer( NbtCompression.None );
-            byte[] buffer2 = new byte[buffer1.Length];
+            var buffer2 = new byte[buffer1.Length];
             Assert.AreEqual( testFile.SaveToBuffer( buffer2, 0, NbtCompression.None ), buffer2.Length );
             CollectionAssert.AreEqual( buffer1, buffer2 );
         }
@@ -189,7 +189,7 @@ namespace fNbt.Test {
 
         [Test]
         public void PrettyPrint() {
-            NbtFile loadedFile = new NbtFile( TestFiles.Big );
+            var loadedFile = new NbtFile( TestFiles.Big );
             Assert.AreEqual( loadedFile.ToString(), loadedFile.RootTag.ToString() );
             Assert.AreEqual( loadedFile.ToString( "   " ), loadedFile.RootTag.ToString( "   " ) );
             Assert.Throws<ArgumentNullException>( () => loadedFile.ToString( null ) );
@@ -217,8 +217,8 @@ namespace fNbt.Test {
             Assert.AreEqual( NbtFile.ReadRootTagName( fileName, compression, true, 0 ), "Level" );
 
             byte[] fileBytes = File.ReadAllBytes( fileName );
-            using( MemoryStream ms = new MemoryStream( fileBytes ) ) {
-                using( NonSeekableStream nss = new NonSeekableStream( ms ) ) {
+            using( var ms = new MemoryStream( fileBytes ) ) {
+                using( var nss = new NonSeekableStream( ms ) ) {
                     Assert.Throws<ArgumentOutOfRangeException>(
                         () => NbtFile.ReadRootTagName( nss, compression, true, -1 ) );
                     NbtFile.ReadRootTagName( nss, compression, true, 0 );
@@ -230,7 +230,7 @@ namespace fNbt.Test {
         [TearDown]
         public void NbtFileTestTearDown() {
             if( Directory.Exists( TestDirName ) ) {
-                foreach( var file in Directory.GetFiles( TestDirName ) ) {
+                foreach( string file in Directory.GetFiles( TestDirName ) ) {
                     File.Delete( file );
                 }
                 Directory.Delete( TestDirName );

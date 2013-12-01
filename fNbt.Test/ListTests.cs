@@ -11,13 +11,13 @@ namespace fNbt.Test {
         [Test]
         public void InterfaceImplementation() {
             // prepare our test lists
-            List<NbtTag> referenceList = new List<NbtTag> {
+            var referenceList = new List<NbtTag> {
                 new NbtInt( 1 ),
                 new NbtInt( 2 ),
                 new NbtInt( 3 )
             };
-            NbtInt testTag = new NbtInt(4);
-            NbtList originalList = new NbtList( referenceList );
+            var testTag = new NbtInt(4);
+            var originalList = new NbtList( referenceList );
 
             // check IList implementations
             IList iList = originalList;
@@ -53,7 +53,7 @@ namespace fNbt.Test {
             Assert.NotNull( iList.SyncRoot );
 
             // check IList.CopyTo
-            NbtInt[] exportTest = new NbtInt[iList.Count];
+            var exportTest = new NbtInt[iList.Count];
             iList.CopyTo( exportTest, 0 );
             CollectionAssert.AreEqual( iList, exportTest );
 
@@ -76,11 +76,11 @@ namespace fNbt.Test {
 
         [Test]
         public void IndexerTest() {
-            NbtList secondList = new NbtList {
+            var secondList = new NbtList {
                 new NbtByte()
             };
 
-            NbtList testList = new NbtList();
+            var testList = new NbtList();
             // Trying to set an out-of-range element
             Assert.Throws<ArgumentOutOfRangeException>( () => testList[0] = new NbtByte( 1 ) );
 
@@ -106,7 +106,7 @@ namespace fNbt.Test {
         [Test]
         public void InitializingListFromCollection() {
             // auto-detecting list type
-            NbtList test1 = new NbtList( "Test1", new NbtTag[] {
+            var test1 = new NbtList( "Test1", new NbtTag[] {
                 new NbtInt( 1 ),
                 new NbtInt( 2 ),
                 new NbtInt( 3 )
@@ -151,7 +151,7 @@ namespace fNbt.Test {
                 new NbtInt( 2 )
             };
 
-            NbtList list = new NbtList( "Test1", sameTags );
+            var list = new NbtList( "Test1", sameTags );
 
             // testing enumerator, indexer, Contains, and IndexOf
             int j = 0;
@@ -184,7 +184,7 @@ namespace fNbt.Test {
 
             // Test some failure scenarios for Add:
             // adding a list to itself
-            NbtList loopList = new NbtList();
+            var loopList = new NbtList();
             Assert.AreEqual( loopList.ListType, NbtTagType.Unknown );
             Assert.Throws<ArgumentException>( () => loopList.Add( loopList ) );
 
@@ -225,10 +225,10 @@ namespace fNbt.Test {
 
         [Test]
         public void SerializingWithoutListType() {
-            NbtCompound root = new NbtCompound( "root" ) { new NbtList( "list" ) };
-            NbtFile file = new NbtFile( root );
+            var root = new NbtCompound( "root" ) { new NbtList( "list" ) };
+            var file = new NbtFile( root );
 
-            using( MemoryStream ms = new MemoryStream() ) {
+            using( var ms = new MemoryStream() ) {
                 // list should throw NbtFormatException, because its ListType is Unknown
                 Assert.Throws<NbtFormatException>( () => file.SaveToStream( ms, NbtCompression.None ) );
             }
@@ -242,8 +242,8 @@ namespace fNbt.Test {
             const int elements = 10;
 
             // construct nbt file
-            NbtFile writtenFile = new NbtFile( new NbtCompound( "ListTypeTest" ) );
-            NbtList writtenList = new NbtList( "Entities", null, expectedListType );
+            var writtenFile = new NbtFile( new NbtCompound( "ListTypeTest" ) );
+            var writtenList = new NbtList( "Entities", null, expectedListType );
             for( int i = 0; i < elements; i++ ) {
                 writtenList.Add( new NbtInt( i ) );
             }
@@ -253,13 +253,13 @@ namespace fNbt.Test {
             byte[] data = writtenFile.SaveToBuffer( NbtCompression.None );
 
             // test loading
-            NbtFile readFile = new NbtFile();
+            var readFile = new NbtFile();
             readFile.LoadFromBuffer( data, 0, data.Length, NbtCompression.None );
 
             // check contents of loaded file
             Assert.NotNull( readFile.RootTag );
             Assert.IsInstanceOf<NbtList>( readFile.RootTag["Entities"] );
-            NbtList readList = (NbtList)readFile.RootTag["Entities"];
+            var readList = (NbtList)readFile.RootTag["Entities"];
             Assert.AreEqual( readList.ListType, writtenList.ListType );
             Assert.AreEqual( readList.Count, writtenList.Count );
 
@@ -277,7 +277,7 @@ namespace fNbt.Test {
         [Test]
         public void Serializing2() {
             // check saving/loading lists of all possible value types
-            NbtFile testFile = new NbtFile( TestFiles.MakeListTest() );
+            var testFile = new NbtFile( TestFiles.MakeListTest() );
             byte[] buffer = testFile.SaveToBuffer( NbtCompression.None );
             testFile.LoadFromBuffer( buffer, 0, buffer.Length, NbtCompression.None );
         }
@@ -287,22 +287,22 @@ namespace fNbt.Test {
         public void NestedListAndCompoundTest() {
             byte[] data;
             {
-                NbtCompound root = new NbtCompound( "Root" );
-                NbtList outerList = new NbtList( "OuterList", NbtTagType.Compound );
-                NbtCompound outerCompound = new NbtCompound();
-                NbtList innerList = new NbtList( "InnerList", NbtTagType.Compound );
-                NbtCompound innerCompound = new NbtCompound();
+                var root = new NbtCompound( "Root" );
+                var outerList = new NbtList( "OuterList", NbtTagType.Compound );
+                var outerCompound = new NbtCompound();
+                var innerList = new NbtList( "InnerList", NbtTagType.Compound );
+                var innerCompound = new NbtCompound();
 
                 innerList.Add( innerCompound );
                 outerCompound.Add( innerList );
                 outerList.Add( outerCompound );
                 root.Add( outerList );
 
-                NbtFile file = new NbtFile( root );
+                var file = new NbtFile( root );
                 data = file.SaveToBuffer( NbtCompression.None );
             }
             {
-                NbtFile file = new NbtFile();
+                var file = new NbtFile();
                 file.LoadFromBuffer( data, 0, data.Length, NbtCompression.None );
                 Assert.AreEqual( file.RootTag.Get<NbtList>( "OuterList" ).Count, 1 );
                 Assert.AreEqual( file.RootTag.Get<NbtList>( "OuterList" ).Get<NbtCompound>( 0 ).Name, null );

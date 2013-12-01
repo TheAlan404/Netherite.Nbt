@@ -328,7 +328,7 @@ namespace fNbt {
         void GoDown() {
             if( nodes == null )
                 nodes = new Stack<NbtReaderNode>();
-            NbtReaderNode newNode = new NbtReaderNode {
+            var newNode = new NbtReaderNode {
                 ListIndex = ListIndex,
                 ParentTagLength = ParentTagLength,
                 ParentName = ParentName,
@@ -578,11 +578,11 @@ namespace fNbt {
 
 
         void AddToParent( [NotNull] NbtTag thisTag, [NotNull] NbtTag parent ) {
-            NbtList parentAsList = parent as NbtList;
+            var parentAsList = parent as NbtList;
             if( parentAsList != null ) {
                 parentAsList.Add( thisTag );
             } else {
-                NbtCompound parentAsCompound = parent as NbtCompound;
+                var parentAsCompound = parent as NbtCompound;
                 if( parentAsCompound != null ) {
                     parentAsCompound.Add( thisTag );
                 } else {
@@ -625,7 +625,7 @@ namespace fNbt {
                     return new NbtByteArray( TagName, reader.ReadBytes( TagLength ) );
 
                 case NbtTagType.IntArray:
-                    int[] ints = new int[TagLength];
+                    var ints = new int[TagLength];
                     for( int i = 0; i < TagLength; i++ ) {
                         ints[i] = reader.ReadInt32();
                     }
@@ -707,7 +707,7 @@ namespace fNbt {
                     break;
 
                 case NbtTagType.IntArray:
-                    int[] intValue = new int[TagLength];
+                    var intValue = new int[TagLength];
                     for( int i = 0; i < TagLength; i++ ) {
                         intValue[i] = reader.ReadInt32();
                     }
@@ -721,11 +721,7 @@ namespace fNbt {
                 default:
                     throw new InvalidOperationException( NonValueTagError );
             }
-            if( cacheTagValues ) {
-                valueCache = value;
-            } else {
-                valueCache = null;
-            }
+            valueCache = cacheTagValues ? value : null;
             return value;
         }
 
@@ -770,7 +766,7 @@ namespace fNbt {
             }
 
             // for everything else, gotta read elements one-by-one
-            T[] result = new T[elementsToRead];
+            var result = new T[elementsToRead];
             switch( ListType ) {
                 case NbtTagType.Byte:
                     for( int i = 0; i < elementsToRead; i++ ) {
@@ -872,7 +868,7 @@ namespace fNbt {
         public string ToString( bool includeValue, [NotNull] string indentString ) {
             if( indentString == null )
                 throw new ArgumentNullException( "indentString" );
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             for( int i = 0; i < Depth; i++ ) {
                 sb.Append( indentString );
             }

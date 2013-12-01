@@ -8,8 +8,8 @@ namespace fNbt.Test {
         [Test]
         public void ValueTest() {
             // write one named tag for every value type, and read it back
-            using( MemoryStream ms = new MemoryStream() ) {
-                NbtWriter writer = new NbtWriter( ms, "root" ); {
+            using( var ms = new MemoryStream() ) {
+                var writer = new NbtWriter( ms, "root" ); {
                     writer.WriteByte( "byte", 1 );
                     writer.WriteShort( "short", 2 );
                     writer.WriteInt( "int", 3 );
@@ -23,7 +23,7 @@ namespace fNbt.Test {
                 writer.Finish();
 
                 ms.Position = 0;
-                NbtFile file = new NbtFile();
+                var file = new NbtFile();
                 file.LoadFromStream( ms, NbtCompression.None );
 
                 TestFiles.AssertValueTest( file );
@@ -33,21 +33,21 @@ namespace fNbt.Test {
 
         [Test]
         public void ByteArrayFromStream() {
-            byte[] data = new byte[64*1024];
+            var data = new byte[64*1024];
             for( int i = 0; i < data.Length; i++ ) {
                 data[i] = unchecked( (byte)i );
             }
 
-            using( MemoryStream ms = new MemoryStream() ) {
-                NbtWriter writer = new NbtWriter( ms, "root" );{
-                    using( NonSeekableStream dataStream = new NonSeekableStream(new MemoryStream(data)) ) {
+            using( var ms = new MemoryStream() ) {
+                var writer = new NbtWriter( ms, "root" );{
+                    using( var dataStream = new NonSeekableStream(new MemoryStream(data)) ) {
                         writer.WriteByteArray( "byteArray", dataStream, data.Length );
                     }
                 } writer.EndCompound();
                 writer.Finish();
 
                 ms.Position = 0;
-                NbtFile file = new NbtFile();
+                var file = new NbtFile();
                 file.LoadFromStream( ms, NbtCompression.None );
                 CollectionAssert.AreEqual( file.RootTag["byteArray"].ByteArrayValue, data );
             }
@@ -58,8 +58,8 @@ namespace fNbt.Test {
         public void CompoundListTest() {
             // test writing various combinations of compound tags and list tags
             const string testString = "Come on and slam, and welcome to the jam.";
-            using( MemoryStream ms = new MemoryStream() ) {
-                NbtWriter writer = new NbtWriter( ms, "Test" ); {
+            using( var ms = new MemoryStream() ) {
+                var writer = new NbtWriter( ms, "Test" ); {
                     writer.BeginCompound( "EmptyCompy" ); {
                     } writer.EndCompound();
 
@@ -97,7 +97,7 @@ namespace fNbt.Test {
                 writer.Finish();
 
                 ms.Seek( 0, SeekOrigin.Begin );
-                NbtFile file = new NbtFile();
+                var file = new NbtFile();
                 file.LoadFromStream( ms, NbtCompression.None );
                 Console.WriteLine( file.ToString() );
             }
@@ -107,8 +107,8 @@ namespace fNbt.Test {
         [Test]
         public void ListTest() {
             // write short (1-element) lists of every possible kind
-            using( MemoryStream ms = new MemoryStream() ) {
-                NbtWriter writer = new NbtWriter( ms, "Test" );
+            using( var ms = new MemoryStream() ) {
+                var writer = new NbtWriter( ms, "Test" );
                 writer.BeginList( "LotsOfLists", NbtTagType.List, 11 ); {
 
                     writer.BeginList( NbtTagType.Byte, 1 );
@@ -166,7 +166,7 @@ namespace fNbt.Test {
                 writer.Finish();
 
                 ms.Position = 0;
-                NbtReader reader = new NbtReader( ms );
+                var reader = new NbtReader( ms );
                 Assert.DoesNotThrow( () => reader.ReadAsTag() );
             }
         }
@@ -174,8 +174,8 @@ namespace fNbt.Test {
 
         [Test]
         public void WriteTagTest() {
-            using( MemoryStream ms = new MemoryStream() ) {
-                NbtWriter writer = new NbtWriter( ms, "root" ); {
+            using( var ms = new MemoryStream() ) {
+                var writer = new NbtWriter( ms, "root" ); {
                     foreach( NbtTag tag in TestFiles.MakeValueTest().Tags ) {
                         writer.WriteTag( tag );
                     }
@@ -183,7 +183,7 @@ namespace fNbt.Test {
                     writer.Finish();
                 }
                 ms.Position = 0;
-                NbtFile file = new NbtFile();
+                var file = new NbtFile();
                 file.LoadFromBuffer( ms.ToArray(), 0, (int)ms.Length, NbtCompression.None );
                 TestFiles.AssertValueTest( file );
             }
@@ -192,14 +192,13 @@ namespace fNbt.Test {
 
         [Test]
         public void ErrorTest() {
-            using( MemoryStream ms = new MemoryStream() ) {
-
+            using( var ms = new MemoryStream() ) {
                 // null constructor parameters, or a non-writable stream
                 Assert.Throws<ArgumentNullException>( () => new NbtWriter( null, "root" ) );
                 Assert.Throws<ArgumentNullException>( () => new NbtWriter( ms, null ) );
                 Assert.Throws<ArgumentException>( () => new NbtWriter( new NonWritableStream(), "root" ) );
 
-                NbtWriter writer = new NbtWriter( ms, "root" ); {
+                var writer = new NbtWriter( ms, "root" ); {
                     // use negative list size
                     Assert.Throws<ArgumentOutOfRangeException>( () => writer.BeginList( "list", NbtTagType.Int, -1 ) );
                     writer.BeginList( "listOfLists", NbtTagType.List, 1 );

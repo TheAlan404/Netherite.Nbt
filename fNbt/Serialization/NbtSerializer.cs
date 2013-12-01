@@ -52,7 +52,7 @@ namespace fNbt.Serialization {
             else if( value is string )
                 return new NbtString( tagName, (string)value );
             else if( value.GetType().IsArray ) {
-                var elementType = value.GetType().GetElementType();
+                Type elementType = value.GetType().GetElementType();
                 var array = value as Array;
                 var listType = NbtTagType.Compound;
                 if( elementType == typeof( byte ) || elementType == typeof( sbyte ) )
@@ -87,29 +87,27 @@ namespace fNbt.Serialization {
                 var compound = new NbtCompound( tagName );
 
                 if( value == null ) return compound;
-                var nameAttributes = Attribute.GetCustomAttributes( value.GetType(), typeof( TagNameAttribute ) );
+                Attribute[] nameAttributes = Attribute.GetCustomAttributes( value.GetType(), typeof( TagNameAttribute ) );
 
                 if( nameAttributes.Length > 0 )
                     compound = new NbtCompound( ( (TagNameAttribute)nameAttributes[0] ).Name );
 
-                var properties = Type.GetProperties().Where( p => !Attribute.GetCustomAttributes( p,
+                IEnumerable<PropertyInfo> properties = Type.GetProperties().Where( p => !Attribute.GetCustomAttributes( p,
                     typeof( NbtIgnoreAttribute ) ).Any() );
 
-                foreach( var property in properties ) {
+                foreach( PropertyInfo property in properties ) {
                     if( !property.CanRead )
                         continue;
 
-                    NbtTag tag;
-
                     string name = property.Name;
                     nameAttributes = Attribute.GetCustomAttributes( property, typeof( TagNameAttribute ) );
-                    var ignoreOnNullAttribute = Attribute.GetCustomAttribute( property, typeof( IgnoreOnNullAttribute ) );
+                    Attribute ignoreOnNullAttribute = Attribute.GetCustomAttribute( property, typeof( IgnoreOnNullAttribute ) );
                     if( nameAttributes.Length != 0 ) {
                         name = ( (TagNameAttribute)nameAttributes[0] ).Name;
                     }
 
                     var innerSerializer = new NbtSerializer( property.PropertyType );
-                    var propValue = property.GetValue( value, null );
+                    object propValue = property.GetValue( value, null );
 
                     if( propValue == null ) {
                         if( ignoreOnNullAttribute != null ) continue;
@@ -120,7 +118,7 @@ namespace fNbt.Serialization {
                         }
                     }
 
-                    tag = innerSerializer.Serialize( propValue, name );
+                    NbtTag tag = innerSerializer.Serialize( propValue, name );
                     compound.Add( tag );
                 }
 
@@ -164,7 +162,7 @@ namespace fNbt.Serialization {
                     return ( (NbtString)value ).Value;
 
                 case NbtTagType.List:
-                    NbtList list = (NbtList)value;
+                    var list = (NbtList)value;
                     Type type;
                     switch( list.ListType ) {
                         case NbtTagType.Byte:
@@ -201,14 +199,14 @@ namespace fNbt.Serialization {
                             throw new NotSupportedException( "The NBT list type '" + list.TagType + "' is not supported." );
                     }
                     Array array = Array.CreateInstance( type, list.Count );
-                    NbtSerializer innerSerializer = new NbtSerializer( type );
+                    var innerSerializer = new NbtSerializer( type );
                     for( int i = 0; i < array.Length; i++ ) {
                         array.SetValue( innerSerializer.Deserialize( list[i] ), i );
                     }
                     return array;
 
                 case NbtTagType.Compound:
-                    NbtCompound compound = value as NbtCompound;
+                    var compound = value as NbtCompound;
                     IEnumerable<PropertyInfo> properties =
                         Type.GetProperties()
                             .Where( p => !Attribute.GetCustomAttributes( p, typeof( NbtIgnoreAttribute ) ).Any() );

@@ -32,7 +32,7 @@ namespace fNbt {
                 if( tags.Count > 0 ) {
                     NbtTagType actualType = tags[0].TagType;
                     if( actualType != value ) {
-                        String msg = String.Format( "Given NbtTagType ({0}) does not match actual element type ({1})",
+                        string msg = String.Format( "Given NbtTagType ({0}) does not match actual element type ({1})",
                                                     value,
                                                     actualType );
                         throw new ArgumentException( msg );
@@ -218,7 +218,7 @@ namespace fNbt {
         [NotNull]
         [Pure]
         public T[] ToArray<T>() where T : NbtTag {
-            T[] result = new T[tags.Count];
+            var result = new T[tags.Count];
             for( int i = 0; i < result.Length; i++ ) {
                 result[i] = (T)tags[i];
             }

@@ -431,7 +431,7 @@ namespace fNbt {
                 throw new ArgumentOutOfRangeException( "count", "count may not be negative" );
             }
             int bufferSize = Math.Min( count, MaxStreamCopyBufferSize );
-            byte[] streamCopyBuffer = new byte[bufferSize];
+            var streamCopyBuffer = new byte[bufferSize];
             WriteByteArray( dataSource, count, streamCopyBuffer );
         }
 
@@ -482,7 +482,7 @@ namespace fNbt {
                 throw new ArgumentOutOfRangeException( "count", "count may not be negative" );
             }
             int bufferSize = Math.Min( count, MaxStreamCopyBufferSize );
-            byte[] streamCopyBuffer = new byte[bufferSize];
+            var streamCopyBuffer = new byte[bufferSize];
             WriteByteArray( tagName, dataSource, count, streamCopyBuffer );
         }
 
@@ -627,7 +627,7 @@ namespace fNbt {
             if( nodes == null ) {
                 nodes = new Stack<NbtWriterNode>();
             }
-            NbtWriterNode newNode = new NbtWriterNode {
+            var newNode = new NbtWriterNode {
                 ParentType = parentType,
                 ListType = listType,
                 ListSize = listSize,

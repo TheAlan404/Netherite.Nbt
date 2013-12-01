@@ -89,7 +89,7 @@ namespace fNbt.Test {
 
         // creates a file with lots of compounds and lists, used to test NbtReader compliance
         public static Stream MakeReaderTest() {
-            NbtCompound root = new NbtCompound( "root" ) {
+            var root = new NbtCompound( "root" ) {
                 new NbtInt( "first" ),
                 new NbtInt( "second" ),
                 new NbtCompound( "third-comp" ) {
@@ -258,7 +258,7 @@ namespace fNbt.Test {
 
             // First nested test
             Assert.IsInstanceOf<NbtCompound>( node["ham"] );
-            NbtCompound subNode = (NbtCompound)node["ham"];
+            var subNode = (NbtCompound)node["ham"];
             Assert.AreEqual( "ham", subNode.Name );
             Assert.AreEqual( 2, subNode.Count );
 
@@ -356,9 +356,9 @@ namespace fNbt.Test {
             Assert.AreEqual( 0.4931287132182315, ((NbtDouble)node).Value );
 
             Assert.IsInstanceOf<NbtIntArray>( root["intArrayTest"] );
-            NbtIntArray intArrayTag = root.Get<NbtIntArray>( "intArrayTest" );
+            var intArrayTag = root.Get<NbtIntArray>( "intArrayTest" );
             Assert.IsNotNull( intArrayTag );
-            Random rand = new Random( 0 );
+            var rand = new Random( 0 );
             for( int i = 0; i < 10; i++ ) {
                 Assert.AreEqual( intArrayTag.Value[i], rand.Next() );
             }

@@ -5,7 +5,7 @@ namespace fNbt.Test {
     public sealed class TagSelectorTests {
         [Test]
         public void SkippingTagsOnFileLoad() {
-            NbtFile loadedFile = new NbtFile();
+            var loadedFile = new NbtFile();
             loadedFile.LoadFromFile( "TestFiles/bigtest.nbt",
                                      NbtCompression.None,
                                      tag => tag.Name != "nested compound test" );
@@ -33,7 +33,7 @@ namespace fNbt.Test {
 
         [Test]
         public void SkippingLists() {
-            NbtFile file = new NbtFile( TestFiles.MakeListTest() );
+            var file = new NbtFile( TestFiles.MakeListTest() );
             byte[] savedFile = file.SaveToBuffer( NbtCompression.None );
             file.LoadFromBuffer( savedFile, 0, savedFile.Length, NbtCompression.None, tag => false );
             Assert.AreEqual( file.RootTag.Count, 0 );
@@ -47,7 +47,7 @@ namespace fNbt.Test {
             nestedComp.Name = "NestedComp";
             root.Add( nestedComp );
 
-            NbtFile file = new NbtFile( root );
+            var file = new NbtFile( root );
             byte[] savedFile = file.SaveToBuffer( NbtCompression.None );
             file.LoadFromBuffer( savedFile, 0, savedFile.Length, NbtCompression.None, tag => false );
             Assert.AreEqual( file.RootTag.Count, 0 );

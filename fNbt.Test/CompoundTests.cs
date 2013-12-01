@@ -54,19 +54,19 @@ namespace fNbt.Test {
         [Test]
         public void GettersAndSetters() {
             // construct a document for us to test.
-            NbtCompound nestedChild = new NbtCompound( "NestedChild" );
-            NbtInt nestedInt = new NbtInt( 1 );
-            NbtList nestedChildList = new NbtList( "NestedChildList" ) {
+            var nestedChild = new NbtCompound( "NestedChild" );
+            var nestedInt = new NbtInt( 1 );
+            var nestedChildList = new NbtList( "NestedChildList" ) {
                 nestedInt
             };
-            NbtCompound child = new NbtCompound( "Child" ) {
+            var child = new NbtCompound( "Child" ) {
                 nestedChild,
                 nestedChildList
             };
-            NbtList childList = new NbtList( "ChildList" ) {
+            var childList = new NbtList( "ChildList" ) {
                 new NbtInt( 1 )
             };
-            NbtCompound parent = new NbtCompound( "Parent" ) {
+            var parent = new NbtCompound( "Parent" ) {
                 child,
                 childList
             };
@@ -129,7 +129,7 @@ namespace fNbt.Test {
             Assert.Throws<InvalidOperationException>( () => parent[0] = new NbtByte("NewerChild") );
 
             // Try adding tag to self
-            NbtCompound selfTest = new NbtCompound( "SelfTest" );
+            var selfTest = new NbtCompound( "SelfTest" );
             Assert.Throws<ArgumentException>( () => selfTest["SelfTest"] = selfTest );
 
             // Try adding a tag that already has a parent
@@ -140,7 +140,7 @@ namespace fNbt.Test {
         [Test]
         public void Renaming() {
             var tagToRename = new NbtInt( "DifferentName", 1 );
-            NbtCompound compound = new NbtCompound {
+            var compound = new NbtCompound {
                 new NbtInt( "SameName", 1 ),
                 tagToRename
             };
@@ -162,8 +162,8 @@ namespace fNbt.Test {
 
         [Test]
         public void AddingAndRemoving() {
-            NbtInt foo = new NbtInt( "Foo" );
-            NbtCompound test = new NbtCompound {
+            var foo = new NbtInt( "Foo" );
+            var test = new NbtCompound {
                 foo
             };
 
@@ -227,7 +227,7 @@ namespace fNbt.Test {
                 new NbtInt( "Name2", 2 ),
                 new NbtLong( "Name3", 3 )
             };
-            NbtCompound compound = new NbtCompound();
+            var compound = new NbtCompound();
 
             // add range
             compound.AddRange( testThings );
@@ -245,7 +245,7 @@ namespace fNbt.Test {
             };
 
             // test NbtCompound(IEnumerable<NbtTag>) constructor
-            NbtCompound comp = new NbtCompound( tagList );
+            var comp = new NbtCompound( tagList );
 
             // test .Names and .Tags collections
             CollectionAssert.AreEquivalent( comp.Names,
@@ -262,12 +262,12 @@ namespace fNbt.Test {
             Assert.IsFalse( iCollection.IsSynchronized );
 
             // test CopyTo()
-            NbtTag[] tags = new NbtTag[iCollection.Count];
+            var tags = new NbtTag[iCollection.Count];
             iCollection.CopyTo( tags, 0 );
             CollectionAssert.AreEquivalent( tags, comp );
 
             // test GetEnumerator()
-            List<NbtTag> enumeratedTags = new List<NbtTag>();
+            var enumeratedTags = new List<NbtTag>();
             foreach( NbtTag tag in comp ) {
                 enumeratedTags.Add( tag );
             }
