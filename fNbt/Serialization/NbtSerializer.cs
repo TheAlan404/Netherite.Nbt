@@ -7,9 +7,10 @@ namespace fNbt.Serialization {
     public class NbtSerializer {
         public Type Type { get; set; }
 
-        PropertyInfo[] propertyCache;
-        Dictionary<PropertyInfo, string> customTagNames;
-        HashSet<PropertyInfo> ignoreOnNull; 
+        PropertyInfo[] properties;
+        Dictionary<PropertyInfo, string> propertyTagNames;
+        HashSet<PropertyInfo> ignoreOnNull;
+        bool propertyInfoRead = false;
 
         /// <summary> Decorates the given property or field with the specified. </summary>
         public NbtSerializer( Type type ) {
@@ -22,139 +23,182 @@ namespace fNbt.Serialization {
         }
 
 
-        PropertyInfo[] GetProperties() {
+        void ReadPropertyInfo() {
             try {
-                if( propertyCache == null ) {
-                    propertyCache =
-                        Type.GetProperties()
-                            .Where( p => !Attribute.GetCustomAttributes( p, typeof( NbtIgnoreAttribute ) ).Any() )
-                            .Where( p => p.CanRead )
-                            .ToArray();
-                    customTagNames = new Dictionary<PropertyInfo, string>();
+                properties =
+                    Type.GetProperties()
+                        .Where( p => !Attribute.GetCustomAttributes( p, typeof( NbtIgnoreAttribute ) ).Any() )
+                        .Where( p => p.CanRead )
+                        .ToArray();
+                propertyTagNames = new Dictionary<PropertyInfo, string>();
 
-                    foreach( PropertyInfo property in propertyCache ) {
-                        // read tag name
-                        Attribute[] nameAttributes = Attribute.GetCustomAttributes( property, typeof( TagNameAttribute ) );
-                        string tagName;
-                        if( nameAttributes.Length != 0 ) {
-                            tagName = ( (TagNameAttribute)nameAttributes[0] ).Name;
-                        } else {
-                            tagName = property.Name;
-                        }
-                        customTagNames.Add( property, tagName );
+                foreach( PropertyInfo property in properties ) {
+                    // read tag name
+                    Attribute[] nameAttributes = Attribute.GetCustomAttributes( property, typeof( TagNameAttribute ) );
+                    string tagName;
+                    if( nameAttributes.Length != 0 ) {
+                        tagName = ( (TagNameAttribute)nameAttributes[0] ).Name;
+                    } else {
+                        tagName = property.Name;
+                    }
+                    propertyTagNames.Add( property, tagName );
 
-                        // read IgnoreOnNull attribute
-                        Attribute ignoreOnNullAttribute = Attribute.GetCustomAttribute( property,
-                            typeof( IgnoreOnNullAttribute ) );
-                        if( ignoreOnNullAttribute != null ) {
-                            if( ignoreOnNull == null ) {
-                                ignoreOnNull = new HashSet<PropertyInfo>();
-                            }
-                            ignoreOnNull.Add( property );
+                    // read IgnoreOnNull attribute
+                    Attribute ignoreOnNullAttribute = Attribute.GetCustomAttribute( property,
+                        typeof( IgnoreOnNullAttribute ) );
+                    if( ignoreOnNullAttribute != null ) {
+                        if( ignoreOnNull == null ) {
+                            ignoreOnNull = new HashSet<PropertyInfo>();
                         }
+                        ignoreOnNull.Add( property );
                     }
                 }
+                propertyInfoRead = true;
 
             } catch {
                 // roll back on error
-                propertyCache = null;
+                properties = null;
                 ignoreOnNull = null;
-                customTagNames = null;
+                propertyTagNames = null;
+                propertyInfoRead = false;
                 throw;
             }
-            return propertyCache;
         }
 
 
+        NbtTag SerializePrimitiveType(string tagName, object value ) {
+            if (value is byte) {
+                return new NbtByte(tagName, (byte)value);
+            } else if (value is sbyte) {
+                return new NbtByte(tagName, (byte)(sbyte)value);
+            } else if (value is bool) {
+                return new NbtByte(tagName, (bool)value ? (byte)1 : (byte)0);
+            } else if (value is double) {
+                return new NbtDouble(tagName, (double)value);
+            } else if (value is float) {
+                return new NbtFloat(tagName, (float)value);
+            } else if (value is int) {
+                return new NbtInt(tagName, (int)value);
+            } else if (value is uint) {
+                return new NbtInt(tagName, (int)(uint)value);
+            } else if (value is long) {
+                return new NbtLong(tagName, (long)value);
+            } else if (value is ulong) {
+                return new NbtLong(tagName, (long)(ulong)value);
+            } else if (value is short) {
+                return new NbtShort(tagName, (short)value);
+            } else if (value is ushort) {
+                return new NbtShort(tagName, (short)(ushort)value);
+            } else if (value is char) {
+                return new NbtShort(tagName, (short)(char)value);
+            } else {
+                throw new NotSupportedException();
+            }
+        }
+
 
         public NbtTag Serialize( object value, string tagName, bool skipInterfaceCheck = false ) {
-            if( !skipInterfaceCheck && value is INbtSerializable ) {
-                return ( (INbtSerializable)value ).Serialize( tagName );
-            } else if( value is NbtTag ) {
-                return (NbtTag)value;
-            } else if( value is byte ) {
-                return new NbtByte( tagName, (byte)value );
-            } else if( value is sbyte ) {
-                return new NbtByte( tagName, (byte)(sbyte)value );
-            } else if( value is bool ) {
-                return new NbtByte( tagName, (byte)( (bool)value ? 1 : 0 ) );
-            } else if( value is byte[] ) {
-                return new NbtByteArray( tagName, (byte[])value );
-            } else if( value is double ) {
-                return new NbtDouble( tagName, (double)value );
-            } else if( value is float ) {
-                return new NbtFloat( tagName, (float)value );
-            } else if( value is int ) {
-                return new NbtInt( tagName, (int)value );
-            } else if( value is uint ) {
-                return new NbtInt( tagName, (int)(uint)value );
-            } else if( value is int[] ) {
-                return new NbtIntArray( tagName, (int[])value );
-            } else if( value is long ) {
-                return new NbtLong( tagName, (long)value );
-            } else if( value is ulong ) {
-                return new NbtLong( tagName, (long)(ulong)value );
-            } else if( value is short ) {
-                return new NbtShort( tagName, (short)value );
-            } else if( value is ushort ) {
-                return new NbtShort( tagName, (short)(ushort)value );
-            } else if( value is string ) {
-                return new NbtString( tagName, (string)value );
-            } else if( Type.IsArray ) {
-                Type elementType = value.GetType().GetElementType();
-                var array = value as Array;
+            if( value == null ) {
+                return new NbtCompound( tagName );
+            }
+
+            Type realType = value.GetType();
+            if( realType.IsPrimitive ) {
+                return SerializePrimitiveType( tagName, value );
+            }
+
+            var valueAsString = value as string;
+            if( valueAsString != null ) {
+                return new NbtString( tagName, valueAsString );
+            }
+
+            var array = value as Array;
+            if( array != null ) {
+                var valueAsByteArray = value as byte[];
+                if( valueAsByteArray != null ) {
+                    return new NbtByteArray( tagName, valueAsByteArray );
+                }
+
+                var valueAsIntArray = value as int[];
+                if( valueAsIntArray != null ) {
+                    return new NbtIntArray( tagName, valueAsIntArray );
+                }
+
+                Type elementType = realType.GetElementType();
                 var listType = NbtTagType.Compound;
-                if( elementType == typeof( byte ) || elementType == typeof( sbyte ) )
+                if( elementType == typeof( byte ) || elementType == typeof( sbyte ) ) {
                     listType = NbtTagType.Byte;
-                else if( elementType == typeof( bool ) )
+                } else if( elementType == typeof( bool ) ) {
                     listType = NbtTagType.Byte;
-                else if( elementType == typeof( byte[] ) )
+                } else if( elementType == typeof( byte[] ) ) {
                     listType = NbtTagType.ByteArray;
-                else if( elementType == typeof( double ) )
+                } else if( elementType == typeof( double ) ) {
                     listType = NbtTagType.Double;
-                else if( elementType == typeof( float ) )
+                } else if( elementType == typeof( float ) ) {
                     listType = NbtTagType.Float;
-                else if( elementType == typeof( int ) || elementType == typeof( uint ) )
+                } else if( elementType == typeof( int ) || elementType == typeof( uint ) ) {
                     listType = NbtTagType.Int;
-                else if( elementType == typeof( int[] ) )
+                } else if( elementType == typeof( int[] ) ) {
                     listType = NbtTagType.IntArray;
-                else if( elementType == typeof( long ) || elementType == typeof( ulong ) )
+                } else if( elementType == typeof( long ) || elementType == typeof( ulong ) ) {
                     listType = NbtTagType.Long;
-                else if( elementType == typeof( short ) || elementType == typeof( ushort ) )
+                } else if( elementType == typeof( short ) || elementType == typeof( ushort ) ) {
                     listType = NbtTagType.Short;
-                else if( elementType == typeof( string ) )
+                } else if( elementType == typeof( string ) ) {
                     listType = NbtTagType.String;
+                }
                 var list = new NbtList( tagName, listType );
                 var innerSerializer = new NbtSerializer( elementType );
                 for( int i = 0; i < array.Length; i++ ) {
                     list.Add( innerSerializer.Serialize( array.GetValue( i ) ) );
                 }
                 return list;
+            }
 
-            } else if( value is NbtFile ) {
-                return ( (NbtFile)value ).RootTag;
+            if( !skipInterfaceCheck && value is INbtSerializable ) {
+                return ( (INbtSerializable)value ).Serialize( tagName );
+            }
 
-            } else {
-                var compound = new NbtCompound( tagName );
-                if( value == null ) return compound;
+            var valueAsTag = value as NbtTag;
+            if( valueAsTag != null ) {
+                return valueAsTag;
+            }
 
-                foreach( PropertyInfo property in GetProperties() ) {
-                    var innerSerializer = new NbtSerializer( property.PropertyType );
-                    object propValue = property.GetValue( value, null );
-                    if( propValue == null ) {
-                        if( ignoreOnNull.Contains( property ) ) continue;
-                        if( property.PropertyType.IsValueType ) {
-                            propValue = Activator.CreateInstance( property.PropertyType );
-                        } else if( property.PropertyType == typeof( string ) ) {
-                            propValue = "";
-                        }
+            var file = value as NbtFile;
+            if( file != null ) {
+                return file.RootTag;
+            }
+
+            var compound = new NbtCompound( tagName );
+            if (!propertyInfoRead) ReadPropertyInfo();
+
+            foreach( PropertyInfo property in properties ) {
+                Type propType = property.PropertyType;
+                object propValue = property.GetValue( value, null );
+
+                if( propValue == null ) {
+                    if( ignoreOnNull.Contains( property ) ) continue;
+                    if( propType.IsArray ) {
+                        propValue = Activator.CreateInstance( propType );
+                    } else if( propType == typeof( string ) ) {
+                        propValue = "";
                     }
-                    NbtTag tag = innerSerializer.Serialize( propValue, customTagNames[property] );
-                    compound.Add( tag );
                 }
 
-                return compound;
+                string propTagName = propertyTagNames[property];
+                NbtTag tag;
+                if( propType.IsPrimitive ) {
+                    tag = SerializePrimitiveType(propTagName, propValue);
+                } else if( propType.IsArray || propType == typeof(string)) {
+                    tag = Serialize( propValue, propTagName );
+                } else {
+                    var innerSerializer = new NbtSerializer( property.PropertyType );
+                    tag = innerSerializer.Serialize( propValue, propTagName );
+                }
+                compound.Add( tag );
             }
+
+            return compound;
         }
 
 
@@ -237,10 +281,11 @@ namespace fNbt.Serialization {
                     return array;
 
                 case NbtTagType.Compound:
+                    if(!propertyInfoRead) ReadPropertyInfo();
                     var compound = value as NbtCompound;
 
                     object resultObject = Activator.CreateInstance( Type );
-                    foreach (PropertyInfo property in GetProperties()) {
+                    foreach (PropertyInfo property in properties) {
                         if( !property.CanWrite ) continue;
                         string name = property.Name;
                         Attribute[] nameAttributes = Attribute.GetCustomAttributes( property, typeof( TagNameAttribute ) );
