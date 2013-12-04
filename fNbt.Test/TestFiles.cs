@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
+using fNbt.Serialization;
 using NUnit.Framework;
 
 namespace fNbt.Test {
-    static class TestFiles {
+    public static class TestFiles {
         public const string DirName = "TestFiles";
         public static readonly string Small = Path.Combine( DirName, "test.nbt" );
         public static readonly string SmallGZip = Path.Combine( DirName, "test.nbt.gz" );
@@ -87,6 +88,16 @@ namespace fNbt.Test {
         }
 
 
+        [TagName( "Root" )]
+        public class SerializerConversionClass {
+            public sbyte SByteProp { get; set; }
+            public bool BoolProp { get; set; }
+            public ushort UInt16Prop { get; set; }
+            public uint UInt32Prop { get; set; }
+            public ulong UInt64Prop { get; set; }
+        }
+
+
         // creates a file with lots of compounds and lists, used to test NbtReader compliance
         public static Stream MakeReaderTest() {
             var root = new NbtCompound( "root" ) {
@@ -121,76 +132,6 @@ namespace fNbt.Test {
         }
 
 
-        // creates an NbtCompound with one of tag of each value-type
-        public static NbtCompound MakeValueTest() {
-            return new NbtCompound( "root" ) {
-                new NbtByte( "byte", 1 ),
-                new NbtShort( "short", 2 ),
-                new NbtInt( "int", 3 ),
-                new NbtLong( "long", 4L ),
-                new NbtFloat( "float", 5f ),
-                new NbtDouble( "double", 6d ),
-                new NbtByteArray( "byteArray", new byte[] { 10, 11, 12 } ),
-                new NbtIntArray( "intArray", new[] { 20, 21, 22 } ),
-                new NbtString( "string", "123" )
-            };
-        }
-
-
-        public static void AssertValueTest( NbtFile file ) {
-            Assert.IsInstanceOf<NbtCompound>( file.RootTag );
-
-            NbtCompound root = file.RootTag;
-            Assert.AreEqual( "root", root.Name );
-            Assert.AreEqual( 9, root.Count );
-
-            Assert.IsInstanceOf<NbtByte>( root["byte"] );
-            NbtTag node = root["byte"];
-            Assert.AreEqual( "byte", node.Name );
-            Assert.AreEqual( 1, node.ByteValue );
-
-            Assert.IsInstanceOf<NbtShort>( root["short"] );
-            node = root["short"];
-            Assert.AreEqual( "short", node.Name );
-            Assert.AreEqual( 2, node.ShortValue );
-
-            Assert.IsInstanceOf<NbtInt>( root["int"] );
-            node = root["int"];
-            Assert.AreEqual( "int", node.Name );
-            Assert.AreEqual( 3, node.IntValue );
-
-            Assert.IsInstanceOf<NbtLong>( root["long"] );
-            node = root["long"];
-            Assert.AreEqual( "long", node.Name );
-            Assert.AreEqual( 4L, node.LongValue );
-
-            Assert.IsInstanceOf<NbtFloat>( root["float"] );
-            node = root["float"];
-            Assert.AreEqual( "float", node.Name );
-            Assert.AreEqual( 5f, node.FloatValue );
-
-            Assert.IsInstanceOf<NbtDouble>( root["double"] );
-            node = root["double"];
-            Assert.AreEqual( "double", node.Name );
-            Assert.AreEqual( 6d, node.DoubleValue );
-
-            Assert.IsInstanceOf<NbtByteArray>( root["byteArray"] );
-            node = root["byteArray"];
-            Assert.AreEqual( "byteArray", node.Name );
-            CollectionAssert.AreEqual( new byte[] { 10, 11, 12 }, node.ByteArrayValue );
-
-            Assert.IsInstanceOf<NbtIntArray>( root["intArray"] );
-            node = root["intArray"];
-            Assert.AreEqual( "intArray", node.Name );
-            CollectionAssert.AreEqual( new[] { 20, 21, 22 }, node.IntArrayValue );
-
-            Assert.IsInstanceOf<NbtString>( root["string"] );
-            node = root["string"];
-            Assert.AreEqual( "string", node.Name );
-            Assert.AreEqual( "123", node.StringValue );
-        }
-
-
         // creates an NbtFile with contents identical to "test.nbt"
         public static NbtFile MakeSmallFile() {
             return new NbtFile( new NbtCompound( "hello world" ) {
@@ -213,9 +154,6 @@ namespace fNbt.Test {
             Assert.AreEqual( "name", node.Name );
             Assert.AreEqual( "Bananrama", node.Value );
         }
-
-
-
 
 
         public static void AssertNbtBigFile( NbtFile file ) {
@@ -363,5 +301,108 @@ namespace fNbt.Test {
                 Assert.AreEqual( intArrayTag.Value[i], rand.Next() );
             }
         }
+
+
+        #region Value test
+
+        // creates an NbtCompound with one of tag of each value-type
+        public static NbtCompound MakeValueTest() {
+            return new NbtCompound("root") {
+                new NbtByte( "byte", 1 ),
+                new NbtShort( "short", 2 ),
+                new NbtInt( "int", 3 ),
+                new NbtLong( "long", 4L ),
+                new NbtFloat( "float", 5f ),
+                new NbtDouble( "double", 6d ),
+                new NbtByteArray( "byteArray", new byte[] { 10, 11, 12 } ),
+                new NbtIntArray( "intArray", new[] { 20, 21, 22 } ),
+                new NbtString( "string", "123" )
+            };
+        }
+
+
+        public static ValueTestClass MakeValueTestObject() {
+            return new ValueTestClass {
+                @byte = 1,
+                @short = 2,
+                @int = 3,
+                @long = 4L,
+                @float = 5f,
+                @double = 6d,
+                byteArray = new byte[] { 10, 11, 12 },
+                intArray = new[] { 20, 21, 22 },
+                @string = "123"
+            };
+        }
+
+
+        [TagName("root")]
+        public class ValueTestClass {
+            public byte @byte { get; set; }
+            public short @short { get; set; }
+            public int @int { get; set; }
+            public long @long { get; set; }
+            public float @float { get; set; }
+            public double @double { get; set; }
+            public byte[] byteArray { get; set; }
+            public int[] intArray { get; set; }
+            public string @string { get; set; }
+        }
+
+
+        public static void AssertValueTest(NbtFile file) {
+            Assert.IsInstanceOf<NbtCompound>(file.RootTag);
+
+            NbtCompound root = file.RootTag;
+            Assert.AreEqual("root", root.Name);
+            Assert.AreEqual(9, root.Count);
+
+            Assert.IsInstanceOf<NbtByte>(root["byte"]);
+            NbtTag node = root["byte"];
+            Assert.AreEqual("byte", node.Name);
+            Assert.AreEqual(1, node.ByteValue);
+
+            Assert.IsInstanceOf<NbtShort>(root["short"]);
+            node = root["short"];
+            Assert.AreEqual("short", node.Name);
+            Assert.AreEqual(2, node.ShortValue);
+
+            Assert.IsInstanceOf<NbtInt>(root["int"]);
+            node = root["int"];
+            Assert.AreEqual("int", node.Name);
+            Assert.AreEqual(3, node.IntValue);
+
+            Assert.IsInstanceOf<NbtLong>(root["long"]);
+            node = root["long"];
+            Assert.AreEqual("long", node.Name);
+            Assert.AreEqual(4L, node.LongValue);
+
+            Assert.IsInstanceOf<NbtFloat>(root["float"]);
+            node = root["float"];
+            Assert.AreEqual("float", node.Name);
+            Assert.AreEqual(5f, node.FloatValue);
+
+            Assert.IsInstanceOf<NbtDouble>(root["double"]);
+            node = root["double"];
+            Assert.AreEqual("double", node.Name);
+            Assert.AreEqual(6d, node.DoubleValue);
+
+            Assert.IsInstanceOf<NbtByteArray>(root["byteArray"]);
+            node = root["byteArray"];
+            Assert.AreEqual("byteArray", node.Name);
+            CollectionAssert.AreEqual(new byte[] { 10, 11, 12 }, node.ByteArrayValue);
+
+            Assert.IsInstanceOf<NbtIntArray>(root["intArray"]);
+            node = root["intArray"];
+            Assert.AreEqual("intArray", node.Name);
+            CollectionAssert.AreEqual(new[] { 20, 21, 22 }, node.IntArrayValue);
+
+            Assert.IsInstanceOf<NbtString>(root["string"]);
+            node = root["string"];
+            Assert.AreEqual("string", node.Name);
+            Assert.AreEqual("123", node.StringValue);
+        }
+
+        #endregion
     }
 }

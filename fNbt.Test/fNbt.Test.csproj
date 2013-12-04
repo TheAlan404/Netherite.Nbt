@@ -85,6 +85,7 @@
     <Compile Include="CompoundTests.cs" />
     <Compile Include="MiscTests.cs" />
     <Compile Include="NbtReaderTests.cs" />
+    <Compile Include="NbtSerializerTests.cs" />
     <Compile Include="NbtWriterTest.cs" />
     <Compile Include="NonSeekableStream.cs" />
     <Compile Include="TagSelectorTests.cs" />
