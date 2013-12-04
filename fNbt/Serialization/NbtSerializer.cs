@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,11 +8,6 @@ namespace fNbt.Serialization {
     public class NbtSerializer {
         public Type Type { get; set; }
 
-        PropertyInfo[] properties;
-        Dictionary<PropertyInfo, string> propertyTagNames;
-        HashSet<PropertyInfo> ignoreOnNull;
-        bool propertyInfoRead = false;
-
 
         /// <summary> Decorates the given property or field with the specified. </summary>
         public NbtSerializer( Type type ) {
@@ -19,11 +15,11 @@ namespace fNbt.Serialization {
         }
 
 
-        public NbtTag Serialize( object value, bool skipInterfaceCheck = false ) {
-            return Serialize( value, "", skipInterfaceCheck );
-        }
 
-
+        PropertyInfo[] properties;
+        Dictionary<PropertyInfo, string> propertyTagNames;
+        HashSet<PropertyInfo> ignoreOnNull;
+        bool propertyInfoRead;
         void ReadPropertyInfo() {
             try {
                 properties =
@@ -98,6 +94,49 @@ namespace fNbt.Serialization {
         }
 
 
+        NbtTag SerializeList(string tagName, IList valueAsArray, Type elementType) {
+            NbtTagType listType;
+            if( elementType == typeof( byte ) || elementType == typeof( sbyte ) || elementType == typeof( bool ) ) {
+                listType = NbtTagType.Byte;
+            } else if( elementType == typeof( byte[] ) ) {
+                listType = NbtTagType.ByteArray;
+            } else if( elementType == typeof( double ) ) {
+                listType = NbtTagType.Double;
+            } else if( elementType == typeof( float ) ) {
+                listType = NbtTagType.Float;
+            } else if( elementType == typeof( int ) || elementType == typeof( uint ) ) {
+                listType = NbtTagType.Int;
+            } else if( elementType == typeof( int[] ) ) {
+                listType = NbtTagType.IntArray;
+            } else if( elementType == typeof( long ) || elementType == typeof( ulong ) ) {
+                listType = NbtTagType.Long;
+            } else if( elementType == typeof( short ) || elementType == typeof( ushort ) ) {
+                listType = NbtTagType.Short;
+            } else if( elementType == typeof( string ) ) {
+                listType = NbtTagType.String;
+            } else {
+                listType = NbtTagType.Compound;
+            }
+            var list = new NbtList( tagName, listType );
+            if( elementType.IsPrimitive ) {
+                for (int i = 0; i < valueAsArray.Count; i++) {
+                    list.Add( SerializePrimitiveType( null, valueAsArray[i] ) );
+                }
+            } else {
+                var innerSerializer = new NbtSerializer( elementType );
+                for( int i = 0; i < valueAsArray.Count; i++ ) {
+                    list.Add( innerSerializer.Serialize( valueAsArray[i], null ) );
+                }
+            }
+            return list;
+        }
+
+
+        public NbtTag Serialize(object value, bool skipInterfaceCheck = false) {
+            return Serialize(value, "", skipInterfaceCheck);
+        }
+
+
         public NbtTag Serialize( object value, string tagName, bool skipInterfaceCheck = false ) {
             if( value == null ) {
                 return new NbtCompound( tagName );
@@ -113,8 +152,9 @@ namespace fNbt.Serialization {
                 return new NbtString( tagName, valueAsString );
             }
 
-            var array = value as Array;
-            if( array != null ) {
+            // Serialize arrays
+            var valueAsArray = value as Array;
+            if( valueAsArray != null ) {
                 var valueAsByteArray = value as byte[];
                 if( valueAsByteArray != null ) {
                     return new NbtByteArray( tagName, valueAsByteArray );
@@ -126,48 +166,30 @@ namespace fNbt.Serialization {
                 }
 
                 Type elementType = realType.GetElementType();
-                var listType = NbtTagType.Compound;
-                if( elementType == typeof( byte ) || elementType == typeof( sbyte ) || elementType == typeof( bool ) ) {
-                    listType = NbtTagType.Byte;
-                } else if( elementType == typeof( byte[] ) ) {
-                    listType = NbtTagType.ByteArray;
-                } else if( elementType == typeof( double ) ) {
-                    listType = NbtTagType.Double;
-                } else if( elementType == typeof( float ) ) {
-                    listType = NbtTagType.Float;
-                } else if( elementType == typeof( int ) || elementType == typeof( uint ) ) {
-                    listType = NbtTagType.Int;
-                } else if( elementType == typeof( int[] ) ) {
-                    listType = NbtTagType.IntArray;
-                } else if( elementType == typeof( long ) || elementType == typeof( ulong ) ) {
-                    listType = NbtTagType.Long;
-                } else if( elementType == typeof( short ) || elementType == typeof( ushort ) ) {
-                    listType = NbtTagType.Short;
-                } else if( elementType == typeof( string ) ) {
-                    listType = NbtTagType.String;
-                }
-                var list = new NbtList( tagName, listType );
-                var innerSerializer = new NbtSerializer( elementType );
-                for( int i = 0; i < array.Length; i++ ) {
-                    list.Add( innerSerializer.Serialize( array.GetValue( i ) ) );
-                }
-                return list;
+                return SerializeList( tagName, valueAsArray, elementType );
             }
 
             if( !skipInterfaceCheck && value is INbtSerializable ) {
                 return ( (INbtSerializable)value ).Serialize( tagName );
             }
 
+            // Serialize ILists
+            if (realType.IsGenericType && realType.GetGenericTypeDefinition() == typeof(List<>)) {
+                Type listType = realType.GetGenericArguments()[0];
+                return SerializeList(tagName, (IList)value, listType);
+            }
+
+            // Skip serializing NbtTags and NbtFiles
             var valueAsTag = value as NbtTag;
             if( valueAsTag != null ) {
                 return valueAsTag;
             }
-
             var file = value as NbtFile;
             if( file != null ) {
                 return file.RootTag;
             }
 
+            // Fallback for compound tags
             var compound = new NbtCompound( tagName );
             if( !propertyInfoRead ) ReadPropertyInfo();
 
@@ -202,7 +224,7 @@ namespace fNbt.Serialization {
         }
 
 
-        static object DeserializePrimitiveType( NbtTag tag ) {
+        static object DeserializeSimpleType( NbtTag tag ) {
             switch( tag.TagType ) {
                 case NbtTagType.Byte:
                     return ( (NbtByte)tag ).Value;
@@ -285,7 +307,7 @@ namespace fNbt.Serialization {
                     Array array = Array.CreateInstance( type, list.Count );
                     if( type.IsPrimitive || type.IsArray || type == typeof( string ) ) {
                         for( int i = 0; i < array.Length; i++ ) {
-                            array.SetValue( DeserializePrimitiveType( list[i] ), i );
+                            array.SetValue( DeserializeSimpleType( list[i] ), i );
                         }
                     } else {
                         var innerSerializer = new NbtSerializer( type );
@@ -333,7 +355,7 @@ namespace fNbt.Serialization {
                     return resultObject;
 
                 default:
-                    return DeserializePrimitiveType( tag );
+                    return DeserializeSimpleType( tag );
             }
         }
     }
