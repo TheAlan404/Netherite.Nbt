@@ -12,6 +12,7 @@ namespace fNbt.Serialization {
         HashSet<PropertyInfo> ignoreOnNull;
         bool propertyInfoRead = false;
 
+
         /// <summary> Decorates the given property or field with the specified. </summary>
         public NbtSerializer( Type type ) {
             Type = type;
@@ -28,7 +29,6 @@ namespace fNbt.Serialization {
                 properties =
                     Type.GetProperties()
                         .Where( p => !Attribute.GetCustomAttributes( p, typeof( NbtIgnoreAttribute ) ).Any() )
-                        .Where( p => p.CanRead )
                         .ToArray();
                 propertyTagNames = new Dictionary<PropertyInfo, string>();
 
@@ -66,31 +66,32 @@ namespace fNbt.Serialization {
         }
 
 
-        NbtTag SerializePrimitiveType(string tagName, object value ) {
-            if (value is byte) {
-                return new NbtByte(tagName, (byte)value);
-            } else if (value is sbyte) {
-                return new NbtByte(tagName, (byte)(sbyte)value);
-            } else if (value is bool) {
-                return new NbtByte(tagName, (bool)value ? (byte)1 : (byte)0);
-            } else if (value is double) {
-                return new NbtDouble(tagName, (double)value);
-            } else if (value is float) {
-                return new NbtFloat(tagName, (float)value);
-            } else if (value is int) {
-                return new NbtInt(tagName, (int)value);
-            } else if (value is uint) {
-                return new NbtInt(tagName, (int)(uint)value);
-            } else if (value is long) {
-                return new NbtLong(tagName, (long)value);
-            } else if (value is ulong) {
-                return new NbtLong(tagName, (long)(ulong)value);
-            } else if (value is short) {
-                return new NbtShort(tagName, (short)value);
-            } else if (value is ushort) {
-                return new NbtShort(tagName, (short)(ushort)value);
-            } else if (value is char) {
-                return new NbtShort(tagName, (short)(char)value);
+        NbtTag SerializePrimitiveType( string tagName, object value ) {
+            Type valueType = value.GetType();
+            if( valueType == typeof( byte ) ) {
+                return new NbtByte( tagName, (byte)value );
+            } else if( valueType == typeof( sbyte ) ) {
+                return new NbtByte( tagName, (byte)(sbyte)value );
+            } else if( valueType == typeof( bool ) ) {
+                return new NbtByte( tagName, (bool)value ? (byte)1 : (byte)0 );
+            } else if( valueType == typeof( double ) ) {
+                return new NbtDouble( tagName, (double)value );
+            } else if( valueType == typeof( float ) ) {
+                return new NbtFloat( tagName, (float)value );
+            } else if( valueType == typeof( int ) ) {
+                return new NbtInt( tagName, (int)value );
+            } else if( valueType == typeof( uint ) ) {
+                return new NbtInt( tagName, (int)(uint)value );
+            } else if( valueType == typeof( long ) ) {
+                return new NbtLong( tagName, (long)value );
+            } else if( valueType == typeof( ulong ) ) {
+                return new NbtLong( tagName, (long)(ulong)value );
+            } else if( valueType == typeof( short ) ) {
+                return new NbtShort( tagName, (short)value );
+            } else if( valueType == typeof( ushort ) ) {
+                return new NbtShort( tagName, (short)(ushort)value );
+            } else if( valueType == typeof( char ) ) {
+                return new NbtShort( tagName, (short)(char)value );
             } else {
                 throw new NotSupportedException();
             }
@@ -126,9 +127,7 @@ namespace fNbt.Serialization {
 
                 Type elementType = realType.GetElementType();
                 var listType = NbtTagType.Compound;
-                if( elementType == typeof( byte ) || elementType == typeof( sbyte ) ) {
-                    listType = NbtTagType.Byte;
-                } else if( elementType == typeof( bool ) ) {
+                if( elementType == typeof( byte ) || elementType == typeof( sbyte ) || elementType == typeof( bool ) ) {
                     listType = NbtTagType.Byte;
                 } else if( elementType == typeof( byte[] ) ) {
                     listType = NbtTagType.ByteArray;
@@ -170,9 +169,10 @@ namespace fNbt.Serialization {
             }
 
             var compound = new NbtCompound( tagName );
-            if (!propertyInfoRead) ReadPropertyInfo();
+            if( !propertyInfoRead ) ReadPropertyInfo();
 
             foreach( PropertyInfo property in properties ) {
+                if( !property.CanRead ) continue;
                 Type propType = property.PropertyType;
                 object propValue = property.GetValue( value, null );
 
@@ -188,8 +188,8 @@ namespace fNbt.Serialization {
                 string propTagName = propertyTagNames[property];
                 NbtTag tag;
                 if( propType.IsPrimitive ) {
-                    tag = SerializePrimitiveType(propTagName, propValue);
-                } else if( propType.IsArray || propType == typeof(string)) {
+                    tag = SerializePrimitiveType( propTagName, propValue );
+                } else if( propType.IsArray || propType == typeof( string ) ) {
                     tag = Serialize( propValue, propTagName );
                 } else {
                     var innerSerializer = new NbtSerializer( property.PropertyType );
@@ -202,42 +202,50 @@ namespace fNbt.Serialization {
         }
 
 
-        public object Deserialize( NbtTag value, bool skipInterfaceCheck = false ) {
-            if( !skipInterfaceCheck && typeof( INbtSerializable ).IsAssignableFrom( Type ) ) {
-                var instance = (INbtSerializable)Activator.CreateInstance( Type );
-                instance.Deserialize( value );
-                return instance;
-            }
-            switch( value.TagType ) {
+        static object DeserializePrimitiveType( NbtTag tag ) {
+            switch( tag.TagType ) {
                 case NbtTagType.Byte:
-                    return ( (NbtByte)value ).Value;
-
-                case NbtTagType.ByteArray:
-                    return ( (NbtByteArray)value ).Value;
+                    return ( (NbtByte)tag ).Value;
 
                 case NbtTagType.Double:
-                    return ( (NbtDouble)value ).Value;
+                    return ( (NbtDouble)tag ).Value;
 
                 case NbtTagType.Float:
-                    return ( (NbtFloat)value ).Value;
+                    return ( (NbtFloat)tag ).Value;
 
                 case NbtTagType.Int:
-                    return ( (NbtInt)value ).Value;
-
-                case NbtTagType.IntArray:
-                    return ( (NbtIntArray)value ).Value;
+                    return ( (NbtInt)tag ).Value;
 
                 case NbtTagType.Long:
-                    return ( (NbtLong)value ).Value;
+                    return ( (NbtLong)tag ).Value;
 
                 case NbtTagType.Short:
-                    return ( (NbtShort)value ).Value;
+                    return ( (NbtShort)tag ).Value;
+
+                case NbtTagType.ByteArray:
+                    return ((NbtByteArray)tag).Value;
+
+                case NbtTagType.IntArray:
+                    return ((NbtIntArray)tag).Value;
 
                 case NbtTagType.String:
-                    return ( (NbtString)value ).Value;
+                    return ((NbtString)tag).Value;
 
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+
+
+        public object Deserialize( NbtTag tag, bool skipInterfaceCheck = false ) {
+            if( !skipInterfaceCheck && typeof( INbtSerializable ).IsAssignableFrom( Type ) ) {
+                var instance = (INbtSerializable)Activator.CreateInstance( Type );
+                instance.Deserialize( tag );
+                return instance;
+            }
+            switch (tag.TagType) {
                 case NbtTagType.List:
-                    var list = (NbtList)value;
+                    var list = (NbtList)tag;
                     Type type;
                     switch( list.ListType ) {
                         case NbtTagType.Byte:
@@ -246,7 +254,7 @@ namespace fNbt.Serialization {
                         case NbtTagType.ByteArray:
                             type = typeof( byte[] );
                             break;
-                        case NbtTagType.Compound:
+                        case NbtTagType.List:
                             type = Type.GetElementType() ?? typeof( object );
                             break;
                         case NbtTagType.Double:
@@ -271,30 +279,33 @@ namespace fNbt.Serialization {
                             type = typeof( string );
                             break;
                         default:
-                            throw new NotSupportedException( "The NBT list type '" + list.TagType + "' is not supported." );
+                            throw new NotSupportedException( "The NBT list type '" + list.TagType +
+                                                             "' is not supported." );
                     }
                     Array array = Array.CreateInstance( type, list.Count );
-                    var innerSerializer = new NbtSerializer( type );
-                    for( int i = 0; i < array.Length; i++ ) {
-                        array.SetValue( innerSerializer.Deserialize( list[i] ), i );
+                    if( type.IsPrimitive || type.IsArray || type == typeof( string ) ) {
+                        for( int i = 0; i < array.Length; i++ ) {
+                            array.SetValue( DeserializePrimitiveType( list[i] ), i );
+                        }
+                    } else {
+                        var innerSerializer = new NbtSerializer( type );
+                        for( int i = 0; i < array.Length; i++ ) {
+                            array.SetValue( innerSerializer.Deserialize( list[i] ), i );
+                        }
                     }
                     return array;
 
                 case NbtTagType.Compound:
-                    if(!propertyInfoRead) ReadPropertyInfo();
-                    var compound = value as NbtCompound;
+                    if( !propertyInfoRead ) ReadPropertyInfo();
+                    var compound = (NbtCompound)tag;
 
                     object resultObject = Activator.CreateInstance( Type );
-                    foreach (PropertyInfo property in properties) {
+                    foreach( PropertyInfo property in properties ) {
                         if( !property.CanWrite ) continue;
-                        string name = property.Name;
-                        Attribute[] nameAttributes = Attribute.GetCustomAttributes( property, typeof( TagNameAttribute ) );
+                        string name = propertyTagNames[property];
 
-                        if( nameAttributes.Length != 0 ) {
-                            name = ( (TagNameAttribute)nameAttributes[0] ).Name;
-                        }
-                        NbtTag node = compound.Tags.SingleOrDefault( a => a.Name == name );
-                        if( node == null ) continue;
+                        NbtTag node;
+                        if( !compound.TryGet( name, out node ) ) continue;
 
                         object data;
                         if( typeof( INbtSerializable ).IsAssignableFrom( property.PropertyType ) ) {
@@ -305,21 +316,25 @@ namespace fNbt.Serialization {
                         }
 
                         // Some manual casting for edge cases
-                        if( property.PropertyType == typeof( bool )
-                            && data is byte ) {
+                        if( property.PropertyType == typeof( bool ) && data is byte ) {
                             data = (byte)data == 1;
                         }
                         if( property.PropertyType == typeof( sbyte ) && data is byte ) {
                             data = (sbyte)(byte)data;
                         }
 
-                        property.SetValue( resultObject, data, null );
+                        if( property.PropertyType.IsInstanceOfType( data ) ) {
+                            property.SetValue( resultObject, data, null );
+                        } else {
+                            property.SetValue( resultObject, Convert.ChangeType( data, property.PropertyType ), null );
+                        }
                     }
 
                     return resultObject;
-            }
 
-            throw new NotSupportedException( "The node type '" + value.GetType() + "' is not supported." );
+                default:
+                    return DeserializePrimitiveType( tag );
+            }
         }
     }
 }
