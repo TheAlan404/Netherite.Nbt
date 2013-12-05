@@ -1,29 +1,28 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
 using fNbt.Serialization;
 using NUnit.Framework;
 
 namespace fNbt.Test {
     [TestFixture]
-    class NbtSerializerTests {
+    internal class NbtSerializerTests {
         [Test]
         public void ValueTest() {
             TestFiles.ValueTestClass testObject = TestFiles.MakeValueTestObject();
             var serializer = new NbtSerializer(testObject.GetType());
 
-            NbtTag serializedTag = serializer.Serialize( testObject, "root" );
+            NbtTag serializedTag = serializer.Serialize(testObject, "root");
 
-            Assert.IsAssignableFrom( typeof(NbtCompound), serializedTag );
+            Assert.IsAssignableFrom(typeof(NbtCompound), serializedTag);
 
-            TestFiles.AssertValueTest( new NbtFile((NbtCompound)serializedTag) );
+            TestFiles.AssertValueTest(new NbtFile((NbtCompound)serializedTag));
         }
 
 
         [Test]
         public void ConversionTest() {
             var defaultObject = new TestFiles.SerializerConversionClass();
-            AssertSerializerRoundTrip( new NbtSerializer( defaultObject.GetType() ), defaultObject );
+            AssertSerializerRoundTrip(new NbtSerializer(defaultObject.GetType()), defaultObject);
         }
 
 
@@ -43,10 +42,10 @@ namespace fNbt.Test {
                 object actualValue = property.GetValue(actual, null);
 
                 var list = actualValue as IList;
-                if( list != null ) {
-                    CollectionAssert.AreEqual( list, (IList)expectedValue );
+                if (list != null) {
+                    CollectionAssert.AreEqual(list, (IList)expectedValue);
                 } else {
-                    Assert.AreEqual( actualValue, expectedValue );
+                    Assert.AreEqual(actualValue, expectedValue);
                 }
             }
         }

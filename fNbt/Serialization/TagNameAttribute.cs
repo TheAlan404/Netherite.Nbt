@@ -1,7 +1,7 @@
 using System;
 
 namespace fNbt.Serialization {
-    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class )]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class)]
     public class TagNameAttribute : Attribute {
         public string Name { get; set; }
 
@@ -10,7 +10,7 @@ namespace fNbt.Serialization {
         /// Decorates the given property or field with the specified
         /// NBT tag name.
         /// </summary>
-        public TagNameAttribute( string name ) {
+        public TagNameAttribute(string name) {
             Name = name;
         }
     }

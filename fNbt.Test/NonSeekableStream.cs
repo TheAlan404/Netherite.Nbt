@@ -2,31 +2,25 @@
 using System.IO;
 
 namespace fNbt.Test {
-    class NonSeekableStream : Stream {
+    internal class NonSeekableStream : Stream {
         readonly Stream stream;
 
 
-        public NonSeekableStream( Stream baseStream ) {
+        public NonSeekableStream(Stream baseStream) {
             stream = baseStream;
         }
 
 
         public override bool CanRead {
-            get {
-                return stream.CanRead;
-            }
+            get { return stream.CanRead; }
         }
 
         public override bool CanSeek {
-            get {
-                return false;
-            }
+            get { return false; }
         }
 
         public override bool CanWrite {
-            get {
-                return stream.CanWrite;
-            }
+            get { return stream.CanWrite; }
         }
 
 
@@ -36,38 +30,32 @@ namespace fNbt.Test {
 
 
         public override long Length {
-            get {
-                throw new NotSupportedException();
-            }
+            get { throw new NotSupportedException(); }
         }
 
         public override long Position {
-            get {
-                return stream.Position;
-            }
-            set {
-                throw new NotSupportedException();
-            }
+            get { return stream.Position; }
+            set { throw new NotSupportedException(); }
         }
 
 
-        public override int Read( byte[] buffer, int offset, int count ) {
-            return stream.Read( buffer, offset, count );
+        public override int Read(byte[] buffer, int offset, int count) {
+            return stream.Read(buffer, offset, count);
         }
 
 
-        public override long Seek( long offset, SeekOrigin origin ) {
+        public override long Seek(long offset, SeekOrigin origin) {
             throw new NotImplementedException();
         }
 
 
-        public override void SetLength( long value ) {
+        public override void SetLength(long value) {
             throw new NotSupportedException();
         }
 
 
-        public override void Write( byte[] buffer, int offset, int count ) {
-            stream.Write( buffer, offset, count );
+        public override void Write(byte[] buffer, int offset, int count) {
+            stream.Write(buffer, offset, count);
         }
     }
 }

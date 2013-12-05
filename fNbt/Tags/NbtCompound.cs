@@ -9,9 +9,7 @@ namespace fNbt {
     public sealed class NbtCompound : NbtTag, ICollection<NbtTag>, ICollection {
         /// <summary> Type of this tag (Compound). </summary>
         public override NbtTagType TagType {
-            get {
-                return NbtTagType.Compound;
-            }
+            get { return NbtTagType.Compound; }
         }
 
         readonly Dictionary<string, NbtTag> tags = new Dictionary<string, NbtTag>();
@@ -23,7 +21,7 @@ namespace fNbt {
 
         /// <summary> Creates an empty NbtByte tag with the given name. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
-        public NbtCompound( [CanBeNull] string tagName ) {
+        public NbtCompound([CanBeNull] string tagName) {
             Name = tagName;
         }
 
@@ -32,8 +30,8 @@ namespace fNbt {
         /// <param name="tags"> Collection of tags to assign to this tag's Value. May not be null </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tags"/> is <c>null</c>, or one of the tags is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If some of the given tags were not named, or two tags with the same name were given. </exception>
-        public NbtCompound( [NotNull] IEnumerable<NbtTag> tags )
-            : this( null, tags ) {}
+        public NbtCompound([NotNull] IEnumerable<NbtTag> tags)
+            : this(null, tags) {}
 
 
         /// <summary> Creates an NbtByte tag with the given name, containing the given tags. </summary>
@@ -41,12 +39,12 @@ namespace fNbt {
         /// <param name="tags"> Collection of tags to assign to this tag's Value. May not be null </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tags"/> is <c>null</c>, or one of the tags is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If some of the given tags were not named, or two tags with the same name were given. </exception>
-        public NbtCompound( [CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags ) {
-            if( tags == null )
-                throw new ArgumentNullException( "tags" );
+        public NbtCompound([CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags) {
+            if (tags == null)
+                throw new ArgumentNullException("tags");
             Name = tagName;
-            foreach( NbtTag tag in tags ) {
-                Add( tag );
+            foreach (NbtTag tag in tags) {
+                Add(tag);
             }
         }
 
@@ -57,22 +55,19 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>; or if trying to assign null value. </exception>
         /// <exception cref="ArgumentException"> <paramref name="tagName"/> does not match the given tag's actual name;
         /// or given tag already has a Parent. </exception>
-        public override NbtTag this[ [NotNull] string tagName ] {
-            [CanBeNull]
-            get {
-                return Get<NbtTag>( tagName );
-            }
+        public override NbtTag this[[NotNull] string tagName] {
+            [CanBeNull] get { return Get<NbtTag>(tagName); }
             set {
-                if( tagName == null ) {
-                    throw new ArgumentNullException( "tagName" );
-                } else if( value == null ) {
-                    throw new ArgumentNullException( "value" );
-                } else if( value.Name != tagName ) {
-                    throw new ArgumentException( "Given tag name must match tag's actual name." );
-                } else if( value.Parent != null ) {
-                    throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
-                } else if( value == this ) {
-                    throw new ArgumentException( "Cannot add tag to itself" );
+                if (tagName == null) {
+                    throw new ArgumentNullException("tagName");
+                } else if (value == null) {
+                    throw new ArgumentNullException("value");
+                } else if (value.Name != tagName) {
+                    throw new ArgumentException("Given tag name must match tag's actual name.");
+                } else if (value.Parent != null) {
+                    throw new ArgumentException("A tag may only be added to one compound/list at a time.");
+                } else if (value == this) {
+                    throw new ArgumentException("Cannot add tag to itself");
                 }
                 tags[tagName] = value;
                 value.Parent = this;
@@ -87,11 +82,11 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
         /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
         [CanBeNull]
-        public T Get<T>( [NotNull] string tagName ) where T : NbtTag {
-            if( tagName == null )
-                throw new ArgumentNullException( "tagName" );
+        public T Get<T>([NotNull] string tagName) where T : NbtTag {
+            if (tagName == null)
+                throw new ArgumentNullException("tagName");
             NbtTag result;
-            if( tags.TryGetValue( tagName, out result ) ) {
+            if (tags.TryGetValue(tagName, out result)) {
                 return (T)result;
             }
             return null;
@@ -104,11 +99,11 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
         /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
         [CanBeNull]
-        public NbtTag Get( [NotNull] string tagName ) {
-            if( tagName == null )
-                throw new ArgumentNullException( "tagName" );
+        public NbtTag Get([NotNull] string tagName) {
+            if (tagName == null)
+                throw new ArgumentNullException("tagName");
             NbtTag result;
-            if( tags.TryGetValue( tagName, out result ) ) {
+            if (tags.TryGetValue(tagName, out result)) {
                 return result;
             }
             return null;
@@ -123,11 +118,11 @@ namespace fNbt {
         /// <returns> true if the NbtCompound contains a tag with the specified name; otherwise, false. </returns>
         /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
         /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
-        public bool TryGet<T>( [NotNull] string tagName, out T result ) where T : NbtTag {
-            if( tagName == null )
-                throw new ArgumentNullException( "tagName" );
+        public bool TryGet<T>([NotNull] string tagName, out T result) where T : NbtTag {
+            if (tagName == null)
+                throw new ArgumentNullException("tagName");
             NbtTag tempResult;
-            if( tags.TryGetValue( tagName, out tempResult ) ) {
+            if (tags.TryGetValue(tagName, out tempResult)) {
                 result = (T)tempResult;
                 return true;
             } else {
@@ -144,11 +139,11 @@ namespace fNbt {
         /// <returns> true if the NbtCompound contains a tag with the specified name; otherwise, false. </returns>
         /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
         /// <exception cref="InvalidCastException"> If tag could not be cast to the desired tag. </exception>
-        public bool TryGet( [NotNull] string tagName, out NbtTag result ) {
-            if( tagName == null )
-                throw new ArgumentNullException( "tagName" );
+        public bool TryGet([NotNull] string tagName, out NbtTag result) {
+            if (tagName == null)
+                throw new ArgumentNullException("tagName");
             NbtTag tempResult;
-            if( tags.TryGetValue( tagName, out tempResult ) ) {
+            if (tags.TryGetValue(tagName, out tempResult)) {
                 result = tempResult;
                 return true;
             } else {
@@ -163,11 +158,11 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="newTags"/> is <c>null</c>, or one of the tags in newTags is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If one of the given tags was unnamed,
         /// or if a tag with the given name already exists in this NbtCompound. </exception>
-        public void AddRange( [NotNull] IEnumerable<NbtTag> newTags ) {
-            if( newTags == null )
-                throw new ArgumentNullException( "newTags" );
-            foreach( NbtTag tag in newTags ) {
-                Add( tag );
+        public void AddRange([NotNull] IEnumerable<NbtTag> newTags) {
+            if (newTags == null)
+                throw new ArgumentNullException("newTags");
+            foreach (NbtTag tag in newTags) {
+                Add(tag);
             }
         }
 
@@ -177,10 +172,10 @@ namespace fNbt {
         /// <returns> true if a tag with given name was found; otherwise, false. </returns>
         /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
         [Pure]
-        public bool Contains( [NotNull] string tagName ) {
-            if( tagName == null )
-                throw new ArgumentNullException( "tagName" );
-            return tags.ContainsKey( tagName );
+        public bool Contains([NotNull] string tagName) {
+            if (tagName == null)
+                throw new ArgumentNullException("tagName");
+            return tags.ContainsKey(tagName);
         }
 
 
@@ -189,14 +184,14 @@ namespace fNbt {
         /// <returns> true if the tag is successfully found and removed; otherwise, false.
         /// This method returns false if name is not found in the NbtCompound. </returns>
         /// <exception cref="ArgumentNullException"> <paramref name="tagName"/> is <c>null</c>. </exception>
-        public bool Remove( [NotNull] string tagName ) {
-            if( tagName == null )
-                throw new ArgumentNullException( "tagName" );
+        public bool Remove([NotNull] string tagName) {
+            if (tagName == null)
+                throw new ArgumentNullException("tagName");
             NbtTag tag;
-            if( !tags.TryGetValue( tagName, out tag ) ) {
+            if (!tags.TryGetValue(tagName, out tag)) {
                 return false;
             }
-            if( !tags.Remove( tagName ) ) {
+            if (!tags.Remove(tagName)) {
                 return false;
             }
             tag.Parent = null;
@@ -204,53 +199,49 @@ namespace fNbt {
         }
 
 
-        internal void RenameTag( [NotNull] string oldName, [NotNull] string newName ) {
-            if( oldName == null )
-                throw new ArgumentNullException( "oldName" );
-            if( newName == null )
-                throw new ArgumentNullException( "newName" );
-            if( oldName == newName )
+        internal void RenameTag([NotNull] string oldName, [NotNull] string newName) {
+            if (oldName == null)
+                throw new ArgumentNullException("oldName");
+            if (newName == null)
+                throw new ArgumentNullException("newName");
+            if (oldName == newName)
                 return;
             NbtTag tag;
-            if( tags.TryGetValue( newName, out tag ) ) {
-                throw new ArgumentException( "Cannot rename: a tag with the name already exists in this compound." );
+            if (tags.TryGetValue(newName, out tag)) {
+                throw new ArgumentException("Cannot rename: a tag with the name already exists in this compound.");
             }
-            if( !tags.TryGetValue( oldName, out tag ) ) {
-                throw new ArgumentException( "Cannot rename: no tag found to rename." );
+            if (!tags.TryGetValue(oldName, out tag)) {
+                throw new ArgumentException("Cannot rename: no tag found to rename.");
             }
-            tags.Remove( oldName );
-            tags.Add( newName, tag );
+            tags.Remove(oldName);
+            tags.Add(newName, tag);
         }
 
 
         /// <summary> Gets a collection containing all tag names in this NbtCompound. </summary>
         public IEnumerable<string> Names {
-            get {
-                return tags.Keys;
-            }
+            get { return tags.Keys; }
         }
 
 
         /// <summary> Gets a collection containing all tags in this NbtCompound. </summary>
         public IEnumerable<NbtTag> Tags {
-            get {
-                return tags.Values;
-            }
+            get { return tags.Values; }
         }
 
 
         #region Reading / Writing
 
-        internal override bool ReadTag( NbtBinaryReader readStream ) {
-            if( Parent != null && readStream.Selector != null && !readStream.Selector( this ) ) {
-                SkipTag( readStream );
+        internal override bool ReadTag(NbtBinaryReader readStream) {
+            if (Parent != null && readStream.Selector != null && !readStream.Selector(this)) {
+                SkipTag(readStream);
                 return false;
             }
 
-            while( true ) {
+            while (true) {
                 NbtTagType nextTag = readStream.ReadTagType();
                 NbtTag newTag;
-                switch( nextTag ) {
+                switch (nextTag) {
                     case NbtTagType.End:
                         return true;
 
@@ -299,25 +290,25 @@ namespace fNbt {
                         break;
 
                     default:
-                        throw new NbtFormatException( "Unsupported tag type found in NBT_Compound: " + nextTag );
+                        throw new NbtFormatException("Unsupported tag type found in NBT_Compound: " + nextTag);
                 }
                 newTag.Parent = this;
                 newTag.Name = readStream.ReadString();
-                if( newTag.ReadTag( readStream ) ) {
+                if (newTag.ReadTag(readStream)) {
                     // ReSharper disable AssignNullToNotNullAttribute
                     // newTag.Name is never null
-                    tags.Add( newTag.Name, newTag );
+                    tags.Add(newTag.Name, newTag);
                     // ReSharper restore AssignNullToNotNullAttribute
                 }
             }
         }
 
 
-        internal override void SkipTag( NbtBinaryReader readStream ) {
-            while( true ) {
+        internal override void SkipTag(NbtBinaryReader readStream) {
+            while (true) {
                 NbtTagType nextTag = readStream.ReadTagType();
                 NbtTag newTag;
-                switch( nextTag ) {
+                switch (nextTag) {
                     case NbtTagType.End:
                         return;
 
@@ -366,28 +357,28 @@ namespace fNbt {
                         break;
 
                     default:
-                        throw new NbtFormatException( "Unsupported tag type found in NBT_Compound: " + nextTag );
+                        throw new NbtFormatException("Unsupported tag type found in NBT_Compound: " + nextTag);
                 }
                 readStream.SkipString();
-                newTag.SkipTag( readStream );
+                newTag.SkipTag(readStream);
             }
         }
 
 
-        internal override void WriteTag( NbtBinaryWriter writeStream ) {
-            writeStream.Write( NbtTagType.Compound );
-            if( Name == null )
-                throw new NbtFormatException( "Name is null" );
-            writeStream.Write( Name );
-            WriteData( writeStream );
+        internal override void WriteTag(NbtBinaryWriter writeStream) {
+            writeStream.Write(NbtTagType.Compound);
+            if (Name == null)
+                throw new NbtFormatException("Name is null");
+            writeStream.Write(Name);
+            WriteData(writeStream);
         }
 
 
-        internal override void WriteData( NbtBinaryWriter writeStream ) {
-            foreach( NbtTag tag in tags.Values ) {
-                tag.WriteTag( writeStream );
+        internal override void WriteData(NbtBinaryWriter writeStream) {
+            foreach (NbtTag tag in tags.Values) {
+                tag.WriteTag(writeStream);
             }
-            writeStream.Write( NbtTagType.End );
+            writeStream.Write(NbtTagType.End);
         }
 
         #endregion
@@ -416,24 +407,24 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If the given tag is unnamed;
         /// or if a tag with the given name already exists in this NbtCompound. </exception>
-        public void Add( [NotNull] NbtTag newTag ) {
-            if( newTag == null ) {
-                throw new ArgumentNullException( "newTag" );
-            } else if( newTag == this ) {
-                throw new ArgumentException( "Cannot add tag to self" );
-            } else if( newTag.Name == null ) {
-                throw new ArgumentException( "Only named tags are allowed in compound tags." );
-            } else if( newTag.Parent != null ) {
-                throw new ArgumentException( "A tag may only be added to one compound/list at a time." );
+        public void Add([NotNull] NbtTag newTag) {
+            if (newTag == null) {
+                throw new ArgumentNullException("newTag");
+            } else if (newTag == this) {
+                throw new ArgumentException("Cannot add tag to self");
+            } else if (newTag.Name == null) {
+                throw new ArgumentException("Only named tags are allowed in compound tags.");
+            } else if (newTag.Parent != null) {
+                throw new ArgumentException("A tag may only be added to one compound/list at a time.");
             }
-            tags.Add( newTag.Name, newTag );
+            tags.Add(newTag.Name, newTag);
             newTag.Parent = this;
         }
 
 
         /// <summary> Removes all tags from this NbtCompound. </summary>
         public void Clear() {
-            foreach( NbtTag tag in tags.Values ) {
+            foreach (NbtTag tag in tags.Values) {
                 tag.Parent = null;
             }
             tags.Clear();
@@ -446,10 +437,10 @@ namespace fNbt {
         /// <param name="tag"> The object to locate in this NbtCompound. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is <c>null</c>. </exception>
         [Pure]
-        public bool Contains( [NotNull] NbtTag tag ) {
-            if( tag == null )
-                throw new ArgumentNullException( "tag" );
-            return tags.ContainsValue( tag );
+        public bool Contains([NotNull] NbtTag tag) {
+            if (tag == null)
+                throw new ArgumentNullException("tag");
+            return tags.ContainsValue(tag);
         }
 
 
@@ -462,8 +453,8 @@ namespace fNbt {
         /// <exception cref="ArgumentException"> Given array is multidimensional; arrayIndex is equal to or greater than the length of array;
         /// the number of tags in this NbtCompound is greater than the available space from arrayIndex to the end of the destination array;
         /// or type NbtTag cannot be cast automatically to the type of the destination array. </exception>
-        public void CopyTo( NbtTag[] array, int arrayIndex ) {
-            tags.Values.CopyTo( array, arrayIndex );
+        public void CopyTo(NbtTag[] array, int arrayIndex) {
+            tags.Values.CopyTo(array, arrayIndex);
         }
 
 
@@ -474,14 +465,14 @@ namespace fNbt {
         /// <param name="tag"> The tag to remove from the NbtCompound. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If the given tag is unnamed </exception>
-        public bool Remove( [NotNull] NbtTag tag ) {
-            if( tag == null )
-                throw new ArgumentNullException( "tag" );
-            if( tag.Name == null )
-                throw new ArgumentException( "Trying to remove an unnamed tag." );
+        public bool Remove([NotNull] NbtTag tag) {
+            if (tag == null)
+                throw new ArgumentNullException("tag");
+            if (tag.Name == null)
+                throw new ArgumentException("Trying to remove an unnamed tag.");
             NbtTag maybeItem;
-            if( tags.TryGetValue( tag.Name, out maybeItem ) ) {
-                if( maybeItem == tag && tags.Remove( tag.Name ) ) {
+            if (tags.TryGetValue(tag.Name, out maybeItem)) {
+                if (maybeItem == tag && tags.Remove(tag.Name)) {
                     tag.Parent = null;
                     return true;
                 }
@@ -493,16 +484,12 @@ namespace fNbt {
         /// <summary> Gets the number of tags contained in the NbtCompound. </summary>
         /// <returns> The number of tags contained in the NbtCompound. </returns>
         public int Count {
-            get {
-                return tags.Count;
-            }
+            get { return tags.Count; }
         }
 
 
         bool ICollection<NbtTag>.IsReadOnly {
-            get {
-                return false;
-            }
+            get { return false; }
         }
 
         #endregion
@@ -510,48 +497,44 @@ namespace fNbt {
 
         #region Implementation of ICollection
 
-        void ICollection.CopyTo( Array array, int index ) {
-            CopyTo( (NbtTag[])array, index );
+        void ICollection.CopyTo(Array array, int index) {
+            CopyTo((NbtTag[])array, index);
         }
 
 
         object ICollection.SyncRoot {
-            get {
-                return ( tags as ICollection ).SyncRoot;
-            }
+            get { return (tags as ICollection).SyncRoot; }
         }
 
 
         bool ICollection.IsSynchronized {
-            get {
-                return false;
-            }
+            get { return false; }
         }
 
         #endregion
 
 
-        internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
-            for( int i = 0; i < indentLevel; i++ ) {
-                sb.Append( indentString );
+        internal override void PrettyPrint(StringBuilder sb, string indentString, int indentLevel) {
+            for (int i = 0; i < indentLevel; i++) {
+                sb.Append(indentString);
             }
-            sb.Append( "TAG_Compound" );
-            if( !String.IsNullOrEmpty( Name ) ) {
-                sb.AppendFormat( "(\"{0}\")", Name );
+            sb.Append("TAG_Compound");
+            if (!String.IsNullOrEmpty(Name)) {
+                sb.AppendFormat("(\"{0}\")", Name);
             }
-            sb.AppendFormat( ": {0} entries {{", tags.Count );
+            sb.AppendFormat(": {0} entries {{", tags.Count);
 
-            if( Count > 0 ) {
-                sb.Append( '\n' );
-                foreach( NbtTag tag in tags.Values ) {
-                    tag.PrettyPrint( sb, indentString, indentLevel + 1 );
-                    sb.Append( '\n' );
+            if (Count > 0) {
+                sb.Append('\n');
+                foreach (NbtTag tag in tags.Values) {
+                    tag.PrettyPrint(sb, indentString, indentLevel + 1);
+                    sb.Append('\n');
                 }
-                for( int i = 0; i < indentLevel; i++ ) {
-                    sb.Append( indentString );
+                for (int i = 0; i < indentLevel; i++) {
+                    sb.Append(indentString);
                 }
             }
-            sb.Append( '}' );
+            sb.Append('}');
         }
     }
 }

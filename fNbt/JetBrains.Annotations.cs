@@ -21,18 +21,18 @@ namespace JetBrains.Annotations {
     /// so the check for <c>null</c> is necessary before its usage. </summary>
     [AttributeUsage(
         AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Delegate |
-        AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+        AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     internal sealed class CanBeNullAttribute : Attribute {}
 
 
     /// <summary> Indicates that the value of marked element could never be <c>null</c>. </summary>
     [AttributeUsage(
         AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Delegate |
-        AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+        AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     internal sealed class NotNullAttribute : Attribute {}
 
 
     /// <summary> Indicates that method doesn't contain observable side effects. </summary>
-    [AttributeUsage( AttributeTargets.Method, Inherited = true )]
+    [AttributeUsage(AttributeTargets.Method, Inherited = true)]
     internal sealed class PureAttribute : Attribute {}
 }

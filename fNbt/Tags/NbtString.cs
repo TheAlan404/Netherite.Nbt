@@ -7,27 +7,22 @@ namespace fNbt {
     public sealed class NbtString : NbtTag {
         /// <summary> Type of this tag (String). </summary>
         public override NbtTagType TagType {
-            get {
-                return NbtTagType.String;
-            }
+            get { return NbtTagType.String; }
         }
 
         /// <summary> Value/payload of this tag (a single string). May not be <c>null</c>. </summary>
         [NotNull]
         public string Value {
-            get {
-                return stringVal;
-            }
+            get { return stringVal; }
             set {
-                if( value == null ) {
-                    throw new ArgumentNullException( "value" );
+                if (value == null) {
+                    throw new ArgumentNullException("value");
                 }
                 stringVal = value;
             }
         }
 
-        [NotNull]
-        string stringVal = "";
+        [NotNull] string stringVal = "";
 
 
         /// <summary> Creates an unnamed NbtString tag with the default value (empty string). </summary>
@@ -37,17 +32,17 @@ namespace fNbt {
         /// <summary> Creates an unnamed NbtString tag with the given value. </summary>
         /// <param name="value"> String value to assign to this tag. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
-        public NbtString( [NotNull] string value )
-            : this( null, value ) {}
+        public NbtString([NotNull] string value)
+            : this(null, value) {}
 
 
         /// <summary> Creates an NbtString tag with the given name and value. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         /// <param name="value"> String value to assign to this tag. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
-        public NbtString( [CanBeNull] string tagName, [NotNull] string value ) {
-            if( value == null )
-                throw new ArgumentNullException( "value" );
+        public NbtString([CanBeNull] string tagName, [NotNull] string value) {
+            if (value == null)
+                throw new ArgumentNullException("value");
             Name = tagName;
             Value = value;
         }
@@ -55,8 +50,8 @@ namespace fNbt {
 
         #region Reading / Writing
 
-        internal override bool ReadTag( NbtBinaryReader readStream ) {
-            if( readStream.Selector != null && !readStream.Selector( this ) ) {
+        internal override bool ReadTag(NbtBinaryReader readStream) {
+            if (readStream.Selector != null && !readStream.Selector(this)) {
                 readStream.SkipString();
                 return false;
             }
@@ -65,38 +60,38 @@ namespace fNbt {
         }
 
 
-        internal override void SkipTag( NbtBinaryReader readStream ) {
+        internal override void SkipTag(NbtBinaryReader readStream) {
             readStream.SkipString();
         }
 
 
-        internal override void WriteTag( NbtBinaryWriter writeStream ) {
-            writeStream.Write( NbtTagType.String );
-            if( Name == null )
-                throw new NbtFormatException( "Name is null" );
-            writeStream.Write( Name );
-            writeStream.Write( Value );
+        internal override void WriteTag(NbtBinaryWriter writeStream) {
+            writeStream.Write(NbtTagType.String);
+            if (Name == null)
+                throw new NbtFormatException("Name is null");
+            writeStream.Write(Name);
+            writeStream.Write(Value);
         }
 
 
-        internal override void WriteData( NbtBinaryWriter writeStream ) {
-            writeStream.Write( Value );
+        internal override void WriteData(NbtBinaryWriter writeStream) {
+            writeStream.Write(Value);
         }
 
         #endregion
 
 
-        internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
-            for( int i = 0; i < indentLevel; i++ ) {
-                sb.Append( indentString );
+        internal override void PrettyPrint(StringBuilder sb, string indentString, int indentLevel) {
+            for (int i = 0; i < indentLevel; i++) {
+                sb.Append(indentString);
             }
-            sb.Append( "TAG_String" );
-            if( !String.IsNullOrEmpty( Name ) ) {
-                sb.AppendFormat( "(\"{0}\")", Name );
+            sb.Append("TAG_String");
+            if (!String.IsNullOrEmpty(Name)) {
+                sb.AppendFormat("(\"{0}\")", Name);
             }
-            sb.Append( ": \"" );
-            sb.Append( Value );
-            sb.Append( '"' );
+            sb.Append(": \"");
+            sb.Append(Value);
+            sb.Append('"');
         }
     }
 }

@@ -7,9 +7,7 @@ namespace fNbt {
     public sealed class NbtInt : NbtTag {
         /// <summary> Type of this tag (Int). </summary>
         public override NbtTagType TagType {
-            get {
-                return NbtTagType.Int;
-            }
+            get { return NbtTagType.Int; }
         }
 
         /// <summary> Value/payload of this tag (a single signed 32-bit integer). </summary>
@@ -22,27 +20,27 @@ namespace fNbt {
 
         /// <summary> Creates an unnamed NbtInt tag with the given value. </summary>
         /// <param name="value"> Value to assign to this tag. </param>
-        public NbtInt( int value )
-            : this( null, value ) {}
+        public NbtInt(int value)
+            : this(null, value) {}
 
 
         /// <summary> Creates an NbtInt tag with the given name and the default value of 0. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
-        public NbtInt( [CanBeNull] string tagName )
-            : this( tagName, 0 ) {}
+        public NbtInt([CanBeNull] string tagName)
+            : this(tagName, 0) {}
 
 
         /// <summary> Creates an NbtInt tag with the given name and value. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         /// <param name="value"> Value to assign to this tag. </param>
-        public NbtInt( [CanBeNull] string tagName, int value ) {
+        public NbtInt([CanBeNull] string tagName, int value) {
             Name = tagName;
             Value = value;
         }
 
 
-        internal override bool ReadTag( NbtBinaryReader readStream ) {
-            if( readStream.Selector != null && !readStream.Selector( this ) ) {
+        internal override bool ReadTag(NbtBinaryReader readStream) {
+            if (readStream.Selector != null && !readStream.Selector(this)) {
                 readStream.ReadInt32();
                 return false;
             }
@@ -51,35 +49,35 @@ namespace fNbt {
         }
 
 
-        internal override void SkipTag( NbtBinaryReader readStream ) {
+        internal override void SkipTag(NbtBinaryReader readStream) {
             readStream.ReadInt32();
         }
 
 
-        internal override void WriteTag( NbtBinaryWriter writeStream ) {
-            writeStream.Write( NbtTagType.Int );
-            if( Name == null )
-                throw new NbtFormatException( "Name is null" );
-            writeStream.Write( Name );
-            writeStream.Write( Value );
+        internal override void WriteTag(NbtBinaryWriter writeStream) {
+            writeStream.Write(NbtTagType.Int);
+            if (Name == null)
+                throw new NbtFormatException("Name is null");
+            writeStream.Write(Name);
+            writeStream.Write(Value);
         }
 
 
-        internal override void WriteData( NbtBinaryWriter writeStream ) {
-            writeStream.Write( Value );
+        internal override void WriteData(NbtBinaryWriter writeStream) {
+            writeStream.Write(Value);
         }
 
 
-        internal override void PrettyPrint( StringBuilder sb, string indentString, int indentLevel ) {
-            for( int i = 0; i < indentLevel; i++ ) {
-                sb.Append( indentString );
+        internal override void PrettyPrint(StringBuilder sb, string indentString, int indentLevel) {
+            for (int i = 0; i < indentLevel; i++) {
+                sb.Append(indentString);
             }
-            sb.Append( "TAG_Int" );
-            if( !String.IsNullOrEmpty( Name ) ) {
-                sb.AppendFormat( "(\"{0}\")", Name );
+            sb.Append("TAG_Int");
+            if (!String.IsNullOrEmpty(Name)) {
+                sb.AppendFormat("(\"{0}\")", Name);
             }
-            sb.Append( ": " );
-            sb.Append( Value );
+            sb.Append(": ");
+            sb.Append(Value);
         }
     }
 }

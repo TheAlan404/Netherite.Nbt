@@ -6,7 +6,7 @@ namespace fNbt {
     /// parsing or serializing an NBT file. </summary>
     [Serializable]
     public sealed class NbtFormatException : Exception {
-        internal NbtFormatException( [NotNull] string message )
-            : base( message ) {}
+        internal NbtFormatException([NotNull] string message)
+            : base(message) {}
     }
 }
