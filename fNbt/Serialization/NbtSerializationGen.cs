@@ -158,13 +158,13 @@ namespace fNbt.Serialization {
                                                      ParameterExpression varRootTag,
                                                      PropertyInfo property,
                                                      string tagName) {
-            // locate the getter for this property
-            Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
-
             // Declare locals
             ParameterExpression varIList = Expression.Parameter(property.PropertyType);
             ParameterExpression varListTag = Expression.Parameter(typeof(NbtList));
             ParameterExpression varIndex = Expression.Parameter(typeof(int));
+
+            // Find getter for this IList
+            Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
 
             // Find getter for the item indexer
             InterfaceMapping listImplMap = property.PropertyType.GetInterfaceMap(typeof(IList<>));
@@ -184,9 +184,9 @@ namespace fNbt.Serialization {
             if (!PrimitiveConversionMap.TryGetValue(elementType, out convertedType)) {
                 convertedType = elementType;
             }
-            Type tagType = TypeToTagMap[convertedType];
+            Type elementTagType = TypeToTagMap[convertedType];
 
-            // Handle type conversion 
+            // Handle element type conversion
             if (elementType == typeof(bool)) {
                 // special handling for bool-to-byte
                 getElementExpr = Expression.Condition(Expression.IsTrue(getElementExpr),
@@ -197,10 +197,10 @@ namespace fNbt.Serialization {
             }
 
             // create "new NbtTag(...)" expression
-            ConstructorInfo tagConstructor = tagType.GetConstructor(new[] { typeof(string), convertedType });
-            Expression constructTagExpression = Expression.New(tagConstructor,
-                                                               Expression.Constant(null, typeof(string)),
-                                                               getElementExpr);
+            ConstructorInfo tagConstructor = elementTagType.GetConstructor(new[] { typeof(string), convertedType });
+            Expression constructElementTagExpr = Expression.New(tagConstructor,
+                                                                Expression.Constant(null, typeof(string)),
+                                                                getElementExpr);
 
             // Arrange tag construction in a loop
             LabelTarget loopBreak = Expression.Label(typeof(void));
@@ -214,21 +214,24 @@ namespace fNbt.Serialization {
                             Expression.Break(loopBreak)),
 
                         // tag.Add( new NbtTag(...) )
-                        Expression.Call(varListTag, NbtListAddMethod, constructTagExpression),
+                        Expression.Call(varListTag, NbtListAddMethod, constructElementTagExpr),
 
                         // i--
                         Expression.Decrement(varIndex)
                         ),
                     loopBreak);
 
-            // Put everything together into a neat block, with locals
+            // Package everything together into a neat block, with locals
             return Expression.Block(
                 new[] { varIList, varListTag, varIndex },
+
                 // IList<> varList = argValue.ThisProperty;
                 Expression.Assign(varIList, getPropertyExpr),
 
-                // NbtList varTag = new NbtList(tagName);
-                Expression.Assign(varListTag, Expression.New(NbtListConstructor, Expression.Constant(tagName))),
+                // NbtList varTag = new NbtList(tagName, elementTagType);
+                Expression.Assign(
+                    varListTag,
+                    Expression.New(NbtListConstructor, Expression.Constant(tagName), Expression.Constant(elementTagType))),
 
                 // int varIndex = varList.Count - 1;
                 Expression.Assign(
@@ -241,8 +244,7 @@ namespace fNbt.Serialization {
                 mainLoop,
 
                 // varRootTag.Add( varListTag );
-                Expression.Call(varRootTag, NbtCompoundAddMethod, varListTag)
-                );
+                Expression.Call(varRootTag, NbtCompoundAddMethod, varListTag));
         }
 
 
