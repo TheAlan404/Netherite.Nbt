@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -20,15 +19,15 @@ namespace fNbt.Serialization {
             typeof(NbtList).GetMethod("Add", new[] { typeof(NbtTag) });
 
         // new ArgumentNullException(string)
-        static readonly ConstructorInfo ArgNullConstructor =
+        static readonly ConstructorInfo ArgumentNullExceptionCtor =
             typeof(ArgumentNullException).GetConstructor(new[] { typeof(string) });
 
         // new NbtCompound(string)
-        static readonly ConstructorInfo NbtCompoundConstructor =
+        static readonly ConstructorInfo NbtCompoundCtor =
             typeof(NbtCompound).GetConstructor(new[] { typeof(string) });
 
         // new NbtList(string,NbtTagType)
-        static readonly ConstructorInfo NbtListConstructor =
+        static readonly ConstructorInfo NbtListCtor =
             typeof(NbtList).GetConstructor(new[] { typeof(string), typeof(NbtTagType) });
 
 
@@ -62,10 +61,10 @@ namespace fNbt.Serialization {
                 Expression.IfThen(
                     Expression.ReferenceEqual(argValue, Expression.Constant(null)),
                     //  throw new ArgumentNullException("value");
-                    Expression.Throw(Expression.New(ArgNullConstructor, Expression.Constant("value")))),
+                    Expression.Throw(Expression.New(ArgumentNullExceptionCtor, Expression.Constant("value")))),
 
                 // varRootTag = new NbtCompound(argTagName);
-                Expression.Assign(varRootTag, Expression.New(NbtCompoundConstructor, argTagName)),
+                Expression.Assign(varRootTag, Expression.New(NbtCompoundCtor, argTagName)),
 
                 // (run the generated serializing code)
                 serializersExpr,
@@ -131,21 +130,30 @@ namespace fNbt.Serialization {
                 }
 
                 // serialize IList<>
-                if (propType.IsGenericType && propType.GetGenericTypeDefinition() == typeof(List<>)) {
-                    // TODO
+                Type iListImpl = GetIListImpl(propType);
+                if (iListImpl != null) {
+                    Type elementType = iListImpl.GetGenericArguments()[0];
+
+                    if (elementType.IsPrimitive) {
+                        expressions.Add(SerializeIListOfPrimitives(iListImpl,
+                                                                   argValue, varRootTag,
+                                                                   property, tagName));
+                    } else {
+                        throw new NotImplementedException("TODO: ILists of non-primitives");
+                    }
                     continue;
                 }
 
                 // Skip serializing NbtTag properties
                 if (propType.IsAssignableFrom(typeof(NbtTag))) {
                     // TODO
-                    continue;
+                    throw new NotImplementedException("TODO: NbtTag");
                 }
 
                 // Skip serializing NbtFile properties
                 if (propType == typeof(NbtFile)) {
                     // TODO
-                    continue;
+                    throw new NotImplementedException("TODO: NbtFile");
                 }
 
                 // TODO: treat property as a compound tag
@@ -154,32 +162,52 @@ namespace fNbt.Serialization {
         }
 
 
-        static Expression SerializeIListOfPrimitives(ParameterExpression argValue,
+        [CanBeNull]
+        static Type GetIListImpl(Type type) {
+            return type.GetInterfaces()
+                       .FirstOrDefault(x => x.IsGenericType &&
+                                            x.GetGenericTypeDefinition() == typeof(IList<>));
+        }
+
+
+        static Expression SerializeIListOfPrimitives(Type iListInterface,
+                                                     ParameterExpression argValue,
                                                      ParameterExpression varRootTag,
                                                      PropertyInfo property,
                                                      string tagName) {
             // Declare locals
             ParameterExpression varIList = Expression.Parameter(property.PropertyType);
             ParameterExpression varListTag = Expression.Parameter(typeof(NbtList));
+            ParameterExpression varLength = Expression.Parameter(typeof(int));
             ParameterExpression varIndex = Expression.Parameter(typeof(int));
 
             // Find getter for this IList
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
 
-            // Find getter for the item indexer
-            InterfaceMapping listImplMap = property.PropertyType.GetInterfaceMap(typeof(IList<>));
-            MethodInfo iListItemGetter = typeof(IList<>).GetProperty("Item").GetGetMethod();
-            int itemGetterIndex = Array.IndexOf(listImplMap.InterfaceMethods, iListItemGetter);
-            MethodInfo itemGetterImpl = listImplMap.TargetMethods[itemGetterIndex];
-            Expression getElementExpr = Expression.Call(varIList, itemGetterImpl, varIndex);
+            MethodInfo countGetterImpl, itemGetterImpl;
+            Expression getElementExpr, getCountExpr;
 
-            // Find getter for IList<>.Count
-            MethodInfo iListCountGetter = typeof(IList<>).GetProperty("Count").GetGetMethod();
-            int countGetterIndex = Array.IndexOf(listImplMap.InterfaceMethods, iListCountGetter);
-            MethodInfo countGetterImpl = listImplMap.TargetMethods[countGetterIndex];
+            if (property.PropertyType.IsArray) {
+                countGetterImpl = property.PropertyType.GetProperty("Length").GetGetMethod();
+                itemGetterImpl = property.PropertyType.GetMethod("GetValue", new[] { typeof(int) });
+
+            } else {
+                // Find getter for the item indexer
+                InterfaceMapping listImplMap = property.PropertyType.GetInterfaceMap(iListInterface);
+                MethodInfo iListItemGetter = typeof(IList<>).GetProperty("Item").GetGetMethod();
+                int itemGetterIndex = Array.IndexOf(listImplMap.InterfaceMethods, iListItemGetter);
+                itemGetterImpl = listImplMap.TargetMethods[itemGetterIndex];
+
+                // Find getter for IList<>.Count
+                MethodInfo iListCountGetter = typeof(IList<>).GetProperty("Count").GetGetMethod();
+                int countGetterIndex = Array.IndexOf(listImplMap.InterfaceMethods, iListCountGetter);
+                countGetterImpl = listImplMap.TargetMethods[countGetterIndex];
+            }
+            getElementExpr = Expression.Call(varIList, itemGetterImpl, varIndex);
+            getCountExpr = Expression.Call(varIList, countGetterImpl);
 
             // Find the correct NbtTag type for elements
-            Type elementType = property.PropertyType.GetGenericArguments()[0];
+            Type elementType = iListInterface.GetGenericArguments()[0];
             Type convertedType;
             if (!PrimitiveConversionMap.TryGetValue(elementType, out convertedType)) {
                 convertedType = elementType;
@@ -188,17 +216,21 @@ namespace fNbt.Serialization {
 
             // Handle element type conversion
             if (elementType == typeof(bool)) {
+                // cast booleans returned from Array.Get()
+                if (getElementExpr.Type != typeof(bool)) {
+                    getElementExpr = Expression.Convert(getElementExpr, typeof(bool));
+                }
                 // special handling for bool-to-byte
-                getElementExpr = Expression.Condition(Expression.IsTrue(getElementExpr),
+                getElementExpr = Expression.Condition(getElementExpr,
                                                       Expression.Constant((byte)1), Expression.Constant((byte)0));
-            } else if (elementType != convertedType) {
+            } else if (elementType != convertedType || getElementExpr.Type != elementType) {
                 // special handling (casting) for sbyte/ushort/char/uint/ulong/decimal
                 getElementExpr = Expression.Convert(getElementExpr, convertedType);
             }
 
             // create "new NbtTag(...)" expression
-            ConstructorInfo tagConstructor = elementTagType.GetConstructor(new[] { typeof(string), convertedType });
-            Expression constructElementTagExpr = Expression.New(tagConstructor,
+            ConstructorInfo tagCtor = elementTagType.GetConstructor(new[] { typeof(string), convertedType });
+            Expression constructElementTagExpr = Expression.New(tagCtor,
                                                                 Expression.Constant(null, typeof(string)),
                                                                 getElementExpr);
 
@@ -208,42 +240,42 @@ namespace fNbt.Serialization {
                 // while (true)
                 Expression.Loop(
                     Expression.Block(
-                        // if (i==0) break;
+                        // if (i >= length) break;
                         Expression.IfThen(
-                            Expression.Equal(varIndex, Expression.Constant(0)),
+                            Expression.GreaterThanOrEqual(varIndex, varLength),
                             Expression.Break(loopBreak)),
 
-                        // tag.Add( new NbtTag(...) )
+                        // tag.Add( new NbtTag(...) );
                         Expression.Call(varListTag, NbtListAddMethod, constructElementTagExpr),
 
-                        // i--
-                        Expression.Decrement(varIndex)
-                        ),
+                        // ++i;
+                        Expression.PreIncrementAssign(varIndex)),
                     loopBreak);
 
             // Package everything together into a neat block, with locals
             return Expression.Block(
-                new[] { varIList, varListTag, varIndex },
+                new[] { varIList, varListTag, varIndex, varLength },
 
-                // IList<> varList = argValue.ThisProperty;
+                // IList<> iList = value.ThisProperty;
                 Expression.Assign(varIList, getPropertyExpr),
 
-                // NbtList varTag = new NbtList(tagName, elementTagType);
+                // NbtList listTag = new NbtList(tagName, NbtTagType.*);
                 Expression.Assign(
                     varListTag,
-                    Expression.New(NbtListConstructor, Expression.Constant(tagName), Expression.Constant(elementTagType))),
+                    Expression.New(NbtListCtor,
+                                   Expression.Constant(tagName),
+                                   Expression.Constant(TypeToTagTypeEnum[elementTagType]))),
 
-                // int varIndex = varList.Count - 1;
-                Expression.Assign(
-                    varIndex,
-                    Expression.Subtract(
-                        Expression.Call(varIList, countGetterImpl),
-                        Expression.Constant(1))),
+                // int length = iList.Count;
+                Expression.Assign( varLength, getCountExpr),
+
+                // int i=0;
+                Expression.Assign(varIndex, Expression.Constant(0)),
 
                 // (fill the list tag)
                 mainLoop,
 
-                // varRootTag.Add( varListTag );
+                // rootTag.Add( listTag );
                 Expression.Call(varRootTag, NbtCompoundAddMethod, varListTag));
         }
 
@@ -262,7 +294,7 @@ namespace fNbt.Serialization {
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
 
             Type tagType = TypeToTagMap[property.PropertyType];
-            ConstructorInfo tagConstructor = tagType.GetConstructor(new[] { typeof(string), property.PropertyType });
+            ConstructorInfo tagCtor = tagType.GetConstructor(new[] { typeof(string), property.PropertyType });
 
             if (ignoreOnNull) {
                 // declare a local var, which will hold the property's value
@@ -280,7 +312,7 @@ namespace fNbt.Serialization {
                         // varRootTag.Add( new NbtString(tagName, varValue) );
                         Expression.Call(
                             varRootTag, NbtCompoundAddMethod,
-                            Expression.New(tagConstructor, Expression.Constant(tagName), varValue))));
+                            Expression.New(tagCtor, Expression.Constant(tagName), varValue))));
             } else {
                 Expression defaultVal = Expression.Constant(GetDefaultValue(property.PropertyType));
 
@@ -288,7 +320,7 @@ namespace fNbt.Serialization {
                 return Expression.Call(
                     varRootTag, NbtCompoundAddMethod,
                     Expression.New(
-                        tagConstructor, Expression.Constant(tagName),
+                        tagCtor, Expression.Constant(tagName),
                         Expression.Coalesce(getPropertyExpr, defaultVal)));
             }
         }
@@ -322,6 +354,20 @@ namespace fNbt.Serialization {
         };
 
 
+        static readonly Dictionary<Type, NbtTagType> TypeToTagTypeEnum = new Dictionary<Type, NbtTagType> {
+            { typeof(NbtByte), NbtTagType.Byte},
+            { typeof(NbtByteArray), NbtTagType.ByteArray},
+            { typeof(NbtDouble), NbtTagType.Double},
+            { typeof(NbtFloat), NbtTagType.Float},
+            { typeof(NbtInt), NbtTagType.Int},
+            { typeof(NbtIntArray), NbtTagType.IntArray},
+            { typeof(NbtLong), NbtTagType.Long},
+            { typeof(NbtShort), NbtTagType.Short},
+            { typeof(NbtString), NbtTagType.String}
+
+        }; 
+
+
         // mapping of convertible value types to directly-usable primitive types
         static readonly Dictionary<Type, Type> PrimitiveConversionMap = new Dictionary<Type, Type> {
             { typeof(bool), typeof(byte) },
@@ -345,7 +391,7 @@ namespace fNbt.Serialization {
 
             // find the tag constructor
             Type tagType = TypeToTagMap[convertedType];
-            ConstructorInfo tagConstructor = tagType.GetConstructor(new[] { typeof(string), convertedType });
+            ConstructorInfo tagCtor = tagType.GetConstructor(new[] { typeof(string), convertedType });
 
             // add a cast, if needed
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
@@ -359,7 +405,7 @@ namespace fNbt.Serialization {
             }
 
             // create a new instance of the appropriate tag
-            return Expression.New(tagConstructor, Expression.Constant(tagName), getPropertyExpr);
+            return Expression.New(tagCtor, Expression.Constant(tagName), getPropertyExpr);
         }
 
 
