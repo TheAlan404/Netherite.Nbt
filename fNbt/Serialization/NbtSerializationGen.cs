@@ -129,13 +129,13 @@ namespace fNbt.Serialization {
                     continue;
                 }
 
-                // serialize IList<>
-                Type iListImpl = GetIListImpl(propType);
+                // serialize something that implements IList<>
+                Type iListImpl = GetGenericInterfaceImpl(propType, typeof(IList<>));
                 if (iListImpl != null) {
                     Type elementType = iListImpl.GetGenericArguments()[0];
 
                     if (elementType.IsPrimitive) {
-                        expressions.Add(SerializeIListOfPrimitives(iListImpl,
+                        expressions.Add(SerializeIListOfPrimitives(elementType,
                                                                    argValue, varRootTag,
                                                                    property, tagName));
                     } else {
@@ -163,14 +163,54 @@ namespace fNbt.Serialization {
 
 
         [CanBeNull]
-        static Type GetIListImpl(Type type) {
-            return type.GetInterfaces()
-                       .FirstOrDefault(x => x.IsGenericType &&
-                                            x.GetGenericTypeDefinition() == typeof(IList<>));
+        static Type GetGenericInterfaceImpl(Type concreteType, Type genericInterface) {
+            if (concreteType.IsGenericType && concreteType.GetGenericTypeDefinition() == genericInterface) {
+                // concreteType itself is the desired generic interface
+                return concreteType;
+            } else {
+                // Check if concreteType implements the desired generic interface ONCE
+                // Double implementations (e.g. Foo : Bar<T1>, Bar<T2>) are not acceptable.
+                return concreteType.GetInterfaces()
+                                   .SingleOrDefault(x => x.IsGenericType &&
+                                                         x.GetGenericTypeDefinition() == genericInterface);
+            }
         }
 
 
-        static Expression SerializeIListOfPrimitives(Type iListInterface,
+        [CanBeNull]
+        static MethodInfo GetGenericInterfaceMethodImpl(Type concreteType, Type genericInterface, string methodName,
+                                                        Type[] methodParams) {
+            // Find a specific "flavor" of the implementation
+            Type impl = GetGenericInterfaceImpl(concreteType, genericInterface);
+            if (impl == null) {
+                throw new ArgumentException(concreteType + " does not implement " + genericInterface);
+            }
+
+            MethodInfo interfaceMethod = impl.GetMethod(methodName, methodParams);
+            if (impl.IsInterface) {
+                // if concreteType is itself an interface (e.g. IList<> implements ICollection<>),
+                // We don't need to look up the interface implementation map. We can just return
+                // the interface's method directly.
+                return interfaceMethod;
+
+            } else {
+                // If concreteType is a class, we need to get a MethodInfo for its specific implementation.
+                // We cannot just call "GetMethod()" on the concreteType, because explicit implementations
+                // may cause ambiguity.
+                InterfaceMapping implMap = concreteType.GetInterfaceMap(impl);
+
+                if (interfaceMethod == null) {
+                    throw new ArgumentException(genericInterface + " does not contain method " + methodName);
+                }
+
+                int methodIndex = Array.IndexOf(implMap.InterfaceMethods, interfaceMethod);
+                MethodInfo concreteMethod = implMap.TargetMethods[methodIndex];
+                return concreteMethod;
+            }
+        }
+
+
+        static Expression SerializeIListOfPrimitives(Type elementType,
                                                      ParameterExpression argValue,
                                                      ParameterExpression varRootTag,
                                                      PropertyInfo property,
@@ -188,26 +228,22 @@ namespace fNbt.Serialization {
             Expression getElementExpr, getCountExpr;
 
             if (property.PropertyType.IsArray) {
+                // Although Array claims to implement IList<>, there is no way to retrieve
+                // the interface implementation: it's handled in an unusual way by the runtime.
+                // So we have to resort to getting Length/GetValue instead of Count/Item
                 countGetterImpl = property.PropertyType.GetProperty("Length").GetGetMethod();
                 itemGetterImpl = property.PropertyType.GetMethod("GetValue", new[] { typeof(int) });
 
             } else {
-                // Find getter for the item indexer
-                InterfaceMapping listImplMap = property.PropertyType.GetInterfaceMap(iListInterface);
-                MethodInfo iListItemGetter = typeof(IList<>).GetProperty("Item").GetGetMethod();
-                int itemGetterIndex = Array.IndexOf(listImplMap.InterfaceMethods, iListItemGetter);
-                itemGetterImpl = listImplMap.TargetMethods[itemGetterIndex];
-
-                // Find getter for IList<>.Count
-                MethodInfo iListCountGetter = typeof(IList<>).GetProperty("Count").GetGetMethod();
-                int countGetterIndex = Array.IndexOf(listImplMap.InterfaceMethods, iListCountGetter);
-                countGetterImpl = listImplMap.TargetMethods[countGetterIndex];
+                countGetterImpl = GetGenericInterfaceMethodImpl(property.PropertyType, typeof(ICollection<>), "get_Count",
+                                                            new Type[0]);
+                itemGetterImpl = GetGenericInterfaceMethodImpl(property.PropertyType, typeof(IList<>), "get_Item",
+                                                            new[] { typeof(int) });
             }
             getElementExpr = Expression.Call(varIList, itemGetterImpl, varIndex);
             getCountExpr = Expression.Call(varIList, countGetterImpl);
 
             // Find the correct NbtTag type for elements
-            Type elementType = iListInterface.GetGenericArguments()[0];
             Type convertedType;
             if (!PrimitiveConversionMap.TryGetValue(elementType, out convertedType)) {
                 convertedType = elementType;
@@ -216,7 +252,7 @@ namespace fNbt.Serialization {
 
             // Handle element type conversion
             if (elementType == typeof(bool)) {
-                // cast booleans returned from Array.Get()
+                // bools returned from Array.GetValue() need to be cast
                 if (getElementExpr.Type != typeof(bool)) {
                     getElementExpr = Expression.Convert(getElementExpr, typeof(bool));
                 }
@@ -224,7 +260,8 @@ namespace fNbt.Serialization {
                 getElementExpr = Expression.Condition(getElementExpr,
                                                       Expression.Constant((byte)1), Expression.Constant((byte)0));
             } else if (elementType != convertedType || getElementExpr.Type != elementType) {
-                // special handling (casting) for sbyte/ushort/char/uint/ulong/decimal
+                // Special handling (casting) for sbyte/ushort/char/uint/ulong/decimal
+                // Also, anything returned by Array.GetValue() needs to be cast
                 getElementExpr = Expression.Convert(getElementExpr, convertedType);
             }
 
