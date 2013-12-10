@@ -162,8 +162,11 @@ namespace fNbt.Serialization {
 
                 // Skip serializing NbtFile properties
                 if (propType == typeof(NbtFile)) {
-                    // TODO
-                    throw new NotImplementedException("TODO: NbtFile");
+                    Expression propValue = Expression.MakeMemberAccess(argValue, property);
+                    PropertyInfo fileRoot = typeof(NbtFile).GetProperty("RootTag");
+                    Expression fileRootGetterExpr = Expression.MakeMemberAccess(propValue, fileRoot);
+                    expressions.Add(Expression.Call(varRootTag, NbtCompoundAddMethod, fileRootGetterExpr));
+                    continue;
                 }
 
                 // TODO: treat property as a compound tag
