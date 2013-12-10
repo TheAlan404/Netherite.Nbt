@@ -136,9 +136,7 @@ namespace fNbt.Serialization {
                     list.Add(SerializePrimitiveType(null, valueAsArray[i]));
                 }
 
-            } else if (elementType == typeof(byte[]) ||
-                       elementType == typeof(int[]) ||
-                       elementType == typeof(string)) {
+            } else if (SerializationUtil.IsDirectlyMappedType(elementType)) {
                 // speedy serialization for directly-mapped types
                 for (int i = 0; i < valueAsArray.Count; i++) {
                     var value = valueAsArray[i];

@@ -19,6 +19,13 @@ namespace fNbt.Serialization {
         }
 
 
+        public static bool IsDirectlyMappedType(Type type) {
+            return type == typeof(byte[]) ||
+                   type == typeof(int[]) ||
+                   type == typeof(string);
+        }
+
+
         // mapping of directly-usable types to their NbtTag subtypes
         public static readonly Dictionary<Type, Type> TypeToTagMap = new Dictionary<Type, Type> {
             { typeof(byte), typeof(NbtByte) },

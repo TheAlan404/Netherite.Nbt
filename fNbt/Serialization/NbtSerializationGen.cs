@@ -21,11 +21,11 @@ namespace fNbt.Serialization {
 
         // new ArgumentNullException(string)
         static readonly ConstructorInfo ArgumentNullExceptionCtor =
-            typeof( ArgumentNullException ).GetConstructor( new[] { typeof( string ) } );
+            typeof(ArgumentNullException).GetConstructor(new[] { typeof(string) });
 
         // new NullReferenceException(string)
         static readonly ConstructorInfo NullReferenceExceptionCtor =
-            typeof( NullReferenceException ).GetConstructor( new[] { typeof( string ) } );
+            typeof(NullReferenceException).GetConstructor(new[] { typeof(string) });
 
         // new NbtCompound(string)
         static readonly ConstructorInfo NbtCompoundCtor =
@@ -121,9 +121,7 @@ namespace fNbt.Serialization {
                 }
 
                 // serialize reference types that map directly to NBT tag types
-                if (propType == typeof(string) ||
-                    propType == typeof(byte[]) ||
-                    propType == typeof(int[])) {
+                if (SerializationUtil.IsDirectlyMappedType(propType)) {
                     Expression serializeStripPropExpr =
                         SerializePropertyDirectly(argValue, varRootTag, property, tagName, selfPolicy);
                     expressions.Add(serializeStripPropExpr);
@@ -156,13 +154,20 @@ namespace fNbt.Serialization {
 
                 // Skip serializing NbtTag properties
                 if (propType.IsAssignableFrom(typeof(NbtTag))) {
-                    // TODO
-                    throw new NotImplementedException("TODO: NbtTag");
+                    Expression newExpr =
+                        MakeNbtFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
+                                           expr => expr);
+                    expressions.Add(newExpr);
+                    continue;
                 }
 
                 // Skip serializing NbtFile properties
                 if (propType == typeof(NbtFile)) {
-                    expressions.Add(MakeNbtFileHandler(argValue, varRootTag, property, tagName, selfPolicy));
+                    PropertyInfo rootTagProp = typeof(NbtFile).GetProperty("RootTag");
+                    Expression newExpr =
+                        MakeNbtFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
+                                           expr => Expression.MakeMemberAccess(expr, rootTagProp));
+                    expressions.Add(newExpr);
                     continue;
                 }
 
@@ -175,19 +180,18 @@ namespace fNbt.Serialization {
 
         static Expression MakeNbtFileHandler(ParameterExpression argValue,
                                              ParameterExpression varRootTag,
-                                             PropertyInfo property, string tagName, NullPolicy selfPolicy) {
+                                             PropertyInfo property, string tagName, NullPolicy selfPolicy,
+                                             Func<ParameterExpression,Expression> conversionFunc ) {
             // declare a local var, which will hold the property's value
             ParameterExpression varValue = Expression.Parameter(property.PropertyType);
-            
+
             // Primary path, adds the root tag of the NbtFile
-            Expression fileRootGetterExpr =
-                Expression.MakeMemberAccess(varValue, typeof(NbtFile).GetProperty("RootTag"));
-            Expression makeTagExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, fileRootGetterExpr);
+            Expression makeTagExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, conversionFunc(varValue));
 
             // Fallback path, in case value is null and NullPolicy is InsertDefaults
             Expression defaultVal = Expression.New(NbtCompoundCtor, Expression.Constant(tagName));
             Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, defaultVal);
-            
+
             // Generate the appropriate enclosing expressions, depending on NullPolicy
             return MakeNullHandler(argValue, property, selfPolicy, varValue, makeTagExpr, defaultValExpr);
         }
@@ -209,8 +213,8 @@ namespace fNbt.Serialization {
 
 
         [CanBeNull]
-        static MethodInfo GetGenericInterfaceMethodImpl(Type concreteType, Type genericInterface, string methodName,
-                                                        Type[] methodParams) {
+        static MethodInfo GetGenericInterfaceMethodImpl(Type concreteType, Type genericInterface,
+            string methodName, Type[] methodParams) {
             // Find a specific "flavor" of the implementation
             Type impl = GetGenericInterfaceImpl(concreteType, genericInterface);
             if (impl == null) {
@@ -242,8 +246,7 @@ namespace fNbt.Serialization {
 
 
         static Expression SerializeIListOfPrimitives(Type elementType,
-                                                     ParameterExpression argValue,
-                                                     ParameterExpression varRootTag,
+                                                     ParameterExpression argValue, ParameterExpression varRootTag,
                                                      PropertyInfo property,
                                                      string tagName) {
             // Declare locals
@@ -332,10 +335,10 @@ namespace fNbt.Serialization {
                     varListTag,
                     Expression.New(NbtListCtor,
                                    Expression.Constant(tagName),
-                                   Expression.Constant( SerializationUtil.TypeToTagTypeEnum[elementTagType] ) ) ),
+                                   Expression.Constant(SerializationUtil.TypeToTagTypeEnum[elementTagType]))),
 
                 // int length = iList.Count;
-                Expression.Assign( varLength, getCountExpr),
+                Expression.Assign(varLength, getCountExpr),
 
                 // int i=0;
                 Expression.Assign(varIndex, Expression.Constant(0)),
@@ -353,8 +356,7 @@ namespace fNbt.Serialization {
         // 1) Skip creating this tag (if ignoreOnNull is true), or
         // 2) Create a tag with empty-string value
         [NotNull]
-        static Expression SerializePropertyDirectly(ParameterExpression argValue,
-                                                    ParameterExpression varRootTag,
+        static Expression SerializePropertyDirectly(ParameterExpression argValue, ParameterExpression varRootTag,
                                                     PropertyInfo property,
                                                     string tagName,
                                                     NullPolicy selfPolicy) {
@@ -382,8 +384,7 @@ namespace fNbt.Serialization {
                                           PropertyInfo property,
                                           NullPolicy policy,
                                           ParameterExpression varValue,
-                                          Expression nonNullExpr,
-                                          Expression defaultValExpr) {
+                                          Expression nonNullExpr, Expression defaultValExpr) {
             // locate the getter for this property
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
             Expression ifExpr;
@@ -436,7 +437,7 @@ namespace fNbt.Serialization {
         static NewExpression MakeTagForPrimitiveType(string tagName, Expression argValue, PropertyInfo property) {
             // check if conversion is necessary
             Type convertedType;
-            if( !SerializationUtil.PrimitiveConversionMap.TryGetValue( property.PropertyType, out convertedType ) ) {
+            if (!SerializationUtil.PrimitiveConversionMap.TryGetValue(property.PropertyType, out convertedType)) {
                 convertedType = property.PropertyType;
             }
 
@@ -464,7 +465,7 @@ namespace fNbt.Serialization {
         [NotNull]
         static IEnumerable<PropertyInfo> GetSerializableProperties(Type type) {
             return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)
-                       .Where(p => !Attribute.GetCustomAttributes(p, typeof(NbtIgnoreAttribute)).Any())
+                       .Where(p => Attribute.GetCustomAttribute(p, typeof(NbtIgnoreAttribute)) == null)
                        .Where(p => p.CanRead)
                        .ToArray();
         }
