@@ -36,9 +36,33 @@ namespace fNbt.Serialization {
             typeof(NbtList).GetConstructor(new[] { typeof(string), typeof(NbtTagType) });
 
 
+
+        static object cacheLock = new object();
+        
+        static readonly Dictionary<Type,object> GlobalCache = new Dictionary<Type, object>();
+
+        static void AddToCache<T>(NbtSerialize<T> funcToStore) {
+            GlobalCache.Add(typeof(T),funcToStore);
+        }
+
+        static NbtSerialize<T> TryGetFromCache<T>() {
+            object result;
+            if (GlobalCache.TryGetValue(typeof(T), out result)) {
+                return (NbtSerialize<T>)result;
+            } else {
+                return null;
+            }
+        }
+
+
+
         // Generates specialized methods for serializing objects of given Type to NBT
         [NotNull]
         public static NbtSerialize<T> CreateSerializerForType<T>() {
+            lock (cacheLock) {
+                
+            }
+
             // Define function arguments
             ParameterExpression argTagName = Expression.Parameter(typeof(string), "tagName");
             ParameterExpression argValue = Expression.Parameter(typeof(T), "value");
@@ -154,6 +178,7 @@ namespace fNbt.Serialization {
 
                 // Skip serializing NbtTag properties
                 if (propType.IsAssignableFrom(typeof(NbtTag))) {
+                    // Add tag directly to the list
                     Expression newExpr =
                         MakeNbtTagOrFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
                                                 expr => expr);
@@ -163,6 +188,7 @@ namespace fNbt.Serialization {
 
                 // Skip serializing NbtFile properties
                 if (propType == typeof(NbtFile)) {
+                    // Add NbtFile's root tag directly to the list
                     PropertyInfo rootTagProp = typeof(NbtFile).GetProperty("RootTag");
                     Expression newExpr =
                         MakeNbtTagOrFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
