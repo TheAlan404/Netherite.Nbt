@@ -17,7 +17,8 @@ namespace fNbt.Serialization {
 
         PropertyInfo[] properties;
         Dictionary<PropertyInfo, string> propertyTagNames;
-        HashSet<PropertyInfo> ignoreOnNull;
+        Dictionary<PropertyInfo, NullPolicy> nullPolicies;
+        Dictionary<PropertyInfo, NullPolicy> elementNullPolicies;
         bool propertyInfoRead;
 
 
@@ -41,20 +42,29 @@ namespace fNbt.Serialization {
                     propertyTagNames.Add(property, tagName);
 
                     // read IgnoreOnNull attribute
-                    Attribute ignoreOnNullAttribute = Attribute.GetCustomAttribute(property,
-                                                                                   typeof(IgnoreOnNullAttribute));
-                    if (ignoreOnNullAttribute != null) {
-                        if (ignoreOnNull == null) {
-                            ignoreOnNull = new HashSet<PropertyInfo>();
+                    NullPolicyAttribute nullPolicyAttr =
+                        (NullPolicyAttribute)Attribute.GetCustomAttribute(property, typeof(NullPolicyAttribute));
+                    if (nullPolicyAttr != null) {
+                        if (nullPolicyAttr.SelfPolicy != NullPolicy.Default) {
+                            if (nullPolicies == null) {
+                                nullPolicies = new Dictionary<PropertyInfo, NullPolicy>();
+                            }
+                            nullPolicies.Add(property, nullPolicyAttr.SelfPolicy);
                         }
-                        ignoreOnNull.Add(property);
+                        if (nullPolicyAttr.ElementPolicy != NullPolicy.Default) {
+                            if (elementNullPolicies == null) {
+                                elementNullPolicies = new Dictionary<PropertyInfo, NullPolicy>();
+                            }
+                            elementNullPolicies.Add( property, nullPolicyAttr.ElementPolicy );
+                        }
                     }
                 }
                 propertyInfoRead = true;
             } catch {
                 // roll back on error
                 properties = null;
-                ignoreOnNull = null;
+                nullPolicies = null;
+                elementNullPolicies = null;
                 propertyTagNames = null;
                 propertyInfoRead = false;
                 throw;
@@ -94,7 +104,7 @@ namespace fNbt.Serialization {
         }
 
 
-        NbtTag SerializeList(string tagName, IList valueAsArray, Type elementType) {
+        NbtTag SerializeList(string tagName, IList valueAsArray, Type elementType, NullPolicy elementNullPolicy) {
             NbtTagType listType;
             if (elementType == typeof(byte) || elementType == typeof(sbyte) || elementType == typeof(bool)) {
                 listType = NbtTagType.Byte;
@@ -117,18 +127,68 @@ namespace fNbt.Serialization {
             } else {
                 listType = NbtTagType.Compound;
             }
+
             var list = new NbtList(tagName, listType);
+
             if (elementType.IsPrimitive) {
+                // speedy serialization for basic types
                 for (int i = 0; i < valueAsArray.Count; i++) {
                     list.Add(SerializePrimitiveType(null, valueAsArray[i]));
                 }
-            } else {
-                var innerSerializer = new NbtSerializer(elementType);
+
+            } else if (elementType == typeof(byte[]) ||
+                       elementType == typeof(int[]) ||
+                       elementType == typeof(string)) {
+                // speedy serialization for directly-mapped types
                 for (int i = 0; i < valueAsArray.Count; i++) {
-                    list.Add(innerSerializer.Serialize(valueAsArray[i], null));
+                    var value = valueAsArray[i];
+                    if (value == null) {
+                        switch (elementNullPolicy) {
+                            case NullPolicy.Error:
+                                throw new NullReferenceException("Null elements not allowed for tag " + tagName);
+                            case NullPolicy.InsertDefault:
+                                list.Add(Serialize(SerializationUtil.GetDefaultValue(elementType), true));
+                                break;
+                            case NullPolicy.Ignore:
+                                continue;
+                        }
+                    } else {
+                        list.Add(Serialize(valueAsArray[i], true));
+                    }
+                }
+
+            } else {
+                // serialize complex types
+                var innerSerializer = new NbtSerializer(elementType);
+                for( int i = 0; i < valueAsArray.Count; i++ ) {
+                    var value = valueAsArray[i];
+                    if( value == null ) {
+                        switch( elementNullPolicy ) {
+                            case NullPolicy.Error:
+                                throw new NullReferenceException( "Null elements not allowed for tag " + tagName );
+                            case NullPolicy.Ignore:
+                                continue;
+                            case NullPolicy.InsertDefault:
+                                // TODO
+                                break;
+                        }
+                    } else {
+                        list.Add( innerSerializer.Serialize( valueAsArray[i], null ) );
+                    }
                 }
             }
             return list;
+        }
+
+
+        NullPolicy GetElementPolicy(PropertyInfo prop) {
+            if (nullPolicies != null) {
+                NullPolicy result;
+                if (nullPolicies.TryGetValue(prop, out result)) {
+                    return result;
+                }
+            }
+            return NullPolicy.Default;
         }
 
 
@@ -137,7 +197,9 @@ namespace fNbt.Serialization {
         }
 
 
-        public NbtTag Serialize(object value, string tagName, bool skipInterfaceCheck = false) {
+        public NbtTag Serialize(object value, string tagName, bool skipInterfaceCheck = false,
+                                NullPolicy thisNullPolicy = NullPolicy.Error,
+                                NullPolicy elementNullPolicy = NullPolicy.Error) {
             if (value == null) {
                 return new NbtCompound(tagName);
             }
@@ -166,7 +228,7 @@ namespace fNbt.Serialization {
                 }
 
                 Type elementType = realType.GetElementType();
-                return SerializeList(tagName, valueAsArray, elementType);
+                return SerializeList( tagName, valueAsArray, elementType, elementNullPolicy );
             }
 
             if (!skipInterfaceCheck && value is INbtSerializable) {
@@ -176,7 +238,7 @@ namespace fNbt.Serialization {
             // Serialize ILists
             if (realType.IsGenericType && realType.GetGenericTypeDefinition() == typeof(List<>)) {
                 Type listType = realType.GetGenericArguments()[0];
-                return SerializeList(tagName, (IList)value, listType);
+                return SerializeList( tagName, (IList)value, listType, elementNullPolicy );
             }
 
             // Skip serializing NbtTags and NbtFiles
@@ -198,12 +260,17 @@ namespace fNbt.Serialization {
                 Type propType = property.PropertyType;
                 object propValue = property.GetValue(value, null);
 
+                // Handle null property values
                 if (propValue == null) {
-                    if (ignoreOnNull.Contains(property)) continue;
-                    if (propType.IsArray) {
-                        propValue = Activator.CreateInstance(propType);
-                    } else if (propType == typeof(string)) {
-                        propValue = "";
+                    NullPolicy selfNullPolicy = GetElementPolicy(property);
+                    switch (selfNullPolicy) {
+                        case NullPolicy.Ignore:
+                            continue;
+                        case NullPolicy.Error:
+                            throw new NullReferenceException("Null values not allowed for property " + property.Name);
+                        case NullPolicy.InsertDefault:
+                            propValue = SerializationUtil.GetDefaultValue(propType);
+                            break;
                     }
                 }
 

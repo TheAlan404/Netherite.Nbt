@@ -116,11 +116,13 @@
     <Compile Include="NbtWriterNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NbtFile.cs" />
-    <Compile Include="Serialization\IgnoreOnNullAttribute.cs" />
     <Compile Include="Serialization\INbtSerializable.cs" />
     <Compile Include="Serialization\NbtIgnoreAttribute.cs" />
     <Compile Include="Serialization\NbtSerializationGen.cs" />
     <Compile Include="Serialization\NbtSerializer.cs" />
+    <Compile Include="Serialization\NullPolicy.cs" />
+    <Compile Include="Serialization\NullPolicyAttribute.cs" />
+    <Compile Include="Serialization\SerializationUtil.cs" />
     <Compile Include="Serialization\TagNameAttribute.cs" />
     <Compile Include="TagSelector.cs" />
     <Compile Include="Tags\NbtIntArray.cs" />
