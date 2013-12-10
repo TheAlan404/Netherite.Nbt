@@ -91,23 +91,23 @@ namespace fNbt.Serialization {
                                                         ParameterExpression varRootTag) {
             var expressions = new List<Expression>();
 
-            foreach( PropertyInfo property in GetSerializableProperties( type ) ) {
+            foreach (PropertyInfo property in GetSerializableProperties(type)) {
                 Type propType = property.PropertyType;
 
                 // read tag name
                 Attribute nameAttribute = Attribute.GetCustomAttribute(property, typeof(TagNameAttribute));
                 string tagName;
-                if( nameAttribute != null) {
+                if (nameAttribute != null) {
                     tagName = ((TagNameAttribute)nameAttribute).Name;
                 } else {
                     tagName = property.Name;
                 }
 
                 // read NullPolicy attribute
-                NullPolicyAttribute ignoreOnNullAttribute =
+                var ignoreOnNullAttribute =
                     (NullPolicyAttribute)Attribute.GetCustomAttribute(property, typeof(NullPolicyAttribute));
-                NullPolicy selfPolicy = NullPolicy.Default,
-                           elementPolicy = NullPolicy.Default;
+                NullPolicy selfPolicy = NullPolicy.Default;
+                NullPolicy elementPolicy = NullPolicy.Default;
                 if (ignoreOnNullAttribute != null) {
                     selfPolicy = ignoreOnNullAttribute.SelfPolicy;
                     elementPolicy = ignoreOnNullAttribute.ElementPolicy;
@@ -162,16 +162,34 @@ namespace fNbt.Serialization {
 
                 // Skip serializing NbtFile properties
                 if (propType == typeof(NbtFile)) {
-                    Expression propValue = Expression.MakeMemberAccess(argValue, property);
-                    PropertyInfo fileRoot = typeof(NbtFile).GetProperty("RootTag");
-                    Expression fileRootGetterExpr = Expression.MakeMemberAccess(propValue, fileRoot);
-                    expressions.Add(Expression.Call(varRootTag, NbtCompoundAddMethod, fileRootGetterExpr));
+                    expressions.Add(MakeNbtFileHandler(argValue, varRootTag, property, tagName, selfPolicy));
                     continue;
                 }
 
                 // TODO: treat property as a compound tag
+                throw new NotImplementedException("TODO: Compound types");
             }
             return expressions;
+        }
+
+
+        static Expression MakeNbtFileHandler(ParameterExpression argValue,
+                                             ParameterExpression varRootTag,
+                                             PropertyInfo property, string tagName, NullPolicy selfPolicy) {
+            // declare a local var, which will hold the property's value
+            ParameterExpression varValue = Expression.Parameter(property.PropertyType);
+            
+            // Primary path, adds the root tag of the NbtFile
+            Expression fileRootGetterExpr =
+                Expression.MakeMemberAccess(varValue, typeof(NbtFile).GetProperty("RootTag"));
+            Expression makeTagExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, fileRootGetterExpr);
+
+            // Fallback path, in case value is null and NullPolicy is InsertDefaults
+            Expression defaultVal = Expression.New(NbtCompoundCtor, Expression.Constant(tagName));
+            Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, defaultVal);
+            
+            // Generate the appropriate enclosing expressions, depending on NullPolicy
+            return MakeNullHandler(argValue, property, selfPolicy, varValue, makeTagExpr, defaultValExpr);
         }
 
 
@@ -340,70 +358,77 @@ namespace fNbt.Serialization {
                                                     PropertyInfo property,
                                                     string tagName,
                                                     NullPolicy selfPolicy) {
-            // locate the getter for this property
-            Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
-
+            // Find the appropriate NbtTag constructor
             Type tagType = SerializationUtil.TypeToTagMap[property.PropertyType];
             ConstructorInfo tagCtor = tagType.GetConstructor(new[] { typeof(string), property.PropertyType });
 
-            if (selfPolicy == NullPolicy.Error || selfPolicy == NullPolicy.Ignore) {
-                // declare a local var, which will hold the property's value
-                ParameterExpression varValue = Expression.Parameter(property.PropertyType);
+            // declare a local var, which will hold the property's value
+            ParameterExpression varValue = Expression.Parameter(property.PropertyType);
 
-                // varRootTag.Add( new NbtString(tagName, varValue) );
-                Expression makeTagExpr =
-                    Expression.Call(
-                        varRootTag,
-                        NbtCompoundAddMethod,
-                        Expression.New(tagCtor, Expression.Constant(tagName), varValue));
+            Expression defaultVal = Expression.Constant(SerializationUtil.GetDefaultValue(property.PropertyType));
+            Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, defaultVal);
 
-                Expression ifExpr;
+            // varRootTag.Add( new NbtString(tagName, varValue) );
+            Expression makeTagExpr = Expression.Call(
+                varRootTag, NbtCompoundAddMethod,
+                Expression.New(tagCtor, Expression.Constant(tagName), varValue));
 
-                if (selfPolicy == NullPolicy.Error) {
-                    string exceptionMessage = "Property " + property.Name + " cannot be null.";
-                    // if(value==null)
-                    ifExpr =
-                        Expression.IfThenElse(
-                            Expression.ReferenceEqual(varValue, Expression.Constant(null)),
-                            // throw new NullReferenceExeption(...)
-                            Expression.Throw(
-                                Expression.New(NullReferenceExceptionCtor,
-                                               Expression.Constant(exceptionMessage))),
-                            // else (add a tag)
-                            makeTagExpr);
-                } else {
-                    // if(varValue != null)
-                    ifExpr =
-                        Expression.IfThen(
-                            Expression.Not(Expression.ReferenceEqual(varValue, Expression.Constant(null))),
-                            // (add a tag)
-                            makeTagExpr);
-                }
-
-                return Expression.Block(
-                    // var varValue = argValue.ThisProperty;
-                    new[] { varValue },
-                    Expression.Assign(varValue, getPropertyExpr),
-                    // (check if value is null, and do something)
-                    ifExpr);
-
-            } else if (selfPolicy == NullPolicy.InsertDefault) {
-                Expression defaultVal = Expression.Constant( SerializationUtil.GetDefaultValue( property.PropertyType ) );
-
-                // varRootTag.Add( new NbtString(tagName, varValue.ThisProperty ?? defaultVal) )
-                return Expression.Call(
-                    varRootTag,
-                    NbtCompoundAddMethod,
-                    Expression.New(
-                        tagCtor,
-                        Expression.Constant(tagName),
-                        Expression.Coalesce(getPropertyExpr, defaultVal)));
-
-            } else {
-                throw new ArgumentOutOfRangeException("Unrecognized value for NullPolicy: " + selfPolicy);
-            }
+            // generate the appropriate enclosing expressions, depending on NullPolicy
+            return MakeNullHandler(argValue, property, selfPolicy, varValue, makeTagExpr, defaultValExpr);
         }
 
+
+        static Expression MakeNullHandler(ParameterExpression argValue,
+                                          PropertyInfo property,
+                                          NullPolicy policy,
+                                          ParameterExpression varValue,
+                                          Expression nonNullExpr,
+                                          Expression defaultValExpr) {
+            // locate the getter for this property
+            Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
+            Expression ifExpr;
+
+            if (policy == NullPolicy.Error) {
+                ifExpr = Expression.IfThenElse(
+                    // if (value==null) throw new NullReferenceException(...)
+                    Expression.ReferenceEqual(varValue, Expression.Constant(null)),
+                    MakeNullReferenceExpr(property.Name),
+                    // else <nonNullExpr>
+                    nonNullExpr);
+
+            } else if (policy == NullPolicy.Ignore) {
+                ifExpr = Expression.IfThen(
+                    // if (value!=null) <nonNullExpr>
+                    Expression.Not(Expression.ReferenceEqual(varValue, Expression.Constant(null))),
+                    nonNullExpr);
+
+            } else if (policy == NullPolicy.InsertDefault) {
+                ifExpr = Expression.IfThenElse(
+                    // if (value==null) throw new NullReferenceException(...)
+                    Expression.ReferenceEqual(varValue, Expression.Constant(null)),
+                    defaultValExpr,
+                    // else <nonNullExpr>
+                    nonNullExpr);
+
+            } else {
+                throw new ArgumentOutOfRangeException("Unrecognized value for NullPolicy: " + policy);
+            }
+
+            return Expression.Block(
+                // var varValue = argValue.ThisProperty;
+                new[] { varValue },
+                Expression.Assign(varValue, getPropertyExpr),
+                // (check if value is null, and do something)
+                ifExpr);
+        }
+
+
+        static Expression MakeNullReferenceExpr(string propName) {
+            string exceptionMessage = "Property " + propName + " cannot be null.";
+            // throw new NullReferenceException(...)
+            return Expression.Throw(
+                Expression.New(NullReferenceExceptionCtor, Expression.Constant(exceptionMessage)));
+        }
 
 
         // Creates a tag constructor for given primitive-type property
