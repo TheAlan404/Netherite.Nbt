@@ -145,7 +145,7 @@ namespace fNbt.Serialization {
                     if (elementType.IsPrimitive) {
                         expressions.Add(SerializeIListOfPrimitives(elementType,
                                                                    argValue, varRootTag,
-                                                                   property, tagName));
+                                                                   property, tagName, selfPolicy));
                     } else {
                         throw new NotImplementedException("TODO: ILists of non-primitives");
                     }
@@ -155,8 +155,8 @@ namespace fNbt.Serialization {
                 // Skip serializing NbtTag properties
                 if (propType.IsAssignableFrom(typeof(NbtTag))) {
                     Expression newExpr =
-                        MakeNbtFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
-                                           expr => expr);
+                        MakeNbtTagOrFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
+                                                expr => expr);
                     expressions.Add(newExpr);
                     continue;
                 }
@@ -165,8 +165,8 @@ namespace fNbt.Serialization {
                 if (propType == typeof(NbtFile)) {
                     PropertyInfo rootTagProp = typeof(NbtFile).GetProperty("RootTag");
                     Expression newExpr =
-                        MakeNbtFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
-                                           expr => Expression.MakeMemberAccess(expr, rootTagProp));
+                        MakeNbtTagOrFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
+                                                expr => Expression.MakeMemberAccess(expr, rootTagProp));
                     expressions.Add(newExpr);
                     continue;
                 }
@@ -178,10 +178,10 @@ namespace fNbt.Serialization {
         }
 
 
-        static Expression MakeNbtFileHandler(ParameterExpression argValue,
-                                             ParameterExpression varRootTag,
-                                             PropertyInfo property, string tagName, NullPolicy selfPolicy,
-                                             Func<ParameterExpression,Expression> conversionFunc ) {
+        static Expression MakeNbtTagOrFileHandler(ParameterExpression argValue,
+                                                  ParameterExpression varRootTag,
+                                                  PropertyInfo property, string tagName, NullPolicy selfPolicy,
+                                                  Func<ParameterExpression, Expression> conversionFunc) {
             // declare a local var, which will hold the property's value
             ParameterExpression varValue = Expression.Parameter(property.PropertyType);
 
@@ -192,7 +192,7 @@ namespace fNbt.Serialization {
             Expression defaultVal = Expression.New(NbtCompoundCtor, Expression.Constant(tagName));
             Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, defaultVal);
 
-            // Generate the appropriate enclosing expressions, depending on NullPolicy
+            // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
             return MakeNullHandler(argValue, property, selfPolicy, varValue, makeTagExpr, defaultValExpr);
         }
 
@@ -247,8 +247,7 @@ namespace fNbt.Serialization {
 
         static Expression SerializeIListOfPrimitives(Type elementType,
                                                      ParameterExpression argValue, ParameterExpression varRootTag,
-                                                     PropertyInfo property,
-                                                     string tagName) {
+                                                     PropertyInfo property, string tagName, NullPolicy selfPolicy) {
             // Declare locals
             ParameterExpression varIList = Expression.Parameter(property.PropertyType);
             ParameterExpression varListTag = Expression.Parameter(typeof(NbtList));
@@ -256,7 +255,6 @@ namespace fNbt.Serialization {
             ParameterExpression varIndex = Expression.Parameter(typeof(int));
 
             // Find getter for this IList
-            Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
             MethodInfo countGetterImpl, itemGetterImpl;
 
             if (property.PropertyType.IsArray) {
@@ -322,20 +320,24 @@ namespace fNbt.Serialization {
                         // ++i;
                         Expression.PreIncrementAssign(varIndex)),
                     loopBreak);
-
-            // Package everything together into a neat block, with locals
-            return Expression.Block(
-                new[] { varIList, varListTag, varIndex, varLength },
-
-                // IList<> iList = value.ThisProperty;
-                Expression.Assign(varIList, getPropertyExpr),
+            
+            // new NbtList(tagName, NbtTagType.*)
+            Expression makeListTagExpr =
+                Expression.New(NbtListCtor,
+                               Expression.Constant(tagName),
+                               Expression.Constant(SerializationUtil.TypeToTagTypeEnum[elementTagType]));
+            
+            // Fallback path, in case value is null and NullPolicy is InsertDefaults:
+            // Add an empty list to root.
+            Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, makeListTagExpr);
+            
+            // Primary path, in case value is not null:
+            // Package the list-building loop into a neat block, with locals
+            Expression makeTagExpr = Expression.Block(
+                new[] { varListTag, varIndex, varLength },
 
                 // NbtList listTag = new NbtList(tagName, NbtTagType.*);
-                Expression.Assign(
-                    varListTag,
-                    Expression.New(NbtListCtor,
-                                   Expression.Constant(tagName),
-                                   Expression.Constant(SerializationUtil.TypeToTagTypeEnum[elementTagType]))),
+                Expression.Assign(varListTag, makeListTagExpr),
 
                 // int length = iList.Count;
                 Expression.Assign(varLength, getCountExpr),
@@ -348,8 +350,11 @@ namespace fNbt.Serialization {
 
                 // rootTag.Add( listTag );
                 Expression.Call(varRootTag, NbtCompoundAddMethod, varListTag));
+            
+            // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
+            return MakeNullHandler(argValue, property, selfPolicy, varIList, makeTagExpr, defaultValExpr);
         }
-
+        
 
         // Creates a NbtString tag for given string property.
         // If the property's value is null, we either...
