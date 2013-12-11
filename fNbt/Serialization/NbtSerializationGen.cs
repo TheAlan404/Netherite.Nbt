@@ -1,12 +1,15 @@
-﻿using System;
+﻿//#define DEBUG_NBTSERIALIZE_COMPILER
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
 
 namespace fNbt.Serialization {
-    public delegate NbtTag NbtSerialize<T>(string tagName, T value);
+    public delegate NbtCompound NbtSerialize<T>(string tagName, T value);
 
 
     public static class NbtSerializationGen {
@@ -100,7 +103,7 @@ namespace fNbt.Serialization {
 
             // Define return value
             ParameterExpression varRootTag = Expression.Parameter(typeof(NbtCompound), "rootTag");
-            LabelTarget returnTarget = Expression.Label(typeof(NbtTag));
+            LabelTarget returnTarget = Expression.Label(typeof(NbtCompound));
 
             // Create property serializers
             List<Expression> propSerializersList = MakePropertySerializers(typeof(T), argValue, varRootTag);
@@ -130,14 +133,14 @@ namespace fNbt.Serialization {
                 serializersExpr,
 
                 // return varRootTag;
-                Expression.Return(returnTarget, varRootTag, typeof(NbtTag)),
-                Expression.Label(returnTarget, Expression.Constant(null, typeof(NbtTag))));
+                Expression.Return(returnTarget, varRootTag, typeof(NbtCompound)),
+                Expression.Label(returnTarget, Expression.Constant(null, typeof(NbtCompound))));
 
             // compile
             Expression<NbtSerialize<T>> methodLambda = Expression.Lambda<NbtSerialize<T>>(method, argTagName, argValue);
-#if DEBUG
+
+#if DEBUG_NBTSERIALIZE_COMPILER
             // When in debug mode, print the expression tree to stdout.
-            // TODO: Disable before release
             PropertyInfo propInfo =
                 typeof(Expression)
                     .GetProperty("DebugView",
@@ -151,6 +154,18 @@ namespace fNbt.Serialization {
         }
 
 
+        static readonly MethodInfo ConsoleWriteLineInfo =
+            typeof(Console).GetMethod("WriteLine", new[] { typeof(string) });
+
+
+        static Expression MarkLineExpr(string message) {
+            var stackTrace = new StackTrace();
+            StackFrame caller = stackTrace.GetFrame(1);
+            string line = message + " @ " + caller.GetMethod().Name;
+            return Expression.Call(ConsoleWriteLineInfo, Expression.Constant(line));
+        }
+
+
         // Produces a list of expressions that, together, do the job of
         // producing all necessary NbtTags and adding them to the "varRootTag" compound tag.
         [NotNull]
@@ -161,6 +176,10 @@ namespace fNbt.Serialization {
 
             foreach (PropertyInfo property in GetSerializableProperties(type)) {
                 Type propType = property.PropertyType;
+
+#if DEBUG_NBTSERIALIZE_COMPILER
+                expressions.Add(MarkLineExpr("Serializing " + property));
+#endif
 
                 // Check if property is self-referential
                 if (propType == type) {
@@ -249,15 +268,22 @@ namespace fNbt.Serialization {
                 }
 
                 // Compound expressions
-                Delegate compoundSerializer = GetSerializerForType(propType);
                 Expression newCompoundExpr =
                     MakeNbtTagHandler(argValue, varRootTag,
                                       property, tagName, selfPolicy,
-                                      expr => Expression.Invoke(Expression.Constant(compoundSerializer),
-                                                                NullStringExpr, expr));
+                                      expr => MakeNbtSerializerCall(propType,tagName, expr));
                 expressions.Add(newCompoundExpr);
             }
             return expressions;
+        }
+
+
+        static Expression MakeNbtSerializerCall(Type type, string tagName, Expression objectExpr) {
+            Delegate compoundSerializer = GetSerializerForType(type);
+            MethodInfo invokeMethodInfo = compoundSerializer.GetType().GetMethod("Invoke");
+            return Expression.Call(Expression.Constant(compoundSerializer),
+                                   invokeMethodInfo,
+                                   Expression.Constant(tagName, typeof(string)), objectExpr);
         }
 
 
@@ -320,12 +346,14 @@ namespace fNbt.Serialization {
             Expression handleOneElementExpr;
             Type elementTagType;
 
-            if (elementType.IsPrimitive) {
-                //=== Serializing arrays/lists of primitive types ===
-
+            if (elementType.IsPrimitive || elementType.IsEnum) {
+                //=== Serializing arrays/lists of primitives and enums ===
+                
                 // Find the correct NbtTag type for elements
                 Type convertedType = GetConvertedType(elementType);
                 elementTagType = GetNbtTagSubtype(elementType);
+
+                getElementExpr = Expression.Convert(getElementExpr, elementType);
 
                 // Handle element type conversion
                 if (elementType == typeof(bool)) {
@@ -389,7 +417,6 @@ namespace fNbt.Serialization {
                 getElementExpr = Expression.Convert(getElementExpr, elementType);
 
                 if (elementIsIList) {
-                    elementTagType = typeof(NbtList);
                     Type subElementType = iListImpl.GetGenericArguments()[0];
                     handleOneElementExpr =
                         SerializeIList(getElementExpr, subElementType, elementType,
@@ -397,12 +424,8 @@ namespace fNbt.Serialization {
                                        subListExpr => Expression.Call(varListTag, NbtListAddMethod, subListExpr));
 
                 } else {
-                    elementTagType = typeof(NbtCompound);
-
                     // Get NbtSerialize<T> method for elementType
-                    Delegate compoundSerializer = GetSerializerForType(elementType);
-                    Expression makeElementTagExpr =
-                        Expression.Invoke(Expression.Constant(compoundSerializer), NullStringExpr, getElementExpr);
+                    Expression makeElementTagExpr = MakeNbtSerializerCall(elementType, null, getElementExpr);
 
                     // declare a local var, which will hold the element's value
                     ParameterExpression varElementValue = Expression.Parameter(elementType, "elementValue");
