@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,7 +9,7 @@ namespace fNbt.Serialization {
     public delegate NbtTag NbtSerialize<T>(string tagName, T value);
 
 
-    public class NbtSerializationGen {
+    public static class NbtSerializationGen {
         // NbtCompound.Add(NbtTag)
         static readonly MethodInfo NbtCompoundAddMethod =
             typeof(NbtCompound).GetMethod("Add", new[] { typeof(NbtTag) });
@@ -37,32 +36,62 @@ namespace fNbt.Serialization {
 
 
 
-        static object cacheLock = new object();
-        
-        static readonly Dictionary<Type,object> GlobalCache = new Dictionary<Type, object>();
+        #region Caching
 
-        static void AddToCache<T>(NbtSerialize<T> funcToStore) {
-            GlobalCache.Add(typeof(T),funcToStore);
-        }
+        static readonly object CacheLock = new object();
+        static readonly Dictionary<Type, Delegate> GlobalCache = new Dictionary<Type, Delegate>();
 
-        static NbtSerialize<T> TryGetFromCache<T>() {
-            object result;
-            if (GlobalCache.TryGetValue(typeof(T), out result)) {
-                return (NbtSerialize<T>)result;
-            } else {
-                return null;
+
+        [NotNull]
+        public static NbtSerialize<T> GetSerializerForType<T>() {
+            lock (CacheLock) {
+                Delegate result;
+                if (GlobalCache.TryGetValue(typeof(T), out result)) {
+                    return (NbtSerialize<T>)result;
+                }
+                NbtSerialize<T> newResult = CreateSerializerForType<T>();
+                GlobalCache.Add(typeof(T), newResult);
+                return newResult;
             }
         }
 
+
+        public static MethodInfo GetSerializerInfoForType( Type t ) {
+            lock (CacheLock) {
+                Delegate result;
+                if (!GlobalCache.TryGetValue(t, out result)) {
+                    result = CreateSerializerForType(t);
+                    GlobalCache.Add(t, result);
+                }
+                return result.Method;
+            }
+        }
+
+        #endregion
+
+
+        static readonly MethodInfo CreateSerializerForTypeInfo =
+            typeof( NbtSerializationGen )
+                    .GetMethod( "CreateSerializerForType",
+                               BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Static,
+                               null,
+                               CallingConventions.Standard,
+                               Type.EmptyTypes,
+                               null );
+
+
+        [NotNull]
+        static Delegate CreateSerializerForType(Type t) {
+            // create a variant of CreateSerializerForType<T> for given type
+            MethodInfo genericMethodToCall =
+                    CreateSerializerForTypeInfo.MakeGenericMethod( new[] { t } );
+            return (Delegate)genericMethodToCall.Invoke(null, new object[0]);
+        }
 
 
         // Generates specialized methods for serializing objects of given Type to NBT
         [NotNull]
-        public static NbtSerialize<T> CreateSerializerForType<T>() {
-            lock (cacheLock) {
-                
-            }
-
+        static NbtSerialize<T> CreateSerializerForType<T>() {
             // Define function arguments
             ParameterExpression argTagName = Expression.Parameter(typeof(string), "tagName");
             ParameterExpression argValue = Expression.Parameter(typeof(T), "value");
@@ -102,8 +131,21 @@ namespace fNbt.Serialization {
                 Expression.Return(returnTarget, varRootTag, typeof(NbtTag)),
                 Expression.Label(returnTarget, Expression.Constant(null, typeof(NbtTag))));
 
+#if DEBUG
+            PropertyInfo propInfo =
+                typeof(Expression)
+                    .GetProperty("DebugView",
+                                 BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Instance);
+             
+            string debugView = (string)propInfo.GetValue(method, null);
+            Console.WriteLine(debugView);
+#endif
+
             // compile
-            return Expression.Lambda<NbtSerialize<T>>(method, argTagName, argValue).Compile();
+            NbtSerialize<T> compiledMethod =
+                Expression.Lambda<NbtSerialize<T>>(method, argTagName, argValue).Compile();
+
+            return compiledMethod;
         }
 
 
@@ -117,6 +159,13 @@ namespace fNbt.Serialization {
 
             foreach (PropertyInfo property in GetSerializableProperties(type)) {
                 Type propType = property.PropertyType;
+
+                // Check if property is self-referential
+                if( propType == type ) {
+                    throw new NotSupportedException(
+                        "Self-referential properties are not supported. " +
+                        "Add NbtIgnore attribute to ignore property " + property.Name );
+                }
 
                 // read tag name
                 Attribute nameAttribute = Attribute.GetCustomAttribute(property, typeof(TagNameAttribute));
@@ -138,7 +187,7 @@ namespace fNbt.Serialization {
                 }
 
                 // simple serialization for primitive types
-                if (propType.IsPrimitive) {
+                if (propType.IsPrimitive || propType.IsEnum) {
                     Expression newTagExpr = MakeTagForPrimitiveType(tagName, argValue, property);
                     expressions.Add(Expression.Call(varRootTag, NbtCompoundAddMethod, newTagExpr));
                     continue;
@@ -165,14 +214,18 @@ namespace fNbt.Serialization {
                 Type iListImpl = GetGenericInterfaceImpl(propType, typeof(IList<>));
                 if (iListImpl != null) {
                     Type elementType = iListImpl.GetGenericArguments()[0];
-
+                    Expression newExpr;
                     if (elementType.IsPrimitive) {
-                        expressions.Add(SerializeIListOfPrimitives(elementType,
-                                                                   argValue, varRootTag,
-                                                                   property, tagName, selfPolicy));
+                        newExpr = SerializeIListOfPrimitives(argValue,
+                                                             varRootTag,
+                                                             elementType,
+                                                             property,
+                                                             tagName,
+                                                             selfPolicy);
                     } else {
                         throw new NotImplementedException("TODO: ILists of non-primitives");
                     }
+                    expressions.Add(newExpr);
                     continue;
                 }
 
@@ -180,7 +233,11 @@ namespace fNbt.Serialization {
                 if (propType.IsAssignableFrom(typeof(NbtTag))) {
                     // Add tag directly to the list
                     Expression newExpr =
-                        MakeNbtTagOrFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
+                        MakeNbtTagOrFileHandler(argValue,
+                                                varRootTag,
+                                                property,
+                                                tagName,
+                                                selfPolicy,
                                                 expr => expr);
                     expressions.Add(newExpr);
                     continue;
@@ -191,14 +248,26 @@ namespace fNbt.Serialization {
                     // Add NbtFile's root tag directly to the list
                     PropertyInfo rootTagProp = typeof(NbtFile).GetProperty("RootTag");
                     Expression newExpr =
-                        MakeNbtTagOrFileHandler(argValue, varRootTag, property, tagName, selfPolicy,
+                        MakeNbtTagOrFileHandler(argValue,
+                                                varRootTag,
+                                                property,
+                                                tagName,
+                                                selfPolicy,
                                                 expr => Expression.MakeMemberAccess(expr, rootTagProp));
                     expressions.Add(newExpr);
                     continue;
                 }
 
-                // TODO: treat property as a compound tag
-                throw new NotImplementedException("TODO: Compound types");
+                // Compound expressions
+                MethodInfo compoundSerializer = GetSerializerInfoForType(propType);
+                Expression newCompoundExpr =
+                    MakeNbtTagOrFileHandler(argValue,
+                                            varRootTag,
+                                            property,
+                                            tagName,
+                                            selfPolicy,
+                                            expr => Expression.Call(compoundSerializer, expr));
+                expressions.Add(newCompoundExpr);
             }
             return expressions;
         }
@@ -271,9 +340,7 @@ namespace fNbt.Serialization {
         }
 
 
-        static Expression SerializeIListOfPrimitives(Type elementType,
-                                                     ParameterExpression argValue, ParameterExpression varRootTag,
-                                                     PropertyInfo property, string tagName, NullPolicy selfPolicy) {
+        static Expression SerializeIListOfPrimitives(ParameterExpression argValue, ParameterExpression varRootTag, Type elementType, PropertyInfo property, string tagName, NullPolicy selfPolicy) {
             // Declare locals
             ParameterExpression varIList = Expression.Parameter(property.PropertyType);
             ParameterExpression varListTag = Expression.Parameter(typeof(NbtList));
@@ -399,7 +466,8 @@ namespace fNbt.Serialization {
             ParameterExpression varValue = Expression.Parameter(property.PropertyType);
 
             Expression defaultVal = Expression.Constant(SerializationUtil.GetDefaultValue(property.PropertyType));
-            Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, defaultVal);
+            Expression defaultValTagCtor = Expression.New(tagCtor, Expression.Constant(tagName), defaultVal);
+            Expression defaultValExpr = Expression.Call( varRootTag, NbtCompoundAddMethod, defaultValTagCtor );
 
             // varRootTag.Add( new NbtString(tagName, varValue) );
             Expression makeTagExpr = Expression.Call(
@@ -465,11 +533,17 @@ namespace fNbt.Serialization {
 
         // Creates a tag constructor for given primitive-type property
         [NotNull]
-        static NewExpression MakeTagForPrimitiveType(string tagName, Expression argValue, PropertyInfo property) {
+        static NewExpression MakeTagForPrimitiveType( string tagName, Expression argValue, PropertyInfo property ) {
+            // special handling for enums
+            Type underlyingType = property.PropertyType;
+            if (property.PropertyType.IsEnum) {
+                underlyingType = Enum.GetUnderlyingType(property.PropertyType);
+            }
+
             // check if conversion is necessary
             Type convertedType;
-            if (!SerializationUtil.PrimitiveConversionMap.TryGetValue(property.PropertyType, out convertedType)) {
-                convertedType = property.PropertyType;
+            if (!SerializationUtil.PrimitiveConversionMap.TryGetValue(underlyingType, out convertedType)) {
+                convertedType = underlyingType;
             }
 
             // find the tag constructor
