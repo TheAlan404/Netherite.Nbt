@@ -37,6 +37,8 @@ namespace fNbt.Serialization {
         // (string)null -- used to select appropriate constructor/method overloads when creating unnamed tags
         static readonly Expression NullStringExpr = Expression.Constant(null, typeof(string));
 
+        const string NullElementMessage = "Null elements not allowed inside a list.";
+
 
         #region Caching
 
@@ -58,7 +60,7 @@ namespace fNbt.Serialization {
         }
 
 
-        public static Delegate GetSerializerForType( Type t ) {
+        public static Delegate GetSerializerForType(Type t) {
             lock (CacheLock) {
                 Delegate result;
                 if (!GlobalCache.TryGetValue(t, out result)) {
@@ -73,18 +75,18 @@ namespace fNbt.Serialization {
 
 
         static readonly MethodInfo CreateSerializerForTypeInfo =
-            typeof( NbtSerializationGen )
-                    .GetMethod( "CreateSerializerForType",
-                               BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Static,
-                               null, CallingConventions.Standard,
-                               Type.EmptyTypes, null );
+            typeof(NbtSerializationGen)
+                .GetMethod("CreateSerializerForType",
+                           BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Static,
+                           null, CallingConventions.Standard,
+                           Type.EmptyTypes, null);
 
 
         [NotNull]
         static Delegate CreateSerializerForType(Type t) {
             // create a variant of CreateSerializerForType<T> for given type
             MethodInfo genericMethodToCall =
-                    CreateSerializerForTypeInfo.MakeGenericMethod( new[] { t } );
+                CreateSerializerForTypeInfo.MakeGenericMethod(new[] { t });
             return (Delegate)genericMethodToCall.Invoke(null, new object[0]);
         }
 
@@ -130,7 +132,7 @@ namespace fNbt.Serialization {
                 // return varRootTag;
                 Expression.Return(returnTarget, varRootTag, typeof(NbtTag)),
                 Expression.Label(returnTarget, Expression.Constant(null, typeof(NbtTag))));
-            
+
             // compile
             Expression<NbtSerialize<T>> methodLambda = Expression.Lambda<NbtSerialize<T>>(method, argTagName, argValue);
 #if DEBUG
@@ -140,7 +142,7 @@ namespace fNbt.Serialization {
                 typeof(Expression)
                     .GetProperty("DebugView",
                                  BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Instance);
-             
+
             var debugView = (string)propInfo.GetValue(methodLambda, null);
             Console.WriteLine(debugView);
 #endif
@@ -211,13 +213,14 @@ namespace fNbt.Serialization {
                 }
 
                 // serialize something that implements IList<>
-                Type iListImpl = GetGenericInterfaceImpl(propType, typeof(IList<>));
+                Type iListImpl = SerializationUtil.GetGenericInterfaceImpl(propType, typeof(IList<>));
                 if (iListImpl != null) {
                     Type elementType = iListImpl.GetGenericArguments()[0];
-                    Expression newExpr =
-                        SerializeIList(argValue, varRootTag,
-                                       elementType, property, tagName,
-                                       selfPolicy, elementPolicy);
+                    Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
+                    Expression newExpr = SerializeIList(getPropertyExpr, elementType, property.PropertyType,
+                                                        tagName, selfPolicy, elementPolicy,
+                                                        MakePropertyNullMessage(property),
+                                                        expr => Expression.Call(varRootTag, NbtCompoundAddMethod, expr));
                     expressions.Add(newExpr);
                     continue;
                 }
@@ -250,7 +253,8 @@ namespace fNbt.Serialization {
                 Expression newCompoundExpr =
                     MakeNbtTagHandler(argValue, varRootTag,
                                       property, tagName, selfPolicy,
-                                      expr => Expression.Invoke(Expression.Constant(compoundSerializer), NullStringExpr, expr));
+                                      expr => Expression.Invoke(Expression.Constant(compoundSerializer),
+                                                                NullStringExpr, expr));
                 expressions.Add(newCompoundExpr);
             }
             return expressions;
@@ -270,72 +274,24 @@ namespace fNbt.Serialization {
             // Fallback path, in case value is null and NullPolicy is InsertDefaults
             Expression defaultVal = Expression.New(NbtCompoundCtor, Expression.Constant(tagName));
             Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, defaultVal);
-            
+
             // Getter for the property value
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
 
             // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
-            return MakeNullHandler(argValue, getPropertyExpr,
-                                   property, selfPolicy, varValue,
-                                   makeTagExpr, defaultValExpr);
+            return MakeNullHandler(varValue,
+                                   getPropertyExpr, selfPolicy, makeTagExpr,
+                                   defaultValExpr, MakePropertyNullMessage(property));
         }
 
 
-        [CanBeNull]
-        static Type GetGenericInterfaceImpl(Type concreteType, Type genericInterface) {
-            if (concreteType.IsGenericType && concreteType.GetGenericTypeDefinition() == genericInterface) {
-                // concreteType itself is the desired generic interface
-                return concreteType;
-            } else {
-                // Check if concreteType implements the desired generic interface ONCE
-                // Double implementations (e.g. Foo : Bar<T1>, Bar<T2>) are not acceptable.
-                return concreteType.GetInterfaces()
-                                   .SingleOrDefault(x => x.IsGenericType &&
-                                                         x.GetGenericTypeDefinition() == genericInterface);
-            }
-        }
 
-
-        [NotNull]
-        static MethodInfo GetGenericInterfaceMethodImpl(Type concreteType, Type genericInterface,
-                                                        string methodName, Type[] methodParams) {
-            // Find a specific generic implementation of the interface
-            Type impl = GetGenericInterfaceImpl(concreteType, genericInterface);
-            if (impl == null) {
-                throw new ArgumentException(concreteType + " does not implement " + genericInterface);
-            }
-
-            MethodInfo interfaceMethod = impl.GetMethod(methodName, methodParams);
-            if (interfaceMethod == null) {
-                throw new ArgumentException(genericInterface + " does not contain method " + methodName);
-            }
-
-            if (impl.IsInterface) {
-                // if concreteType is itself an interface (e.g. IList<> implements ICollection<>),
-                // We don't need to look up the interface implementation map. We can just return
-                // the interface's method directly.
-                return interfaceMethod;
-
-            } else {
-                // If concreteType is a class, we need to get a MethodInfo for its specific implementation.
-                // We cannot just call "GetMethod()" on the concreteType, because explicit implementations
-                // may cause ambiguity.
-                InterfaceMapping implMap = concreteType.GetInterfaceMap(impl);
-
-                int methodIndex = Array.IndexOf(implMap.InterfaceMethods, interfaceMethod);
-                MethodInfo concreteMethod = implMap.TargetMethods[methodIndex];
-                return concreteMethod;
-            }
-        }
-        
-
-
-        static Expression SerializeIList(ParameterExpression argValue, ParameterExpression varRootTag,
-                                         Type elementType, PropertyInfo property, string tagName,
-                                         NullPolicy selfPolicy, NullPolicy elementPolicy) {
-
+        static Expression SerializeIList(Expression getIListExpr, Type elementType, Type listType,
+                                         string tagName, NullPolicy selfPolicy, NullPolicy elementPolicy,
+                                         string nullMessage,
+                                         Func<Expression, Expression> processTagExpr) {
             // Declare locals
-            ParameterExpression varIList = Expression.Parameter(property.PropertyType, "iList");
+            ParameterExpression varIList = Expression.Parameter(listType, "iList");
             ParameterExpression varListTag = Expression.Parameter(typeof(NbtList), "listTag");
             ParameterExpression varLength = Expression.Parameter(typeof(int), "length");
             ParameterExpression varIndex = Expression.Parameter(typeof(int), "i");
@@ -343,20 +299,20 @@ namespace fNbt.Serialization {
             // Find getter for this IList
             MethodInfo countGetterImpl, itemGetterImpl;
 
-            if (property.PropertyType.IsArray) {
+            if (listType.IsArray) {
                 // Although Array claims to implement IList<>, there is no way to retrieve
                 // the interface implementation: it's handled in an unusual way by the runtime.
                 // So we have to resort to getting Length/GetValue instead of Count/Item
-                countGetterImpl = property.PropertyType.GetProperty("Length").GetGetMethod();
-                itemGetterImpl = property.PropertyType.GetMethod("GetValue", new[] { typeof(int) });
+                countGetterImpl = listType.GetProperty("Length").GetGetMethod();
+                itemGetterImpl = listType.GetMethod("GetValue", new[] { typeof(int) });
 
             } else {
                 // For non-array IList<> types, grab this.Count getter (which maps to get_Count())
-                countGetterImpl = GetGenericInterfaceMethodImpl(
-                    property.PropertyType, typeof(ICollection<>), "get_Count", new Type[0]);
+                countGetterImpl = SerializationUtil.GetGenericInterfaceMethodImpl(
+                    listType, typeof(ICollection<>), "get_Count", new Type[0]);
                 // ...and the getter for indexer this[int], which maps to get_Item(int)
-                itemGetterImpl = GetGenericInterfaceMethodImpl(
-                    property.PropertyType, typeof(IList<>), "get_Item", new[] { typeof(int) });
+                itemGetterImpl = SerializationUtil.GetGenericInterfaceMethodImpl(
+                    listType, typeof(IList<>), "get_Item", new[] { typeof(int) });
             }
             Expression getElementExpr = Expression.Call(varIList, itemGetterImpl, varIndex);
             Expression getCountExpr = Expression.Call(varIList, countGetterImpl);
@@ -368,11 +324,8 @@ namespace fNbt.Serialization {
                 //=== Serializing arrays/lists of primitive types ===
 
                 // Find the correct NbtTag type for elements
-                Type convertedType;
-                if (!SerializationUtil.PrimitiveConversionMap.TryGetValue(elementType, out convertedType)) {
-                    convertedType = elementType;
-                }
-                elementTagType = SerializationUtil.TypeToTagMap[convertedType];
+                Type convertedType = GetConvertedType(elementType);
+                elementTagType = GetNbtTagSubtype(elementType);
 
                 // Handle element type conversion
                 if (elementType == typeof(bool)) {
@@ -422,35 +375,52 @@ namespace fNbt.Serialization {
                                                    Expression.Constant(SerializationUtil.GetDefaultValue(elementType))));
 
                 // generate the appropriate enclosing expressions, depending on NullPolicy
-                handleOneElementExpr = MakeNullHandler(argValue, getElementExpr,
-                                                       property, elementPolicy, varValue,
-                                                       addElementExpr, defaultElementExpr);
+                handleOneElementExpr = MakeNullHandler(varValue,
+                                                       getElementExpr, elementPolicy,
+                                                       addElementExpr, defaultElementExpr,
+                                                       NullElementMessage);
 
             } else {
                 //=== Serializing arrays/lists of everything else ===
 
-                // declare a local var, which will hold the property's value
-                ParameterExpression varValue = Expression.Parameter(elementType, "value");
-
-                // Get NbtSerialize<T> method for elementType
-                elementTagType = typeof(NbtCompound);
-                Delegate compoundSerializer = GetSerializerForType(elementType);
-
-                // Primary path, adds the root tag of the NbtFile
+                // Check if this is an IList-of-ILists
+                Type iListImpl = SerializationUtil.GetGenericInterfaceImpl(elementType, typeof(IList<>));
+                bool elementIsIList = (iListImpl != null);
                 getElementExpr = Expression.Convert(getElementExpr, elementType);
-                Expression addElementExpr =
-                    Expression.Call(varRootTag, NbtCompoundAddMethod,
-                                    Expression.Invoke(Expression.Constant(compoundSerializer), NullStringExpr, getElementExpr));
 
-                // Fallback path, in case value is null and NullPolicy is InsertDefaults
-                Expression defaultElementExpr =
-                    Expression.Call(varRootTag, NbtCompoundAddMethod,
-                                    Expression.New(NbtCompoundCtor, NullStringExpr));
+                if (elementIsIList) {
+                    elementTagType = typeof(NbtList);
+                    Type subElementType = iListImpl.GetGenericArguments()[0];
+                    handleOneElementExpr =
+                        SerializeIList(getElementExpr, subElementType, elementType,
+                                       null, elementPolicy, elementPolicy, NullElementMessage,
+                                       subListExpr => Expression.Call(varListTag, NbtListAddMethod, subListExpr));
 
-                // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
-                handleOneElementExpr = MakeNullHandler(argValue, getElementExpr,
-                                                       property, elementPolicy, varValue,
-                                                       addElementExpr, defaultElementExpr);
+                } else {
+                    elementTagType = typeof(NbtCompound);
+
+                    // Get NbtSerialize<T> method for elementType
+                    Delegate compoundSerializer = GetSerializerForType(elementType);
+                    Expression makeElementTagExpr =
+                        Expression.Invoke(Expression.Constant(compoundSerializer), NullStringExpr, getElementExpr);
+
+                    // declare a local var, which will hold the element's value
+                    ParameterExpression varElementValue = Expression.Parameter(elementType, "elementValue");
+
+                    // Primary path, adds the newly-made Compound tag to our list
+                    Expression addSerializedCompoundExpr =
+                        Expression.Call(varListTag, NbtListAddMethod, makeElementTagExpr);
+
+                    // Fallback path, in case element's value is null and NullPolicy is InsertDefaults
+                    Expression addEmptyCompoundExpr =
+                        Expression.Call(varListTag, NbtListAddMethod, Expression.New(NbtCompoundCtor, NullStringExpr));
+
+                    // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
+                    handleOneElementExpr = MakeNullHandler(varElementValue,
+                                                           getElementExpr, elementPolicy,
+                                                           addSerializedCompoundExpr, addEmptyCompoundExpr,
+                                                           NullElementMessage);
+                }
             }
 
             // Arrange tag construction in a loop
@@ -471,17 +441,15 @@ namespace fNbt.Serialization {
                         Expression.PreIncrementAssign(varIndex)),
                     loopBreak);
 
-
-
             // new NbtList(tagName, NbtTagType.*)
             Expression makeListTagExpr =
                 Expression.New(NbtListCtor,
-                               Expression.Constant(tagName),
-                               Expression.Constant(SerializationUtil.TypeToTagTypeEnum[elementTagType]));
+                               Expression.Constant(tagName, typeof(string)),
+                               Expression.Constant(GetNbtTagType(elementType)));
 
             // Fallback path, in case value our IList null and NullPolicy is InsertDefaults:
             // Add an empty list to root.
-            Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, makeListTagExpr);
+            Expression defaultValExpr = processTagExpr(makeListTagExpr);
 
             // Primary path, in case our IList is not null:
             // Package the list-building loop into a neat block, with locals
@@ -501,15 +469,48 @@ namespace fNbt.Serialization {
                 mainLoop,
 
                 // rootTag.Add( listTag );
-                Expression.Call(varRootTag, NbtCompoundAddMethod, varListTag));
-
-            // Getter for the property value
-            Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
+                processTagExpr(varListTag));
 
             // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
-            return MakeNullHandler(argValue, getPropertyExpr,
-                                   property, selfPolicy, varIList,
-                                   makeTagExpr, defaultValExpr);
+            return MakeNullHandler(varIList, getIListExpr, selfPolicy,
+                                   makeTagExpr, defaultValExpr, nullMessage);
+        }
+
+
+        static Type GetConvertedType(Type rawType) {
+            if (rawType.IsEnum) {
+                rawType = Enum.GetUnderlyingType(rawType);
+            }
+
+            Type convertedType;
+            if (!SerializationUtil.PrimitiveConversionMap.TryGetValue(rawType, out convertedType)) {
+                convertedType = rawType;
+            }
+
+            return convertedType;
+        }
+
+
+        static Type GetNbtTagSubtype(Type rawValueType) {
+            Type convertedType = GetConvertedType(rawValueType);
+            return SerializationUtil.TypeToTagMap[convertedType];
+        }
+
+
+        static NbtTagType GetNbtTagType(Type rawValueType) {
+            Type convertedType = GetConvertedType(rawValueType);
+
+            Type directTagType;
+            if (SerializationUtil.TypeToTagMap.TryGetValue(convertedType, out directTagType)) {
+                return SerializationUtil.TypeToTagTypeEnum[directTagType];
+            }
+
+            Type iListImpl = SerializationUtil.GetGenericInterfaceImpl(rawValueType, typeof(IList<>));
+            if (iListImpl != null) {
+                return NbtTagType.List;
+            } else {
+                return NbtTagType.Compound;
+            }
         }
 
 
@@ -530,37 +531,40 @@ namespace fNbt.Serialization {
             ParameterExpression varValue = Expression.Parameter(property.PropertyType);
 
             Expression defaultVal = Expression.Constant(SerializationUtil.GetDefaultValue(property.PropertyType));
-            Expression defaultValTagCtor = Expression.New(tagCtor, Expression.Constant(tagName), defaultVal);
+            Expression defaultValTagCtor = Expression.New(tagCtor, Expression.Constant(tagName, typeof(string)), defaultVal);
             Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, defaultValTagCtor);
 
             // varRootTag.Add( new NbtString(tagName, varValue) );
             Expression makeTagExpr = Expression.Call(
                 varRootTag, NbtCompoundAddMethod,
-                Expression.New(tagCtor, Expression.Constant(tagName), varValue));
+                Expression.New(tagCtor, Expression.Constant(tagName, typeof(string)), varValue));
 
             // Getter for the property value
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
 
             // generate the appropriate enclosing expressions, depending on NullPolicy
-            return MakeNullHandler(argValue, getPropertyExpr,
-                                   property, selfPolicy, varValue,
-                                   makeTagExpr, defaultValExpr);
+            return MakeNullHandler(varValue, getPropertyExpr, selfPolicy, makeTagExpr,
+                                   defaultValExpr, MakePropertyNullMessage(property));
         }
 
 
+        static string MakePropertyNullMessage(PropertyInfo prop) {
+            return "Property " + prop.DeclaringType.Name + "." + prop.Name + " cannot be null.";
+        }
 
-        static Expression MakeNullHandler(ParameterExpression argValue,Expression getPropertyExpr,
-                                          PropertyInfo property,
-                                          NullPolicy policy,
-                                          ParameterExpression varValue, Expression nonNullExpr, Expression defaultValExpr) {
+
+        static Expression MakeNullHandler(ParameterExpression varValue, Expression getPropertyExpr, NullPolicy policy,
+                                          Expression nonNullExpr, Expression defaultValExpr, string exceptionMessage) {
             // locate the getter for this property
             Expression ifExpr;
 
             if (policy == NullPolicy.Error) {
+                // throw new NullReferenceException(...)
                 ifExpr = Expression.IfThenElse(
-                    // if (value==null) throw new NullReferenceException(...)
+                    // if (value==null) throw new NullReferenceException(exceptionMessage)
                     Expression.ReferenceEqual(varValue, Expression.Constant(null)),
-                    MakeNullReferenceExpr(property.Name),
+                    Expression.Throw(
+                        Expression.New(NullReferenceExceptionCtor, Expression.Constant(exceptionMessage))),
                     // else <nonNullExpr>
                     nonNullExpr);
 
@@ -583,7 +587,7 @@ namespace fNbt.Serialization {
             }
 
             return Expression.Block(
-                // var varValue = argValue.ThisProperty;
+                // var varValue = value.ThisProperty;
                 new[] { varValue },
                 Expression.Assign(varValue, getPropertyExpr),
                 // (check if value is null, and do something)
@@ -591,28 +595,11 @@ namespace fNbt.Serialization {
         }
 
 
-        static Expression MakeNullReferenceExpr(string propName) {
-            string exceptionMessage = "Property " + propName + " cannot be null.";
-            // throw new NullReferenceException(...)
-            return Expression.Throw(
-                Expression.New(NullReferenceExceptionCtor, Expression.Constant(exceptionMessage)));
-        }
-
-
         // Creates a tag constructor for given primitive-type property
         [NotNull]
-        static NewExpression MakeTagForPrimitiveType( string tagName, Expression argValue, PropertyInfo property ) {
-            // special handling for enums
-            Type underlyingType = property.PropertyType;
-            if (property.PropertyType.IsEnum) {
-                underlyingType = Enum.GetUnderlyingType(property.PropertyType);
-            }
-
-            // check if conversion is necessary
-            Type convertedType;
-            if (!SerializationUtil.PrimitiveConversionMap.TryGetValue(underlyingType, out convertedType)) {
-                convertedType = underlyingType;
-            }
+        static NewExpression MakeTagForPrimitiveType(string tagName, Expression argValue, PropertyInfo property) {
+            // Find a mapping from PropertyType to closest NBT equivalent
+            Type convertedType = GetConvertedType(property.PropertyType);
 
             // find the tag constructor
             Type tagType = SerializationUtil.TypeToTagMap[convertedType];
@@ -630,7 +617,7 @@ namespace fNbt.Serialization {
             }
 
             // create a new instance of the appropriate tag
-            return Expression.New(tagCtor, Expression.Constant(tagName), getPropertyExpr);
+            return Expression.New(tagCtor, Expression.Constant(tagName, typeof(string)), getPropertyExpr);
         }
 
 
