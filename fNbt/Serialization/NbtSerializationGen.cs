@@ -97,7 +97,7 @@ namespace fNbt.Serialization {
             ParameterExpression argValue = Expression.Parameter(typeof(T), "value");
 
             // Define return value
-            ParameterExpression varRootTag = Expression.Parameter(typeof(NbtCompound), "varRootTag");
+            ParameterExpression varRootTag = Expression.Parameter(typeof(NbtCompound), "rootTag");
             LabelTarget returnTarget = Expression.Label(typeof(NbtTag));
 
             // Create property serializers
@@ -342,10 +342,10 @@ namespace fNbt.Serialization {
 
         static Expression SerializeIListOfPrimitives(ParameterExpression argValue, ParameterExpression varRootTag, Type elementType, PropertyInfo property, string tagName, NullPolicy selfPolicy) {
             // Declare locals
-            ParameterExpression varIList = Expression.Parameter(property.PropertyType);
-            ParameterExpression varListTag = Expression.Parameter(typeof(NbtList));
-            ParameterExpression varLength = Expression.Parameter(typeof(int));
-            ParameterExpression varIndex = Expression.Parameter(typeof(int));
+            ParameterExpression varIList = Expression.Parameter(property.PropertyType,"iList");
+            ParameterExpression varListTag = Expression.Parameter(typeof(NbtList),"listTag");
+            ParameterExpression varLength = Expression.Parameter(typeof(int),"length");
+            ParameterExpression varIndex = Expression.Parameter(typeof(int),"i");
 
             // Find getter for this IList
             MethodInfo countGetterImpl, itemGetterImpl;
@@ -554,7 +554,7 @@ namespace fNbt.Serialization {
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
             if (property.PropertyType == typeof(bool)) {
                 // special handling for bool-to-byte
-                getPropertyExpr = Expression.Condition(Expression.IsTrue(getPropertyExpr),
+                getPropertyExpr = Expression.Condition(getPropertyExpr,
                                                        Expression.Constant((byte)1), Expression.Constant((byte)0));
             } else if (property.PropertyType != convertedType) {
                 // special handling (casting) for sbyte/ushort/char/uint/ulong/decimal
