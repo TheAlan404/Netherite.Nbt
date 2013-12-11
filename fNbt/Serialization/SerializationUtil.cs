@@ -41,15 +41,17 @@ namespace fNbt.Serialization {
 
 
         public static readonly Dictionary<Type, NbtTagType> TypeToTagTypeEnum = new Dictionary<Type, NbtTagType> {
-            { typeof(NbtByte), NbtTagType.Byte},
-            { typeof(NbtByteArray), NbtTagType.ByteArray},
-            { typeof(NbtDouble), NbtTagType.Double},
-            { typeof(NbtFloat), NbtTagType.Float},
-            { typeof(NbtInt), NbtTagType.Int},
-            { typeof(NbtIntArray), NbtTagType.IntArray},
-            { typeof(NbtLong), NbtTagType.Long},
-            { typeof(NbtShort), NbtTagType.Short},
-            { typeof(NbtString), NbtTagType.String}
+            { typeof(NbtByte), NbtTagType.Byte },
+            { typeof(NbtByteArray), NbtTagType.ByteArray },
+            { typeof(NbtDouble), NbtTagType.Double },
+            { typeof(NbtFloat), NbtTagType.Float },
+            { typeof(NbtInt), NbtTagType.Int },
+            { typeof(NbtIntArray), NbtTagType.IntArray },
+            { typeof(NbtLong), NbtTagType.Long },
+            { typeof(NbtShort), NbtTagType.Short },
+            { typeof(NbtString), NbtTagType.String },
+            { typeof(NbtCompound), NbtTagType.Compound },
+            { typeof(NbtList), NbtTagType.List }
         };
 
 
