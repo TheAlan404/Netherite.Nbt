@@ -14,6 +14,7 @@ namespace fNbt {
         readonly long streamStartOffset;
         bool atValue;
         object valueCache;
+        readonly bool canSeekStream;
 
 
         /// <summary> Initializes a new instance of the NbtReader class. </summary>
@@ -37,7 +38,12 @@ namespace fNbt {
             CacheTagValues = false;
             ParentTagType = NbtTagType.Unknown;
             TagType = NbtTagType.Unknown;
-            streamStartOffset = stream.Position;
+
+            canSeekStream = stream.CanSeek;
+            if (canSeekStream) {
+                streamStartOffset = stream.Position;
+            }
+            
             reader = new NbtBinaryReader(stream, bigEndian);
         }
 
@@ -125,7 +131,8 @@ namespace fNbt {
             get { return reader.BaseStream; }
         }
 
-        /// <summary> Gets the number of bytes from the beginning of the stream to the beginning of this tag. </summary>
+        /// <summary> Gets the number of bytes from the beginning of the stream to the beginning of this tag.
+        /// If the stream is not seekable, this value will always be 0. </summary>
         public int TagStartOffset { get; private set; }
 
         /// <summary> Gets the number of tags read from the stream so far
@@ -188,7 +195,9 @@ namespace fNbt {
                         SkipValue();
                     }
                     // Read next tag, check if we've hit the end
-                    TagStartOffset = (int)(reader.BaseStream.Position - streamStartOffset);
+                    if (canSeekStream) {
+                        TagStartOffset = (int)(reader.BaseStream.Position - streamStartOffset);
+                    }
                     TagType = reader.ReadTagType();
                     if (TagType == NbtTagType.End) {
                         TagName = null;
@@ -232,7 +241,9 @@ namespace fNbt {
                             throw new NbtFormatException(InvalidParentTagError);
                         }
                     } else {
-                        TagStartOffset = (int)(reader.BaseStream.Position - streamStartOffset);
+                        if (canSeekStream) {
+                            TagStartOffset = (int)(reader.BaseStream.Position - streamStartOffset);
+                        }
                         ReadTagHeader(false);
                     }
                     return true;
