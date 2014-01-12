@@ -251,21 +251,27 @@ namespace fNbt {
                 FileCompression = compression;
             }
 
-            long bytesRead;
+            // prepare to count bytes read
+            long startOffset = 0;
+            if (stream.CanSeek) {
+                startOffset = stream.Position;
+            } else {
+                stream = new ByteCountingStream(stream);
+            }
 
             switch (FileCompression) {
                 case NbtCompression.GZip:
                     using (var decStream = new GZipStream(stream, CompressionMode.Decompress, true)) {
                         if (bufferSize > 0) {
-                            bytesRead = LoadFromStreamInternal(new BufferedStream(decStream, bufferSize), selector);
+                            LoadFromStreamInternal(new BufferedStream(decStream, bufferSize), selector);
                         } else {
-                            bytesRead = LoadFromStreamInternal(decStream, selector);
+                            LoadFromStreamInternal(decStream, selector);
                         }
                     }
                     break;
 
                 case NbtCompression.None:
-                    bytesRead = LoadFromStreamInternal(stream, selector);
+                    LoadFromStreamInternal(stream, selector);
                     break;
 
                 case NbtCompression.ZLib:
@@ -275,9 +281,9 @@ namespace fNbt {
                     stream.ReadByte();
                     using (var decStream = new DeflateStream(stream, CompressionMode.Decompress, true)) {
                         if (bufferSize > 0) {
-                            bytesRead = LoadFromStreamInternal(new BufferedStream(decStream, bufferSize), selector);
+                            LoadFromStreamInternal(new BufferedStream(decStream, bufferSize), selector);
                         } else {
-                            bytesRead = LoadFromStreamInternal(decStream, selector);
+                            LoadFromStreamInternal(decStream, selector);
                         }
                     }
                     break;
@@ -286,7 +292,12 @@ namespace fNbt {
                     throw new ArgumentOutOfRangeException("compression");
             }
 
-            return bytesRead;
+            // report bytes read
+            if (stream.CanSeek) {
+                return stream.Position - startOffset;
+            } else {
+                return ((ByteCountingStream)stream).BytesRead;
+            }
         }
 
 
@@ -337,7 +348,7 @@ namespace fNbt {
         }
 
 
-        long LoadFromStreamInternal([NotNull] Stream stream, [CanBeNull] TagSelector tagSelector) {
+        void LoadFromStreamInternal([NotNull] Stream stream, [CanBeNull] TagSelector tagSelector) {
             // Make sure the first byte in this file is the tag for a TAG_Compound
             if (stream.ReadByte() != (int)NbtTagType.Compound) {
                 throw new NbtFormatException("Given NBT stream does not start with a TAG_Compound");
@@ -349,8 +360,6 @@ namespace fNbt {
             var rootCompound = new NbtCompound(reader.ReadString());
             rootCompound.ReadTag(reader);
             RootTag = rootCompound;
-
-            return reader.BytesRead;
         }
 
         #endregion
@@ -459,28 +468,29 @@ namespace fNbt {
                     "Cannot save NbtFile: Root tag is not named. Its name may be an empty string, but not null.");
             }
 
-            long bytesWritten;
+            long startOffset = 0;
+            if (stream.CanSeek) {
+                startOffset = stream.Position;
+            } else {
+                stream = new ByteCountingStream(stream);
+            }
 
             switch (compression) {
                 case NbtCompression.ZLib:
-                    bytesWritten = 2;
                     stream.WriteByte(0x78);
                     stream.WriteByte(0x01);
                     int checksum;
                     using (var compressStream = new ZLibStream(stream, CompressionMode.Compress, true)) {
                         var bufferedStream = new BufferedStream(compressStream, WriteBufferSize);
-                        var writer = new NbtBinaryWriter(bufferedStream, BigEndian);
-                        RootTag.WriteTag(writer);
+                        RootTag.WriteTag(new NbtBinaryWriter(bufferedStream, BigEndian));
                         bufferedStream.Flush();
                         checksum = compressStream.Checksum;
-                        bytesWritten += writer.BytesWritten;
                     }
                     byte[] checksumBytes = BitConverter.GetBytes(checksum);
                     if (BitConverter.IsLittleEndian) {
                         // Adler32 checksum is big-endian
                         Array.Reverse(checksumBytes);
                     }
-                    bytesWritten += checksumBytes.Length;
                     stream.Write(checksumBytes, 0, checksumBytes.Length);
                     break;
 
@@ -488,17 +498,14 @@ namespace fNbt {
                     using (var compressStream = new GZipStream(stream, CompressionMode.Compress, true)) {
                         // use a buffered stream to avoid GZipping in small increments (which has a lot of overhead)
                         var bufferedStream = new BufferedStream(compressStream, WriteBufferSize);
-                        var writer = new NbtBinaryWriter(bufferedStream, BigEndian);
-                        RootTag.WriteTag(writer);
+                        RootTag.WriteTag(new NbtBinaryWriter(bufferedStream, BigEndian));
                         bufferedStream.Flush();
-                        bytesWritten = writer.BytesWritten;
                     }
                     break;
 
                 case NbtCompression.None: {
-                    NbtBinaryWriter writer = new NbtBinaryWriter(stream, BigEndian);
+                    var writer = new NbtBinaryWriter(stream, BigEndian);
                     RootTag.WriteTag(writer);
-                    bytesWritten = writer.BytesWritten;
                 }
                     break;
 
@@ -506,7 +513,11 @@ namespace fNbt {
                     throw new ArgumentOutOfRangeException("compression");
             }
 
-            return bytesWritten;
+            if (stream.CanSeek) {
+                return stream.Position - startOffset;
+            } else {
+                return ((ByteCountingStream)stream).BytesWritten;
+            }
         }
 
         #endregion

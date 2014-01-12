@@ -34,7 +34,7 @@ namespace fNbt.Test {
         }
 
         public override long Position {
-            get { return stream.Position; }
+            get { throw new NotSupportedException(); }
             set { throw new NotSupportedException(); }
         }
 

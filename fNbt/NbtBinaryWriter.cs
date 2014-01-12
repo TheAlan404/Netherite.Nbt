@@ -11,8 +11,6 @@ namespace fNbt {
         readonly byte[] stringConversionBuffer = new byte[64];
         const int MaxBufferedStringLength = 16;
 
-        public long BytesWritten { get; private set; }
-
         public NbtBinaryWriter([NotNull] Stream input, bool bigEndian)
             : base(input) {
             swapNeeded = (BitConverter.IsLittleEndian == bigEndian);
@@ -21,25 +19,6 @@ namespace fNbt {
 
         public void Write(NbtTagType value) {
             BaseStream.WriteByte((byte)value);
-            BytesWritten++;
-        }
-
-
-        public override void Write( byte value ) {
-            BaseStream.WriteByte( value );
-            BytesWritten++;
-        }
-
-
-        public override void Write( byte[] buffer ) {
-            BaseStream.Write(buffer, 0, buffer.Length);
-            BytesWritten += buffer.Length;
-        }
-
-
-        public override void Write(byte[] buffer, int index, int count) {
-            BaseStream.Write( buffer, index, count );
-            BytesWritten += count;
         }
 
 
@@ -49,7 +28,6 @@ namespace fNbt {
             } else {
                 base.Write(value);
             }
-            BytesWritten += 2;
         }
 
 
@@ -59,7 +37,6 @@ namespace fNbt {
             } else {
                 base.Write(value);
             }
-            BytesWritten += 4;
         }
 
 
@@ -69,7 +46,6 @@ namespace fNbt {
             } else {
                 base.Write(value);
             }
-            BytesWritten += 8;
         }
 
 
@@ -81,7 +57,6 @@ namespace fNbt {
             } else {
                 base.Write(value);
             }
-            BytesWritten += 4;
         }
 
 
@@ -93,7 +68,6 @@ namespace fNbt {
             } else {
                 base.Write(value);
             }
-            BytesWritten += 8;
         }
 
 
@@ -104,12 +78,10 @@ namespace fNbt {
                 byte[] bytes = Encoding.UTF8.GetBytes(value);
                 Write((short)bytes.Length);
                 BaseStream.Write( bytes, 0, bytes.Length );
-                BytesWritten += 2 + bytes.Length;
             } else {
                 int byteCount = Encoding.UTF8.GetBytes(value, 0, value.Length, stringConversionBuffer, 0);
                 Write( (short)byteCount );
                 BaseStream.Write( stringConversionBuffer, 0, byteCount );
-                BytesWritten += 2 + byteCount;
             }
         }
 

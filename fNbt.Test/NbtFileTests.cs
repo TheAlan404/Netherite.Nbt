@@ -88,7 +88,7 @@ namespace fNbt.Test {
             using (var ms = new MemoryStream(fileBytes)) {
                 using (var nss = new NonSeekableStream(ms)) {
                     var file = new NbtFile();
-                    int length = file.LoadFromStream(nss, NbtCompression.None, null);
+                    long length = file.LoadFromStream(nss, NbtCompression.None, null);
                     TestFiles.AssertNbtBigFile(file);
                     Assert.AreEqual(length, new FileInfo(TestFiles.Big).Length);
                 }
@@ -131,7 +131,7 @@ namespace fNbt.Test {
         void ReloadFileInternal(String fileName, NbtCompression compression, bool bigEndian) {
             var loadedFile = new NbtFile(Path.Combine(TestFiles.DirName, fileName));
             loadedFile.BigEndian = bigEndian;
-            int bytesWritten = loadedFile.SaveToFile(Path.Combine(TestDirName, fileName), compression);
+            long bytesWritten = loadedFile.SaveToFile(Path.Combine(TestDirName, fileName), compression);
             int bytesRead = loadedFile.LoadFromFile(Path.Combine(TestDirName, fileName), NbtCompression.AutoDetect, null);
             Assert.AreEqual(bytesWritten, bytesRead);
             TestFiles.AssertNbtBigFile(loadedFile);
@@ -143,13 +143,13 @@ namespace fNbt.Test {
             var loadedFile = new NbtFile(TestFiles.Big);
             using (var ms = new MemoryStream()) {
                 using (var nss = new NonSeekableStream(ms)) {
-                    int bytesWritten = loadedFile.SaveToStream(nss, NbtCompression.None);
+                    long bytesWritten = loadedFile.SaveToStream(nss, NbtCompression.None);
                     ms.Position = 0;
                     Assert.Throws<NotSupportedException>(() => loadedFile.LoadFromStream(nss, NbtCompression.AutoDetect));
                     ms.Position = 0;
                     Assert.Throws<InvalidDataException>(() => loadedFile.LoadFromStream(nss, NbtCompression.ZLib));
                     ms.Position = 0;
-                    int bytesRead = loadedFile.LoadFromStream(nss, NbtCompression.None);
+                    long bytesRead = loadedFile.LoadFromStream(nss, NbtCompression.None);
                     Assert.AreEqual(bytesWritten, bytesRead);
                     TestFiles.AssertNbtBigFile(loadedFile);
                 }

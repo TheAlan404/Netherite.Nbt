@@ -22,9 +22,6 @@ namespace fNbt {
         }
 
 
-        public long BytesRead { get; private set; }
-
-
         public NbtTagType ReadTagType() {
             var type = (NbtTagType)ReadByte();
             if (type < NbtTagType.End || type > NbtTagType.IntArray) {
@@ -34,20 +31,7 @@ namespace fNbt {
         }
 
 
-        public override byte ReadByte() {
-            BytesRead++;
-            return base.ReadByte();
-        }
-
-
-        public override byte[] ReadBytes(int count) {
-            BytesRead += count;
-            return base.ReadBytes(count);
-        }
-
-
         public override short ReadInt16() {
-            BytesRead += 2;
             if (swapNeeded) {
                 return NbtBinaryWriter.Swap(base.ReadInt16());
             } else {
@@ -57,7 +41,6 @@ namespace fNbt {
 
 
         public override int ReadInt32() {
-            BytesRead += 4;
             if (swapNeeded) {
                 return NbtBinaryWriter.Swap(base.ReadInt32());
             } else {
@@ -67,7 +50,6 @@ namespace fNbt {
 
 
         public override long ReadInt64() {
-            BytesRead += 8;
             if (swapNeeded) {
                 return NbtBinaryWriter.Swap(base.ReadInt64());
             } else {
@@ -77,7 +59,6 @@ namespace fNbt {
 
 
         public override float ReadSingle() {
-            BytesRead += 4;
             if (swapNeeded) {
                 BaseStream.Read(floatBuffer, 0, sizeof(float));
                 Array.Reverse(floatBuffer);
@@ -89,7 +70,6 @@ namespace fNbt {
 
 
         public override double ReadDouble() {
-            BytesRead += 8;
             if (swapNeeded) {
                 BaseStream.Read(doubleBuffer, 0, sizeof(double));
                 Array.Reverse(doubleBuffer);
@@ -112,7 +92,6 @@ namespace fNbt {
                         throw new EndOfStreamException();
                     }
                     stringBytesRead += bytesReadThisTime;
-                    BytesRead += bytesReadThisTime;
                 }
                 return Encoding.UTF8.GetString(stringConversionBuffer, 0, length);
             } else {
@@ -127,7 +106,6 @@ namespace fNbt {
                 throw new ArgumentOutOfRangeException("bytesToSkip");
             } else if (BaseStream.CanSeek) {
                 BaseStream.Position += bytesToSkip;
-                BytesRead += bytesToSkip;
             } else if (bytesToSkip != 0) {
                 if (seekBuffer == null)
                     seekBuffer = new byte[SeekBufferSize];
@@ -138,7 +116,6 @@ namespace fNbt {
                     if (bytesReadThisTime == 0) {
                         throw new EndOfStreamException();
                     }
-                    BytesRead += bytesReadThisTime;
                     bytesSkipped += bytesReadThisTime;
                 }
             }
@@ -154,6 +131,7 @@ namespace fNbt {
         }
 
 
+        [CanBeNull]
         public TagSelector Selector { get; set; }
     }
 }
