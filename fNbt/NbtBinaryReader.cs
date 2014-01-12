@@ -8,7 +8,7 @@ namespace fNbt {
     /// while taking care of endianness, string encoding, and skipping. </summary>
     internal sealed class NbtBinaryReader : BinaryReader {
         readonly byte[] floatBuffer = new byte[sizeof(float)],
-            doubleBuffer = new byte[sizeof(double)];
+                        doubleBuffer = new byte[sizeof(double)];
 
         byte[] seekBuffer;
         const int SeekBufferSize = 8*1024;
@@ -22,6 +22,9 @@ namespace fNbt {
         }
 
 
+        public long BytesRead { get; private set; }
+
+
         public NbtTagType ReadTagType() {
             var type = (NbtTagType)ReadByte();
             if (type < NbtTagType.End || type > NbtTagType.IntArray) {
@@ -31,7 +34,20 @@ namespace fNbt {
         }
 
 
+        public override byte ReadByte() {
+            BytesRead++;
+            return base.ReadByte();
+        }
+
+
+        public override byte[] ReadBytes(int count) {
+            BytesRead += count;
+            return base.ReadBytes(count);
+        }
+
+
         public override short ReadInt16() {
+            BytesRead += 2;
             if (swapNeeded) {
                 return NbtBinaryWriter.Swap(base.ReadInt16());
             } else {
@@ -41,6 +57,7 @@ namespace fNbt {
 
 
         public override int ReadInt32() {
+            BytesRead += 4;
             if (swapNeeded) {
                 return NbtBinaryWriter.Swap(base.ReadInt32());
             } else {
@@ -50,6 +67,7 @@ namespace fNbt {
 
 
         public override long ReadInt64() {
+            BytesRead += 8;
             if (swapNeeded) {
                 return NbtBinaryWriter.Swap(base.ReadInt64());
             } else {
@@ -59,16 +77,19 @@ namespace fNbt {
 
 
         public override float ReadSingle() {
+            BytesRead += 4;
             if (swapNeeded) {
                 BaseStream.Read(floatBuffer, 0, sizeof(float));
                 Array.Reverse(floatBuffer);
                 return BitConverter.ToSingle(floatBuffer, 0);
+            } else {
+                return base.ReadSingle();
             }
-            return base.ReadSingle();
         }
 
 
         public override double ReadDouble() {
+            BytesRead += 8;
             if (swapNeeded) {
                 BaseStream.Read(doubleBuffer, 0, sizeof(double));
                 Array.Reverse(doubleBuffer);
@@ -84,7 +105,15 @@ namespace fNbt {
                 throw new NbtFormatException("Negative string length given!");
             }
             if (length < stringConversionBuffer.Length) {
-                BaseStream.Read(stringConversionBuffer, 0, length);
+                int stringBytesRead = 0;
+                while (stringBytesRead < length) {
+                    int bytesReadThisTime = BaseStream.Read(stringConversionBuffer, 0, length);
+                    if (bytesReadThisTime == 0) {
+                        throw new EndOfStreamException();
+                    }
+                    stringBytesRead += bytesReadThisTime;
+                    BytesRead += bytesReadThisTime;
+                }
                 return Encoding.UTF8.GetString(stringConversionBuffer, 0, length);
             } else {
                 byte[] stringData = ReadBytes(length);
@@ -98,16 +127,19 @@ namespace fNbt {
                 throw new ArgumentOutOfRangeException("bytesToSkip");
             } else if (BaseStream.CanSeek) {
                 BaseStream.Position += bytesToSkip;
+                BytesRead += bytesToSkip;
             } else if (bytesToSkip != 0) {
                 if (seekBuffer == null)
                     seekBuffer = new byte[SeekBufferSize];
-                int bytesDone = 0;
-                while (bytesDone < bytesToSkip) {
-                    int readThisTime = BaseStream.Read(seekBuffer, bytesDone, bytesToSkip - bytesDone);
-                    if (readThisTime == 0) {
+                int bytesSkipped = 0;
+                while (bytesSkipped < bytesToSkip) {
+                    int bytesToRead = Math.Min(SeekBufferSize, bytesToSkip - bytesSkipped);
+                    int bytesReadThisTime = BaseStream.Read(seekBuffer, bytesSkipped, bytesToRead);
+                    if (bytesReadThisTime == 0) {
                         throw new EndOfStreamException();
                     }
-                    bytesDone += readThisTime;
+                    BytesRead += bytesReadThisTime;
+                    bytesSkipped += bytesReadThisTime;
                 }
             }
         }
