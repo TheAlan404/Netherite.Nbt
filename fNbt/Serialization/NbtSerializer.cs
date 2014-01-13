@@ -55,7 +55,7 @@ namespace fNbt.Serialization {
                             if (elementNullPolicies == null) {
                                 elementNullPolicies = new Dictionary<PropertyInfo, NullPolicy>();
                             }
-                            elementNullPolicies.Add( property, nullPolicyAttr.ElementPolicy );
+                            elementNullPolicies.Add(property, nullPolicyAttr.ElementPolicy);
                         }
                     }
                 }
@@ -135,7 +135,6 @@ namespace fNbt.Serialization {
                 for (int i = 0; i < valueAsArray.Count; i++) {
                     list.Add(SerializePrimitiveType(null, valueAsArray[i]));
                 }
-
             } else if (SerializationUtil.IsDirectlyMappedType(elementType)) {
                 // speedy serialization for directly-mapped types
                 for (int i = 0; i < valueAsArray.Count; i++) {
@@ -154,16 +153,15 @@ namespace fNbt.Serialization {
                         list.Add(Serialize(valueAsArray[i], true));
                     }
                 }
-
             } else {
                 // serialize complex types
                 var innerSerializer = new NbtSerializer(elementType);
-                for( int i = 0; i < valueAsArray.Count; i++ ) {
+                for (int i = 0; i < valueAsArray.Count; i++) {
                     var value = valueAsArray[i];
-                    if( value == null ) {
-                        switch( elementNullPolicy ) {
+                    if (value == null) {
+                        switch (elementNullPolicy) {
                             case NullPolicy.Error:
-                                throw new NullReferenceException( "Null elements not allowed for tag " + tagName );
+                                throw new NullReferenceException("Null elements not allowed for tag " + tagName);
                             case NullPolicy.Ignore:
                                 continue;
                             case NullPolicy.InsertDefault:
@@ -171,7 +169,7 @@ namespace fNbt.Serialization {
                                 break;
                         }
                     } else {
-                        list.Add( innerSerializer.Serialize( valueAsArray[i], null ) );
+                        list.Add(innerSerializer.Serialize(valueAsArray[i], null));
                     }
                 }
             }
@@ -226,7 +224,7 @@ namespace fNbt.Serialization {
                 }
 
                 Type elementType = realType.GetElementType();
-                return SerializeList( tagName, valueAsArray, elementType, elementNullPolicy );
+                return SerializeList(tagName, valueAsArray, elementType, elementNullPolicy);
             }
 
             if (!skipInterfaceCheck && value is INbtSerializable) {
@@ -236,7 +234,7 @@ namespace fNbt.Serialization {
             // Serialize ILists
             if (realType.IsGenericType && realType.GetGenericTypeDefinition() == typeof(List<>)) {
                 Type listType = realType.GetGenericArguments()[0];
-                return SerializeList( tagName, (IList)value, listType, elementNullPolicy );
+                return SerializeList(tagName, (IList)value, listType, elementNullPolicy);
             }
 
             // Skip serializing NbtTags and NbtFiles

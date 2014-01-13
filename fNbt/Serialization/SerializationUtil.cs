@@ -5,7 +5,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 namespace fNbt.Serialization {
-    static class SerializationUtil {
+    internal static class SerializationUtil {
         // Gets default value for directly-mapped reference types, to substitute a null
         public static object GetDefaultValue(Type type) {
             if (type == typeof(string)) {
@@ -70,7 +70,6 @@ namespace fNbt.Serialization {
         };
 
 
-        
         [CanBeNull]
         public static Type GetGenericInterfaceImpl(Type concreteType, Type genericInterface) {
             if (concreteType.IsGenericType && concreteType.GetGenericTypeDefinition() == genericInterface) {
@@ -88,7 +87,7 @@ namespace fNbt.Serialization {
 
         [NotNull]
         public static MethodInfo GetGenericInterfaceMethodImpl(Type concreteType, Type genericInterface,
-                                                        string methodName, Type[] methodParams) {
+                                                               string methodName, Type[] methodParams) {
             // Find a specific generic implementation of the interface
             Type impl = GetGenericInterfaceImpl(concreteType, genericInterface);
             if (impl == null) {
@@ -105,7 +104,6 @@ namespace fNbt.Serialization {
                 // We don't need to look up the interface implementation map. We can just return
                 // the interface's method directly.
                 return interfaceMethod;
-
             } else {
                 // If concreteType is a class, we need to get a MethodInfo for its specific implementation.
                 // We cannot just call "GetMethod()" on the concreteType, because explicit implementations
@@ -117,6 +115,5 @@ namespace fNbt.Serialization {
                 return concreteMethod;
             }
         }
-
     }
 }

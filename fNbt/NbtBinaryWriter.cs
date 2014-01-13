@@ -11,6 +11,7 @@ namespace fNbt {
         readonly byte[] stringConversionBuffer = new byte[64];
         const int MaxBufferedStringLength = 16;
 
+
         public NbtBinaryWriter([NotNull] Stream input, bool bigEndian)
             : base(input) {
             swapNeeded = (BitConverter.IsLittleEndian == bigEndian);
@@ -31,7 +32,7 @@ namespace fNbt {
         }
 
 
-        public override void Write( int value ) {
+        public override void Write(int value) {
             if (swapNeeded) {
                 base.Write(Swap(value));
             } else {
@@ -40,7 +41,7 @@ namespace fNbt {
         }
 
 
-        public override void Write( long value ) {
+        public override void Write(long value) {
             if (swapNeeded) {
                 base.Write(Swap(value));
             } else {
@@ -49,7 +50,7 @@ namespace fNbt {
         }
 
 
-        public override void Write( float value ) {
+        public override void Write(float value) {
             if (swapNeeded) {
                 byte[] floatBytes = BitConverter.GetBytes(value);
                 Array.Reverse(floatBytes);
@@ -77,11 +78,11 @@ namespace fNbt {
             if (value.Length > MaxBufferedStringLength) {
                 byte[] bytes = Encoding.UTF8.GetBytes(value);
                 Write((short)bytes.Length);
-                BaseStream.Write( bytes, 0, bytes.Length );
+                BaseStream.Write(bytes, 0, bytes.Length);
             } else {
                 int byteCount = Encoding.UTF8.GetBytes(value, 0, value.Length, stringConversionBuffer, 0);
-                Write( (short)byteCount );
-                BaseStream.Write( stringConversionBuffer, 0, byteCount );
+                Write((short)byteCount);
+                BaseStream.Write(stringConversionBuffer, 0, byteCount);
             }
         }
 

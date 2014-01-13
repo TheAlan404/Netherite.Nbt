@@ -5,6 +5,7 @@ namespace fNbt.Serialization {
         public readonly NullPolicy SelfPolicy;
         public readonly NullPolicy ElementPolicy;
 
+
         public NullPolicyAttribute(NullPolicy selfPolicy) {
             SelfPolicy = selfPolicy;
             ElementPolicy = NullPolicy.Default;

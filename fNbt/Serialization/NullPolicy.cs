@@ -1,5 +1,5 @@
 namespace fNbt.Serialization {
-    /// <summary> Defines how null values should be treated. </summary>
+    /// <summary> Defines how null values should be treated. Default policy is Error. </summary>
     public enum NullPolicy {
         Default = 0,
         Error = 0,
