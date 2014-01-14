@@ -516,9 +516,8 @@ namespace fNbt.Serialization {
         [NotNull]
         static NewExpression MakeNbtTagCtor([NotNull] Type valueType, [NotNull] Expression tagNameExpr,
                                             [NotNull] Expression tagValueExpr) {
-            if (!valueType.IsPrimitive && !valueType.IsEnum &&
-                valueType != typeof(byte[]) && valueType != typeof(int[])) {
-                throw new ArgumentException("Given type must be primitive or enum", "valueType");
+            if (!SerializationUtil.IsDirectlyMappedType(valueType)) {
+                throw new ArgumentException("Given type must be primitive, enum, string, byte[], or int[]", "valueType");
             }
 
             // Add conversion logic, if needed
@@ -529,11 +528,8 @@ namespace fNbt.Serialization {
             Type elementTagType = SerializationUtil.TypeToTagMap[tagValueExpr.Type];
 
             // Find appropriate constructor
-            ConstructorInfo tagCtor = elementTagType.GetConstructor(new[] { typeof(string), valueType });
-            if (tagCtor == null) {
-                // Should never happen. This assertion is here for completeness' sake.
-                throw new Exception("Unable to find NbtTag constructor");
-            }
+            ConstructorInfo tagCtor = elementTagType.GetConstructor(new[] { typeof(string), tagValueExpr.Type });
+            // ReSharper disable once AssignNullToNotNullAttribute -- constructor will never be null
             return Expression.New(tagCtor, tagNameExpr, tagValueExpr);
         }
 
@@ -543,16 +539,17 @@ namespace fNbt.Serialization {
         static Expression MakeConversionToDirectType([NotNull] Type valueType, [NotNull] Expression tagValueExpr) {
             // Add casting/conversion, if needed
             Type convertedType = GetConvertedType(valueType);
+
+            // boxed values returned by Array.GetValue() needs to be cast to bool first
+            if (valueType != tagValueExpr.Type) {
+                tagValueExpr = Expression.Convert(tagValueExpr, valueType);
+            }
+
             if (valueType == typeof(bool)) {
-                // Special handling for booleans
-                // value returned by Array.GetValue() needs to be cast to bool first
-                if (tagValueExpr.Type != typeof(bool)) {
-                    tagValueExpr = Expression.Convert(tagValueExpr, typeof(bool));
-                }
-                // to go from bool to byte: (value ? (byte)1 : (byte)0)
+                // Special handling for booleans: (<tagValueExpr> ? (byte)1 : (byte)0)
                 return Expression.Condition(tagValueExpr,
                                             Expression.Constant((byte)1), Expression.Constant((byte)0));
-            } else if (valueType != convertedType || tagValueExpr.Type != convertedType) {
+            } else if (valueType != convertedType) {
                 // special handling (casting) for enums and sbyte/ushort/char/uint/ulong/decimal
                 return Expression.Convert(tagValueExpr, convertedType);
             } else {
@@ -638,9 +635,9 @@ namespace fNbt.Serialization {
         // Generate a message for a NullReferenceException to be thrown if given property's value is null
         [NotNull]
         static string MakePropertyNullMessage([NotNull] PropertyInfo prop) {
-                return string.Format("Property {0}.{1} cannot be null.",
-                                     // ReSharper disable once PossibleNullReferenceException
-                                     prop.DeclaringType.Name, prop.Name);
+            return string.Format("Property {0}.{1} cannot be null.",
+                                 // ReSharper disable once PossibleNullReferenceException
+                                 prop.DeclaringType.Name, prop.Name);
         }
 
 

@@ -23,7 +23,8 @@ namespace fNbt.Serialization {
 
 
         public static bool IsDirectlyMappedType(Type type) {
-            return type == typeof(byte[]) ||
+            return type.IsPrimitive || type.IsEnum ||
+                   type == typeof(byte[]) ||
                    type == typeof(int[]) ||
                    type == typeof(string);
         }
