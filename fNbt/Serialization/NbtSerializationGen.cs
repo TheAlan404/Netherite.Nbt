@@ -3,7 +3,6 @@
 
 // Hiding erroneous warnings -- see http://youtrack.jetbrains.com/issue/RSRP-333085
 // ReSharper disable PossiblyMistakenUseOfParamsMethod
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +16,67 @@ using System.Diagnostics;
 
 namespace fNbt.Serialization {
     public delegate NbtCompound NbtSerialize<T>(string tagName, T value);
+
+
+    internal class CallResolver {
+        public CallResolver(Dictionary<Type,Expression> parentSerializers) {
+            this.parentSerializers = parentSerializers;
+        }
+
+
+        readonly Dictionary<Type, Expression> parentSerializers;
+        readonly Dictionary<Type,ParameterExpression> parameters = new Dictionary<Type, ParameterExpression>();
+
+
+        public bool HasParameters {
+            get { return parameters.Count > 0; }
+        }
+
+
+        public ParameterExpression[] GetParameterList() {
+            return parameters.Values.ToArray();
+        }
+
+
+        public Expression[] GetParameterAssignmentList() {
+            List<Expression> assignmentExprs = new List<Expression>();
+            foreach (KeyValuePair<Type, ParameterExpression> param in parameters) {
+                Expression val = Expression.Invoke(parentSerializers[param.Key]);
+                assignmentExprs.Add(Expression.Assign(param.Value, val));
+            }
+            return assignmentExprs.ToArray();
+        }
+
+
+        public Expression MakeCall([NotNull] Type type, [CanBeNull] string tagName,
+                                   [NotNull] Expression objectExpr) {
+            Expression parentSerializer;
+            if( parentSerializers.TryGetValue( type, out parentSerializer ) ) {
+                // Dynamically resolved invoke -- for self-referencing/cross-referencing types
+                // We delay resolving the correct NbtSerialize delegate for type, since that delegate is still
+                // being created at this time. The resulting serialization code is a bit less efficient, but at least
+                // it has the correct behavior.
+                ParameterExpression paramExpr;
+                if (!parameters.TryGetValue(type, out paramExpr)) {
+                    Type delegateType = typeof(NbtSerialize<>).MakeGenericType(new[] { type });
+                    paramExpr = Expression.Parameter(delegateType);
+                    parameters.Add(type,paramExpr);
+                }
+
+                return Expression.Invoke(paramExpr,
+                                         Expression.Constant(tagName, typeof(string)),
+                                         objectExpr);
+
+            } else {
+                // Statically resolved invoke
+                Delegate compoundSerializer = NbtSerializationGen.GetSerializerForType( type );
+                MethodInfo invokeMethodInfo = compoundSerializer.GetType().GetMethod( "Invoke" );
+                return Expression.Call( Expression.Constant( compoundSerializer ),
+                                       invokeMethodInfo,
+                                       Expression.Constant( tagName, typeof( string ) ), objectExpr );
+            }
+        }
+    }
 
 
     public static class NbtSerializationGen {
@@ -65,7 +125,6 @@ namespace fNbt.Serialization {
 #endif
 
         const string NullElementMessage = "Null elements not allowed inside a list.";
-        static readonly HashSet<Type> TypesBeingProcessed = new HashSet<Type>();
 
 
         #region Caching
@@ -81,7 +140,7 @@ namespace fNbt.Serialization {
                 if (GlobalCache.TryGetValue(typeof(T), out result)) {
                     return (NbtSerialize<T>)result;
                 }
-                NbtSerialize<T> newResult = CreateSerializerForType<T>();
+                NbtSerialize<T> newResult = CreateSerializerForType<T>(null);
                 GlobalCache.Add(typeof(T), newResult);
                 return newResult;
             }
@@ -104,18 +163,9 @@ namespace fNbt.Serialization {
         #endregion
 
 
-        // NbtSerializationGen.GetSerializerForType(Type)
-        static readonly MethodInfo GetSerializerForTypeInfo =
-            typeof(NbtSerializationGen)
-                .GetMethod("GetSerializerForType", new[] { typeof(Type) });
-
         // NbtSerializationGen.CreateSerializerForType<T>()
         static readonly MethodInfo CreateSerializerForTypeInfo =
-            typeof(NbtSerializationGen)
-                .GetMethod("CreateSerializerForType",
-                           BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Static,
-                           null, CallingConventions.Standard,
-                           Type.EmptyTypes, null);
+            typeof(NbtSerializationGen).GetMethods().First(mi => mi.Name == "GetSerializerForType" && mi.IsGenericMethod);
 
 
         // create and invoke a variant of CreateSerializerForType<T> for given type
@@ -130,80 +180,104 @@ namespace fNbt.Serialization {
 
         // Generates specialized methods for serializing objects of given Type to NBT
         [NotNull]
-        static NbtSerialize<T> CreateSerializerForType<T>() {
-            if (TypesBeingProcessed.Contains(typeof(T))) {
-                // Shouldn't happen unless I messed up a lock somewhere
-                throw new InvalidOperationException("Attempting to create serializer twice for the same type.");
+        static NbtSerialize<T> CreateSerializerForType<T>(Dictionary<Type, Expression> parentSerializers) {
+            if (parentSerializers == null) {
+                parentSerializers = new Dictionary<Type, Expression>();
             }
-            TypesBeingProcessed.Add(typeof(T));
 
-            try {
-                // Define function arguments
-                ParameterExpression argTagName = Expression.Parameter(typeof(string), "tagName");
-                ParameterExpression argValue = Expression.Parameter(typeof(T), "value");
+            // This allows our function to call itself, while it is still being built up.
+            NbtSerialize<T> placeholderDelegate = null;
+            // A closure is modified intentionally, at the end of this method:
+            // placeholderDelegate will be replaced with reference to the compiled function.
+            // ReSharper disable once AccessToModifiedClosure
+            Expression<Func<NbtSerialize<T>>> placeholderExpr = () => placeholderDelegate;
+            parentSerializers.Add(typeof(T), placeholderExpr);
+            CallResolver cr = new CallResolver(parentSerializers);
 
-                // Define return value
-                ParameterExpression varRootTag = Expression.Parameter(typeof(NbtCompound), "rootTag");
-                LabelTarget returnTarget = Expression.Label(typeof(NbtCompound));
+            // Define function arguments
+            ParameterExpression argTagName = Expression.Parameter(typeof(string), "tagName");
+            ParameterExpression argValue = Expression.Parameter(typeof(T), "value");
 
-                // Create property serializers
-                List<Expression> propSerializersList = MakePropertySerializers(typeof(T), argValue, varRootTag);
-                Expression serializersExpr;
-                if (propSerializersList.Count == 0) {
-                    serializersExpr = Expression.Empty();
-                } else if (propSerializersList.Count == 1) {
-                    serializersExpr = propSerializersList[0];
-                } else {
-                    serializersExpr = Expression.Block(propSerializersList);
-                }
+            // Define return value
+            ParameterExpression varRootTag = Expression.Parameter(typeof(NbtCompound), "rootTag");
+            LabelTarget returnTarget = Expression.Label(typeof(NbtCompound));
 
-                // Construct the method body
-                BlockExpression method = Expression.Block(
-                    new[] { varRootTag },
+            // Create property serializers
+            List<Expression> propSerializersList =
+                MakePropertySerializers(cr, typeof(T), argValue, varRootTag);
 
-                    // if( argValue == null )
-                    Expression.IfThen(
-                        Expression.ReferenceEqual(argValue, Expression.Constant(null)),
-                        //  throw new ArgumentNullException("value");
-                        Expression.Throw(Expression.New(ArgumentNullExceptionCtor, Expression.Constant("value")))),
+            if (cr.HasParameters) {
+                propSerializersList.InsertRange(0, cr.GetParameterAssignmentList());
+            }
 
-                    // varRootTag = new NbtCompound(argTagName);
-                    Expression.Assign(varRootTag, Expression.New(NbtCompoundCtor, argTagName)),
+            Expression serializersExpr;
+            if (propSerializersList.Count == 0) {
+                serializersExpr = Expression.Empty();
+            } else if (propSerializersList.Count == 1) {
+                serializersExpr = propSerializersList[0];
+            } else {
+                serializersExpr = Expression.Block(propSerializersList);
+            }
 
-                    // (run the generated serializing code)
-                    serializersExpr,
+            // Create function-wide variables -- includes root tag and serializer delegates
+            List<ParameterExpression> vars = new List<ParameterExpression> {
+                varRootTag
+            };
+            if (cr.HasParameters) {
+                vars.AddRange(cr.GetParameterList());
+            }
 
-                    // return varRootTag;
-                    Expression.Return(returnTarget, varRootTag, typeof(NbtCompound)),
-                    Expression.Label(returnTarget, Expression.Constant(null, typeof(NbtCompound))));
+            // Construct the method body
+            BlockExpression method = Expression.Block(
+                vars,
 
-                // compile
-                Expression<NbtSerialize<T>> methodLambda = Expression.Lambda<NbtSerialize<T>>(method, argTagName,
-                                                                                              argValue);
+                // if( argValue == null )
+                Expression.IfThen(
+                    Expression.ReferenceEqual(argValue, Expression.Constant(null)),
+                    //  throw new ArgumentNullException("value");
+                    Expression.Throw(Expression.New(ArgumentNullExceptionCtor, Expression.Constant("value")))),
+
+                // varRootTag = new NbtCompound(argTagName);
+                Expression.Assign(varRootTag, Expression.New(NbtCompoundCtor, argTagName)),
+
+                // (run the generated serializing code)
+                serializersExpr,
+
+                // return varRootTag;
+                Expression.Return(returnTarget, varRootTag, typeof(NbtCompound)),
+                Expression.Label(returnTarget, Expression.Constant(null, typeof(NbtCompound))));
+
+            // compile
+            Expression<NbtSerialize<T>> methodLambda =
+                Expression.Lambda<NbtSerialize<T>>(method, argTagName, argValue);
 
 #if DEBUG_NBTSERIALIZE_COMPILER
-                // When in debug mode, print the expression tree to stdout.
-                PropertyInfo propInfo =
-                    typeof(Expression)
-                        .GetProperty("DebugView",
-                                     BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Instance);
+            // When in debug mode, print the expression tree to stdout.
+            PropertyInfo propInfo =
+                typeof(Expression)
+                    .GetProperty("DebugView",
+                                 BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Instance);
 
-                var debugView = (string)propInfo.GetValue(methodLambda, null);
-                Console.WriteLine(debugView);
+            var debugView = (string)propInfo.GetValue(methodLambda, null);
+            Console.WriteLine(debugView);
 #endif
 
-                return methodLambda.Compile();
-            } finally {
-                TypesBeingProcessed.Remove(typeof(T));
-            }
-        }
+            NbtSerialize<T> compiledMethod = methodLambda.Compile();
 
+            // modify the closure created earlier, to allow recursive calls
+            placeholderDelegate = compiledMethod;
+
+            // Now that method is compiled, indirection is no longer needed
+            parentSerializers.Remove(typeof(T));
+            return compiledMethod;
+        }
 
 
         // Produces a list of expressions that, together, do the job of
         // producing all necessary NbtTags and adding them to the "varRootTag" compound tag.
         [NotNull]
-        static List<Expression> MakePropertySerializers([NotNull] Type type, [NotNull] ParameterExpression argValue,
+        static List<Expression> MakePropertySerializers([NotNull] CallResolver parentSerializers,
+                                                        [NotNull] Type type, [NotNull] ParameterExpression argValue,
                                                         [NotNull] ParameterExpression varRootTag) {
             var expressions = new List<Expression>();
 
@@ -213,13 +287,6 @@ namespace fNbt.Serialization {
 #if DEBUG_NBTSERIALIZE_COMPILER
                 expressions.Add(MarkLineExpr("Serializing " + property));
 #endif
-
-                // Check if property is self-referential
-                if (propType == type) {
-                    throw new NotSupportedException(
-                        "Self-referential properties are not supported. " +
-                        "Add NbtIgnore attribute to ignore property " + property.Name);
-                }
 
                 // read tag name
                 Attribute nameAttribute = Attribute.GetCustomAttribute(property, typeof(TagNameAttribute));
@@ -277,7 +344,7 @@ namespace fNbt.Serialization {
                 if (iListImpl != null) {
                     Type elementType = iListImpl.GetGenericArguments()[0];
                     Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
-                    Expression newExpr = SerializeIList(getPropertyExpr, elementType, property.PropertyType,
+                    Expression newExpr = SerializeIList(parentSerializers,getPropertyExpr, elementType, property.PropertyType,
                                                         tagName, selfPolicy, elementPolicy,
                                                         MakePropertyNullMessage(property),
                                                         expr => Expression.Call(varRootTag, NbtCompoundAddMethod, expr));
@@ -312,37 +379,10 @@ namespace fNbt.Serialization {
                 Expression newCompoundExpr =
                     MakeNbtTagHandler(argValue, varRootTag,
                                       property, tagName, selfPolicy,
-                                      expr => MakeNbtSerializerCall(propType, tagName, expr));
+                                      expr => parentSerializers.MakeCall(propType, tagName, expr));
                 expressions.Add(newCompoundExpr);
             }
             return expressions;
-        }
-
-
-        // Creates a call to the appropriate NbtSerialize delegate for given type, and passes objectExpr to it.
-        // If the serializer for given type does not yet exist, it's generated at this time.
-        [NotNull]
-        static Expression MakeNbtSerializerCall([NotNull] Type type, [CanBeNull] string tagName,
-                                                [NotNull] Expression objectExpr) {
-            if (TypesBeingProcessed.Contains(type)) {
-                // Dynamically resolved invoke -- for self-referencing/cross-referencing types
-                // We delay resolving the correct NbtSerialize delegate for type, since that delegate is still
-                // being created at this time. The resulting serialization code is a bit less efficient, but at least
-                // it has the correct behavior.
-                Type nbtSerializeSubtype = typeof(NbtSerialize<>).MakeGenericType(new[] { type });
-                Expression getNbtSerializeExpr =
-                    Expression.Convert(Expression.Call(GetSerializerForTypeInfo, Expression.Constant(type)),
-                                       nbtSerializeSubtype);
-                return Expression.Invoke(getNbtSerializeExpr, Expression.Constant(tagName, typeof(string)), objectExpr);
-
-            } else {
-                // Statically resolved invoke
-                Delegate compoundSerializer = GetSerializerForType(type);
-                MethodInfo invokeMethodInfo = compoundSerializer.GetType().GetMethod("Invoke");
-                return Expression.Call(Expression.Constant(compoundSerializer),
-                                       invokeMethodInfo,
-                                       Expression.Constant(tagName, typeof(string)), objectExpr);
-            }
         }
 
 
@@ -381,7 +421,8 @@ namespace fNbt.Serialization {
         // Creates serialization code for properties with value type that is an array or an IList<T>.
         // For byte[] and int[], use SerializePropertyDirectly(...) instead -- it's more efficient.
         [NotNull]
-        static Expression SerializeIList([NotNull] Expression getIListExpr, [NotNull] Type elementType,
+        static Expression SerializeIList(CallResolver parentSerializers,
+                                         [NotNull] Expression getIListExpr, [NotNull] Type elementType,
                                          [NotNull] Type listType, [CanBeNull] string tagName,
                                          NullPolicy selfPolicy, NullPolicy elementPolicy,
                                          [NotNull] string nullMessage,
@@ -404,10 +445,16 @@ namespace fNbt.Serialization {
             } else {
                 // For non-array IList<> types, grab this.Count getter (which maps to get_Count())
                 countGetterImpl = SerializationUtil.GetGenericInterfaceMethodImpl(
-                    listType, typeof(ICollection<>), "get_Count", new Type[0]);
+                    listType,
+                    typeof(ICollection<>),
+                    "get_Count",
+                    new Type[0]);
                 // ...and the getter for indexer this[int], which maps to get_Item(int)
                 itemGetterImpl = SerializationUtil.GetGenericInterfaceMethodImpl(
-                    listType, typeof(IList<>), "get_Item", new[] { typeof(int) });
+                    listType,
+                    typeof(IList<>),
+                    "get_Item",
+                    new[] { typeof(int) });
             }
             Expression getElementExpr = Expression.Call(varIList, itemGetterImpl, varIndex);
             Expression getCountExpr = Expression.Call(varIList, countGetterImpl);
@@ -418,7 +465,8 @@ namespace fNbt.Serialization {
                 //=== Serializing arrays/lists of primitives and enums ===
                 // tag.Add( new NbtTag(null, <getElementExpr>) );
                 handleOneElementExpr =
-                    Expression.Call(varListTag, NbtListAddMethod,
+                    Expression.Call(varListTag,
+                                    NbtListAddMethod,
                                     MakeNbtTagCtor(elementType, NullStringExpr, getElementExpr));
 
             } else if (SerializationUtil.IsDirectlyMappedType(elementType)) {
@@ -433,20 +481,25 @@ namespace fNbt.Serialization {
                 // Primary path, in case element value is not null:
                 // listTag.Add(new NbtTag(null, <getElementExpr>));
                 Expression addElementExpr =
-                    Expression.Call(varListTag, NbtListAddMethod,
+                    Expression.Call(varListTag,
+                                    NbtListAddMethod,
                                     MakeNbtTagCtor(elementType, NullStringExpr, getElementExpr));
 
                 // Fallback path, in case element value is null and elementPolicy is InsertDefaults:
                 // Add a default-value tag to the list: listTag.Add(new NbtTag(null, <default>))
                 Expression defaultElementExpr =
-                    Expression.Call(varListTag, NbtListAddMethod,
-                                    MakeNbtTagCtor(elementType, NullStringExpr,
+                    Expression.Call(varListTag,
+                                    NbtListAddMethod,
+                                    MakeNbtTagCtor(elementType,
+                                                   NullStringExpr,
                                                    Expression.Constant(SerializationUtil.GetDefaultValue(elementType))));
 
                 // generate the appropriate enclosing expressions, depending on NullPolicy
                 handleOneElementExpr = MakeNullHandler(varValue,
-                                                       getElementExpr, elementPolicy,
-                                                       addElementExpr, defaultElementExpr,
+                                                       getElementExpr,
+                                                       elementPolicy,
+                                                       addElementExpr,
+                                                       defaultElementExpr,
                                                        NullElementMessage);
             } else {
                 //=== Serializing arrays/lists of everything else ===
@@ -459,12 +512,18 @@ namespace fNbt.Serialization {
                 if (elementIsIList) {
                     Type subElementType = iListImpl.GetGenericArguments()[0];
                     handleOneElementExpr =
-                        SerializeIList(getElementExpr, subElementType, elementType,
-                                       null, elementPolicy, elementPolicy, NullElementMessage,
+                        SerializeIList(parentSerializers,
+                                       getElementExpr,
+                                       subElementType,
+                                       elementType,
+                                       null,
+                                       elementPolicy,
+                                       elementPolicy,
+                                       NullElementMessage,
                                        subListExpr => Expression.Call(varListTag, NbtListAddMethod, subListExpr));
                 } else {
                     // Get NbtSerialize<T> method for elementType
-                    Expression makeElementTagExpr = MakeNbtSerializerCall(elementType, null, getElementExpr);
+                    Expression makeElementTagExpr = parentSerializers.MakeCall(elementType, null, getElementExpr);
 
                     // declare a local var, which will hold the element's value
                     ParameterExpression varElementValue = Expression.Parameter(elementType, "elementValue");
@@ -479,8 +538,10 @@ namespace fNbt.Serialization {
 
                     // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
                     handleOneElementExpr = MakeNullHandler(varElementValue,
-                                                           getElementExpr, elementPolicy,
-                                                           addSerializedCompoundExpr, addEmptyCompoundExpr,
+                                                           getElementExpr,
+                                                           elementPolicy,
+                                                           addSerializedCompoundExpr,
+                                                           addEmptyCompoundExpr,
                                                            NullElementMessage);
                 }
             }
