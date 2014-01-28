@@ -125,6 +125,7 @@
     <Compile Include="Serialization\NullPolicy.cs" />
     <Compile Include="Serialization\NullPolicyAttribute.cs" />
     <Compile Include="Serialization\SerializationUtil.cs" />
+    <Compile Include="Serialization\SerializeCodeEmitter.cs" />
     <Compile Include="Serialization\TagNameAttribute.cs" />
     <Compile Include="TagSelector.cs" />
     <Compile Include="Tags\NbtIntArray.cs" />
