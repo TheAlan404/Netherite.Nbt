@@ -280,16 +280,23 @@ namespace fNbt.Serialization {
                     continue;
                 }
 
-                // serialize something that implements IList<>
-                Type iListImpl = SerializationUtil.GetGenericInterfaceImpl(propType, typeof(IList<>));
-                if (iListImpl != null) {
-                    expressions.Add(codeEmitter.HandleIList(tagName, property, iListImpl, selfPolicy, elementPolicy));
+                // Skip serializing NbtTag properties
+                if( typeof( NbtTag ).IsAssignableFrom( propType ) ) {
+                    expressions.Add( codeEmitter.HandleNbtTag( tagName, property, selfPolicy ) );
                     continue;
                 }
 
-                // Skip serializing NbtTag properties
-                if (typeof(NbtTag).IsAssignableFrom(propType)) {
-                    expressions.Add(codeEmitter.HandleNbtTag(tagName, property, selfPolicy));
+                // serialize something that implements IDictionary<string,?>
+                Type iDictImpl = SerializationUtil.GetStringIDictionaryImpl(propType);
+                if (iDictImpl != null) {
+                    expressions.Add(codeEmitter.HandleStringIDictionary(tagName, property, iDictImpl, selfPolicy,
+                                                                        elementPolicy));
+                }
+
+                // serialize something that implements IList<?>
+                Type iListImpl = SerializationUtil.GetGenericInterfaceImpl(propType, typeof(IList<>));
+                if (iListImpl != null) {
+                    expressions.Add(codeEmitter.HandleIList(tagName, property, iListImpl, selfPolicy, elementPolicy));
                     continue;
                 }
 

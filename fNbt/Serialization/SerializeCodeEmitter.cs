@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
@@ -140,10 +142,54 @@ namespace fNbt.Serialization {
 
 
         public override Expression HandleCompoundObject(string tagName, PropertyInfo property, NullPolicy selfPolicy) {
-            return MakeNbtTagHandler(property,
-                                     tagName,
-                                     selfPolicy,
+            return MakeNbtTagHandler(property, tagName, selfPolicy,
                                      expr => callResolver.MakeCall(property.PropertyType, tagName, expr));
+        }
+
+
+        public override Expression HandleStringIDictionary(string tagName, PropertyInfo property, Type iDictImpl,
+                                                           NullPolicy selfPolicy, NullPolicy elementPolicy) {
+            Type elementType = iDictImpl.GetGenericArguments()[1];
+            // find type of KeyValuePair<,> that the enumerator will return
+            Type kvpType = typeof(KeyValuePair<,>).MakeGenericType(iDictImpl.GetGenericArguments());
+
+            // locate IDictionary.GetEnumerable()
+            Type enumerableType = typeof(IEnumerable<>).MakeGenericType(kvpType);
+            Type enumeratorType = typeof(IEnumerator<>).MakeGenericType(kvpType);
+            MethodInfo getEnumeratorImpl =
+                SerializationUtil.GetGenericInterfaceMethodImpl(
+                    property.PropertyType, enumerableType, "GetEnumerator", Type.EmptyTypes);
+            MethodInfo moveNextMethod = enumeratorType.GetMethod("MoveNext");
+
+            ParameterExpression varIDict = Expression.Parameter(property.PropertyType, "iDict");
+            ParameterExpression varCompTag = Expression.Parameter(typeof(NbtCompound), "compTag");
+            ParameterExpression varEnumerator = Expression.Parameter(enumeratorType, "enumerator");
+
+            // property getter
+            Expression getIDictExpr = Expression.MakeMemberAccess(argValue, property);
+            LabelTarget loopBreak = Expression.Label(typeof(void));
+
+            Expression forEachElementExpr = null;
+
+            Expression makeTagExpr =
+                Expression.Block(
+                    new[] { varIDict, varCompTag, varEnumerator },
+                    Expression.Assign(varEnumerator, Expression.Call(varIDict, getEnumeratorImpl)),
+                    Expression.Loop(
+                        Expression.IfThenElse(Expression.Call(varEnumerator, moveNextMethod),
+                                              Expression.Block(forEachElementExpr),
+                                              Expression.Break(loopBreak)),
+                        loopBreak)
+                    );
+
+            // default value (in case of NullPolicy.InsertDefault): new NbtCompound(tagName)
+            Expression defaultValExpr = Expression.New(NbtCompoundCtor, Expression.Constant(tagName));
+
+
+            string nullMessage = string.Format("Null elements are not allowed inside {0}.{1}",
+                                               property.DeclaringType.Name, property.Name);
+            return NbtCompiler.MakeNullHandler(varIDict, getIDictExpr, selfPolicy,
+                                               makeTagExpr, defaultValExpr, nullMessage);
         }
 
 
@@ -171,11 +217,8 @@ namespace fNbt.Serialization {
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
 
             // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
-            return NbtCompiler.MakeNullHandler(varValue,
-                                               getPropertyExpr,
-                                               selfPolicy,
-                                               makeTagExpr,
-                                               defaultValExpr,
+            return NbtCompiler.MakeNullHandler(varValue, getPropertyExpr, selfPolicy,
+                                               makeTagExpr, defaultValExpr,
                                                MakePropertyNullMessage(property));
         }
 
@@ -206,16 +249,10 @@ namespace fNbt.Serialization {
             } else {
                 // For non-array IList<> types, grab this.Count getter (which maps to get_Count())
                 countGetterImpl = SerializationUtil.GetGenericInterfaceMethodImpl(
-                    listType,
-                    typeof(ICollection<>),
-                    "get_Count",
-                    new Type[0]);
+                    listType, typeof(ICollection<>), "get_Count", new Type[0]);
                 // ...and the getter for indexer this[int], which maps to get_Item(int)
                 itemGetterImpl = SerializationUtil.GetGenericInterfaceMethodImpl(
-                    listType,
-                    typeof(IList<>),
-                    "get_Item",
-                    new[] { typeof(int) });
+                    listType, typeof(IList<>), "get_Item", new[] { typeof(int) });
             }
             Expression getElementExpr = Expression.Call(varIList, itemGetterImpl, varIndex);
             Expression getCountExpr = Expression.Call(varIList, countGetterImpl);
@@ -348,12 +385,8 @@ namespace fNbt.Serialization {
                 processTagExpr(varListTag));
 
             // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
-            return NbtCompiler.MakeNullHandler(varIList,
-                                               getIListExpr,
-                                               selfPolicy,
-                                               makeTagExpr,
-                                               defaultValExpr,
-                                               nullMessage);
+            return NbtCompiler.MakeNullHandler(varIList, getIListExpr, selfPolicy,
+                                               makeTagExpr, defaultValExpr, nullMessage);
         }
 
 

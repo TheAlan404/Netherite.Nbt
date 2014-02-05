@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
@@ -83,6 +84,18 @@ namespace fNbt.Serialization {
                                    .SingleOrDefault(x => x.IsGenericType &&
                                                          x.GetGenericTypeDefinition() == genericInterface);
             }
+        }
+
+
+        public static bool IsStringIDictionary(Type concreteType) {
+            return GetStringIDictionaryImpl(concreteType) != null;
+        }
+
+        public static Type GetStringIDictionaryImpl( Type concreteType ) {
+            return concreteType.GetInterfaces().FirstOrDefault(
+                iface => iface.IsGenericType &&
+                         iface.GetGenericTypeDefinition() == typeof(IDictionary<,>) &&
+                         iface.GetGenericArguments()[0] == typeof(string));
         }
 
 

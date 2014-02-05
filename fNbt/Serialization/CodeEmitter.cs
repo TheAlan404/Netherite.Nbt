@@ -20,13 +20,17 @@ namespace fNbt.Serialization {
 
         public abstract Expression HandleINbtSerializable(string tagName, PropertyInfo property);
 
-        public abstract Expression HandleIList(string tagName, PropertyInfo property, Type iListImpl, NullPolicy selfPolicy, NullPolicy elementPolicy);
+        public abstract Expression HandleIList(string tagName, PropertyInfo property, Type iListImpl,
+                                               NullPolicy selfPolicy, NullPolicy elementPolicy);
 
         public abstract Expression HandleNbtTag(string tagName, PropertyInfo property, NullPolicy selfPolicy);
 
         public abstract Expression HandleNbtFile(string tagName, PropertyInfo property, NullPolicy selfPolicy);
 
         public abstract Expression HandleCompoundObject(string tagName, PropertyInfo property, NullPolicy selfPolicy);
+
+        public abstract Expression HandleStringIDictionary(string tagName, PropertyInfo property, Type iDictImpl,
+                                                           NullPolicy selfPolicy, NullPolicy elementPolicy);
     }
 
 
@@ -72,6 +76,11 @@ namespace fNbt.Serialization {
 
 
         public override Expression HandleCompoundObject(string tagName, PropertyInfo property, NullPolicy selfPolicy) {
+            throw new NotImplementedException();
+        }
+
+
+        public override Expression HandleStringIDictionary(string tagName, PropertyInfo property, Type iDictImpl, NullPolicy selfPolicy, NullPolicy elementPolicy) {
             throw new NotImplementedException();
         }
     }
