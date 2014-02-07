@@ -402,7 +402,7 @@ namespace fNbt.Serialization {
 
 
             [NotNull]
-            public Expression MakeCall([NotNull] Type type, [CanBeNull] string tagName,
+            public Expression MakeCall([NotNull] Type type, [CanBeNull] Expression tagNameExpr,
                                        [NotNull] Expression objectExpr) {
                 Expression serializerExpr;
                 if (ParentSerializers.TryGetValue(type, out serializerExpr)) {
@@ -417,14 +417,14 @@ namespace fNbt.Serialization {
                         parameters.Add(type, paramExpr);
                     }
 
-                    return Expression.Invoke(paramExpr, Expression.Constant(tagName, typeof(string)),
+                    return Expression.Invoke(paramExpr, tagNameExpr,
                                              objectExpr);
                 } else {
                     // Statically resolved invoke
                     Delegate compoundSerializer = GetSerializer(type);
                     MethodInfo invokeMethodInfo = compoundSerializer.GetType().GetMethod("Invoke");
                     return Expression.Call(Expression.Constant(compoundSerializer), invokeMethodInfo,
-                                           Expression.Constant(tagName, typeof(string)), objectExpr);
+                                           tagNameExpr, objectExpr);
                 }
             }
         }
