@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -145,7 +146,8 @@ namespace fNbt.Serialization {
 
             return MakeStringIDictionaryHandler(
                 Expression.Constant(tagName, typeof(string)), getIDictExpr, iDictImpl,
-                selfPolicy, elementPolicy, nullMessage, nullElementMessage);
+                selfPolicy, elementPolicy, nullMessage, nullElementMessage,
+                expr => Expression.Call(varRootTag, NbtCompoundAddMethod, expr));
         }
 
 
@@ -281,7 +283,8 @@ namespace fNbt.Serialization {
         Expression MakeStringIDictionaryHandler([NotNull] Expression tagNameExpr, [NotNull] Expression getIDictExpr,
                                                 [NotNull] Type iDictImpl,
                                                 NullPolicy selfPolicy, NullPolicy elementPolicy,
-                                                [NotNull] string selfNullMsg, [NotNull] string elementNullMsg) {
+                                                [NotNull] string selfNullMsg, [NotNull] string elementNullMsg,
+                                                [NotNull] Func<Expression, Expression> processTagExpr) {
             Type elementType = iDictImpl.GetGenericArguments()[1];
 
             // find type of KeyValuePair<string,?> that the enumerator will return
@@ -297,8 +300,9 @@ namespace fNbt.Serialization {
                     iDictImpl, enumerableType, "GetEnumerator", Type.EmptyTypes);
 
             // locate IEnumerator.MoveNext()
-            MethodInfo moveNextMethod = enumeratorType.GetMethod("MoveNext");
-            PropertyInfo currentProp = enumerableType.GetProperty("Current");
+            MethodInfo moveNextMethod = typeof(IEnumerator).GetMethod("MoveNext");
+            MethodInfo disposeMethod = typeof(IDisposable).GetMethod("Dispose");
+            PropertyInfo currentProp = enumeratorType.GetProperty("Current");
 
             ParameterExpression varIDict = Expression.Parameter(iDictImpl, "iDict");
             ParameterExpression varCompTag = Expression.Parameter(typeof(NbtCompound), "compTag");
@@ -323,17 +327,27 @@ namespace fNbt.Serialization {
             Expression makeIDictTagExpr =
                 Expression.Block(
                     new[] { varCompTag, varEnumerator },
+
                     // varCompTag = new NbtCompound(tagName)
                     Expression.Assign(varCompTag, Expression.New(NbtCompoundCtor, tagNameExpr)),
-                    // varEnumerator = <varIDict>.GetEnumerator()
+                    // varEnumerator = iDict.GetEnumerator()
                     Expression.Assign(varEnumerator, Expression.Call(varIDict, getEnumeratorImpl)),
-                    // while (<varEnumerator>.MoveNext()) <loopBody>;
-                    Expression.Loop(
-                        Expression.IfThenElse(Expression.Call(varEnumerator, moveNextMethod),
-                                              loopBody,
-                                              Expression.Break(loopBreak)),
-                        loopBreak)
-                    );
+
+                    // try {
+                    Expression.MakeTry(
+                        typeof(void),
+                        // while (<varEnumerator>.MoveNext()) <loopBody>;
+                        Expression.Loop(
+                            Expression.IfThenElse(Expression.Call(varEnumerator, moveNextMethod),
+                                                  loopBody,
+                                                  Expression.Break(loopBreak)),
+                            loopBreak),
+
+                        // } finally { enumerator.Dispose(); }
+                        Expression.Call(varEnumerator, disposeMethod),
+                        null, null),
+
+                    processTagExpr(varCompTag));
 
             // default value (in case selfPolicy is InsertDefault): new NbtCompound(tagName)
             Expression defaultValExpr = Expression.New(NbtCompoundCtor, tagNameExpr);
@@ -407,7 +421,7 @@ namespace fNbt.Serialization {
                 } else if (iDictImpl != null) {
                     // element is IDictionary<string,?>
                     return MakeStringIDictionaryHandler(tagNameExpr, tagValueExpr, iDictImpl, elementPolicy,
-                                                        elementPolicy, nullElementMsg, nullElementMsg);
+                                                        elementPolicy, nullElementMsg, nullElementMsg, addTagExprFunc);
 
                 } else {
                     // Get NbtSerialize<T> method for elementType

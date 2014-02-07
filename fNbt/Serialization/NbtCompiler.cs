@@ -44,9 +44,9 @@ namespace fNbt.Serialization {
         internal static readonly Expression NullStringExpr = Expression.Constant(null, typeof(string));
 
 #if DEBUG_NBTSERIALIZE_COMPILER
-        // Console.WriteLine(string)
-        static readonly MethodInfo ConsoleWriteLineInfo =
-            typeof(Console).GetMethod("WriteLine", new[] { typeof(string) });
+        // Debug.WriteLine(string)
+        static readonly MethodInfo DebugWriteLineMethod =
+            typeof(Debug).GetMethod("WriteLine", new[] { typeof(string) });
 
 
         // Used for debugging
@@ -56,7 +56,7 @@ namespace fNbt.Serialization {
             var stackTrace = new StackTrace();
             StackFrame caller = stackTrace.GetFrame(1);
             string line = message + " @ " + caller.GetMethod().Name;
-            return Expression.Call(ConsoleWriteLineInfo, Expression.Constant(line));
+            return Expression.Call(DebugWriteLineMethod, Expression.Constant(line));
         }
 #endif
 
@@ -214,7 +214,7 @@ namespace fNbt.Serialization {
                                      BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Instance);
 
                 var debugView = (string)propInfo.GetValue(methodLambda, null);
-                Console.WriteLine(debugView);
+                Debug.WriteLine(debugView);
 #endif
 
                 NbtSerialize<T> compiledMethod = methodLambda.Compile();
@@ -291,6 +291,7 @@ namespace fNbt.Serialization {
                 if (iDictImpl != null) {
                     expressions.Add(codeEmitter.HandleStringIDictionary(tagName, property, iDictImpl, selfPolicy,
                                                                         elementPolicy));
+                    continue;
                 }
 
                 // serialize something that implements IList<?>

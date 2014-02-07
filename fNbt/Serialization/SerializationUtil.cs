@@ -74,15 +74,19 @@ namespace fNbt.Serialization {
 
         [CanBeNull]
         public static Type GetGenericInterfaceImpl(Type concreteType, Type genericInterface) {
-            if (concreteType.IsGenericType && concreteType.GetGenericTypeDefinition() == genericInterface) {
-                // concreteType itself is the desired generic interface
-                return concreteType;
+            if (genericInterface.IsGenericTypeDefinition) {
+                if (concreteType.IsGenericType && concreteType.GetGenericTypeDefinition() == genericInterface) {
+                    // concreteType itself is the desired generic interface
+                    return concreteType;
+                } else {
+                    // Check if concreteType implements the desired generic interface ONCE
+                    // Double implementations (e.g. Foo : Bar<T1>, Bar<T2>) are not acceptable.
+                    return concreteType.GetInterfaces()
+                                       .SingleOrDefault(x => x.IsGenericType &&
+                                                             x.GetGenericTypeDefinition() == genericInterface);
+                }
             } else {
-                // Check if concreteType implements the desired generic interface ONCE
-                // Double implementations (e.g. Foo : Bar<T1>, Bar<T2>) are not acceptable.
-                return concreteType.GetInterfaces()
-                                   .SingleOrDefault(x => x.IsGenericType &&
-                                                         x.GetGenericTypeDefinition() == genericInterface);
+                return genericInterface;
             }
         }
 
