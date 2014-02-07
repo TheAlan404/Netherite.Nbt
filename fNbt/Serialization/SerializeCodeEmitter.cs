@@ -102,12 +102,21 @@ namespace fNbt.Serialization {
         }
 
 
-        public override Expression HandleINbtSerializable(string tagName, PropertyInfo property) {
-            // TODO: handle NullPolicy
+        public override Expression HandleINbtSerializable(string tagName, PropertyInfo property, NullPolicy selfPolicy) {
             MethodInfo serializeMethod = property.PropertyType.GetMethod("Serialize", new[] { typeof(string) });
+            ParameterExpression varValue = Expression.Parameter(property.PropertyType, "value");
+
+            // rootTag.Add( value.Serialize() )
+            Expression serializeExpr = Expression.Call(
+                varRootTag, NbtCompoundAddMethod,
+                Expression.Call(varValue, serializeMethod, Expression.Constant(tagName)));
+
+            // fallback branch in case NullPolicy is InsertDefault
+            Expression defaultExpr = Expression.New(NbtCompoundCtor, Expression.Constant(tagName));
+
+            string nullMsg = MakePropertyNullMessage(property);
             Expression propValue = Expression.MakeMemberAccess(argValue, property);
-            Expression newTagExpr = Expression.Call(propValue, serializeMethod, Expression.Constant(tagName));
-            return Expression.Call(varRootTag, NbtCompoundAddMethod, newTagExpr);
+            return NbtCompiler.MakeNullHandler(varValue, propValue, selfPolicy, serializeExpr, defaultExpr, nullMsg);
         }
 
 
@@ -364,12 +373,12 @@ namespace fNbt.Serialization {
                                       NullPolicy elementPolicy, [NotNull] string nullElementMsg,
                                       [NotNull] Func<Expression, Expression> addTagExprFunc) {
             if (elementType.IsPrimitive || elementType.IsEnum) {
-                //=== Serializing dictionaries of primitives and enums ===
+                //=== Serializing primitives and enums ===
                 // tag.Add( new NbtTag(kvp.Key, kvp.Value) );
                 return addTagExprFunc(MakeNbtTagCtor(elementType, tagNameExpr, tagValueExpr));
 
             } else if (SerializationUtil.IsDirectlyMappedType(elementType)) {
-                //=== Serializing arrays/lists of directly-mapped reference types (byte[], int[], string) ===
+                //=== Serializing directly-mapped reference types (byte[], int[], string) ===
                 // declare a local var, which will hold the property's value
                 ParameterExpression varElementValue = Expression.Parameter(elementType, "elementValue");
 
@@ -388,7 +397,7 @@ namespace fNbt.Serialization {
                 return NbtCompiler.MakeNullHandler(varElementValue, tagValueExpr, elementPolicy,
                                                    addElementExpr, defaultElementExpr, nullElementMsg);
             } else {
-                //=== Serializing arrays/lists of everything else ===
+                //=== Serializing everything else ===
                 // Check if this is an IList-of-ILists
                 Type iListImpl = SerializationUtil.GetGenericInterfaceImpl(elementType, typeof(IList<>));
                 Type iDictImpl = SerializationUtil.GetStringIDictionaryImpl(elementType);

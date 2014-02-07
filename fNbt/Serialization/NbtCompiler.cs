@@ -276,13 +276,13 @@ namespace fNbt.Serialization {
 
                 // check if this type can handle its own serialization
                 if (typeof(INbtSerializable).IsAssignableFrom(propType)) {
-                    expressions.Add(codeEmitter.HandleINbtSerializable(tagName, property));
+                    expressions.Add(codeEmitter.HandleINbtSerializable(tagName, property, selfPolicy));
                     continue;
                 }
 
                 // Skip serializing NbtTag properties
-                if( typeof( NbtTag ).IsAssignableFrom( propType ) ) {
-                    expressions.Add( codeEmitter.HandleNbtTag( tagName, property, selfPolicy ) );
+                if (typeof(NbtTag).IsAssignableFrom(propType)) {
+                    expressions.Add(codeEmitter.HandleNbtTag(tagName, property, selfPolicy));
                     continue;
                 }
 

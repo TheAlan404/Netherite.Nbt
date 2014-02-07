@@ -23,7 +23,7 @@ namespace fNbt.Serialization {
 
 
         [NotNull]
-        public abstract Expression HandleINbtSerializable([NotNull] string tagName, [NotNull] PropertyInfo property);
+        public abstract Expression HandleINbtSerializable([NotNull] string tagName, [NotNull] PropertyInfo property, NullPolicy selfPolicy);
 
 
         [NotNull]

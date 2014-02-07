@@ -23,7 +23,7 @@ namespace fNbt.Serialization {
         }
 
 
-        public override Expression HandleINbtSerializable(string tagName, PropertyInfo property) {
+        public override Expression HandleINbtSerializable(string tagName, PropertyInfo property, NullPolicy selfPolicy) {
             throw new NotImplementedException();
         }
 
