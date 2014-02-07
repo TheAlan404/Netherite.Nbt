@@ -105,25 +105,29 @@ namespace fNbt.Serialization {
         public override Expression HandleINbtSerializable(string tagName, PropertyInfo property, NullPolicy selfPolicy) {
             MethodInfo serializeMethod = property.PropertyType.GetMethod("Serialize", new[] { typeof(string) });
             ParameterExpression varValue = Expression.Parameter(property.PropertyType, "value");
+            string nullMsg = MakePropertyNullMessage(property);
 
             // rootTag.Add( value.Serialize() )
             Expression serializeExpr = Expression.Call(
                 varRootTag, NbtCompoundAddMethod,
                 Expression.Call(varValue, serializeMethod, Expression.Constant(tagName)));
-
-            // fallback branch in case NullPolicy is InsertDefault
+            
+            // Fallback path, in case value is null and NullPolicy is InsertDefaults
             Expression defaultExpr = Expression.New(NbtCompoundCtor, Expression.Constant(tagName));
 
-            string nullMsg = MakePropertyNullMessage(property);
+            // Getter for the property value
             Expression propValue = Expression.MakeMemberAccess(argValue, property);
+
             return NbtCompiler.MakeNullHandler(varValue, propValue, selfPolicy, serializeExpr, defaultExpr, nullMsg);
         }
 
 
         public override Expression HandleIList(string tagName, PropertyInfo property, Type iListImpl,
                                                NullPolicy selfPolicy, NullPolicy elementPolicy) {
-            Type elementType = iListImpl.GetGenericArguments()[0];
+            // Getter for the property value
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
+            
+            Type elementType = iListImpl.GetGenericArguments()[0];
             Expression tagNameExpr = Expression.Constant(tagName, typeof(string));
             string selfNullMsg = MakePropertyNullMessage(property);
             string elementNullMsg = MakeElementNullMessage(property);
@@ -185,7 +189,8 @@ namespace fNbt.Serialization {
             Expression makeTagExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, conversionFunc(varValue));
 
             // Fallback path, in case value is null and NullPolicy is InsertDefaults
-            Expression defaultVal = Expression.New(NbtCompoundCtor, Expression.Constant(tagName));
+            ConstructorInfo tagCtor = property.PropertyType.GetConstructor(new[]{typeof(string)});
+            Expression defaultVal = Expression.New(tagCtor, Expression.Constant(tagName));
             Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, defaultVal);
 
             // Getter for the property value
@@ -201,8 +206,10 @@ namespace fNbt.Serialization {
         // Creates serialization code for properties with value type that is an array or an IList<T>.
         // For byte[] and int[], use SerializePropertyDirectly(...) instead -- it's more efficient.
         [NotNull]
-        Expression MakeIListHandler([NotNull] Expression getIListExpr, [NotNull] Type elementType, Expression tagNameExpr,
-                                    NullPolicy selfPolicy, NullPolicy elementPolicy, [NotNull] string selfNullMsg, string elementNullMsg,
+        Expression MakeIListHandler([NotNull] Expression getIListExpr, [NotNull] Type elementType,
+                                    [NotNull] Expression tagNameExpr,
+                                    NullPolicy selfPolicy, NullPolicy elementPolicy, [NotNull] string selfNullMsg,
+                                    [NotNull] string elementNullMsg,
                                     [NotNull] Func<Expression, Expression> processTagExpr) {
             Type listType = getIListExpr.Type;
 
@@ -345,7 +352,7 @@ namespace fNbt.Serialization {
                     // try {
                     Expression.MakeTry(
                         typeof(void),
-                        // while (<varEnumerator>.MoveNext()) <loopBody>;
+                        // while (enumerator.MoveNext()) <loopBody>;
                         Expression.Loop(
                             Expression.IfThenElse(Expression.Call(varEnumerator, moveNextMethod),
                                                   loopBody,
@@ -548,6 +555,7 @@ namespace fNbt.Serialization {
                                  // ReSharper disable once PossibleNullReferenceException
                                  property.DeclaringType.Name, property.Name);
         }
+
 
         // Generate a message for a NullReferenceException to be thrown if given property's element is null
         [NotNull]
