@@ -1,29 +1,55 @@
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using JetBrains.Annotations;
 
 namespace fNbt.Serialization {
     internal abstract class CodeEmitter {
+        [NotNull]
         public abstract ParameterExpression ReturnValue { get; }
 
+
+        [NotNull]
         public abstract Expression GetPreamble();
 
-        public abstract Expression HandlePrimitiveOrEnum(string tagName, PropertyInfo property);
 
-        public abstract Expression HandleDirectlyMappedType(string tagName, PropertyInfo property, NullPolicy selfPolicy);
+        [NotNull]
+        public abstract Expression HandlePrimitiveOrEnum([NotNull] string tagName, [NotNull] PropertyInfo property);
 
-        public abstract Expression HandleINbtSerializable(string tagName, PropertyInfo property);
 
-        public abstract Expression HandleIList(string tagName, PropertyInfo property, Type iListImpl,
+        [NotNull]
+        public abstract Expression HandleDirectlyMappedType([NotNull] string tagName, [NotNull] PropertyInfo property,
+                                                            NullPolicy selfPolicy);
+
+
+        [NotNull]
+        public abstract Expression HandleINbtSerializable([NotNull] string tagName, [NotNull] PropertyInfo property);
+
+
+        [NotNull]
+        public abstract Expression HandleNbtTag([NotNull] string tagName, [NotNull] PropertyInfo property,
+                                                NullPolicy selfPolicy);
+
+
+        [NotNull]
+        public abstract Expression HandleNbtFile([NotNull] string tagName, [NotNull] PropertyInfo property,
+                                                 NullPolicy selfPolicy);
+
+
+        [NotNull]
+        public abstract Expression HandleIList([NotNull] string tagName, [NotNull] PropertyInfo property,
+                                               [NotNull] Type iListImpl,
                                                NullPolicy selfPolicy, NullPolicy elementPolicy);
 
-        public abstract Expression HandleNbtTag(string tagName, PropertyInfo property, NullPolicy selfPolicy);
 
-        public abstract Expression HandleNbtFile(string tagName, PropertyInfo property, NullPolicy selfPolicy);
-
-        public abstract Expression HandleCompoundObject(string tagName, PropertyInfo property, NullPolicy selfPolicy);
-
-        public abstract Expression HandleStringIDictionary(string tagName, PropertyInfo property, Type iDictImpl,
+        [NotNull]
+        public abstract Expression HandleStringIDictionary([NotNull] string tagName, [NotNull] PropertyInfo property,
+                                                           [NotNull] Type iDictImpl,
                                                            NullPolicy selfPolicy, NullPolicy elementPolicy);
+
+
+        [NotNull]
+        public abstract Expression HandleCompoundObject([NotNull] string tagName, [NotNull] PropertyInfo property,
+                                                        NullPolicy selfPolicy);
     }
 }
