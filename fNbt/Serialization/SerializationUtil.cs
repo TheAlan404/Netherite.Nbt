@@ -87,15 +87,11 @@ namespace fNbt.Serialization {
         }
 
 
-        public static bool IsStringIDictionary(Type concreteType) {
-            return GetStringIDictionaryImpl(concreteType) != null;
-        }
-
         public static Type GetStringIDictionaryImpl( Type concreteType ) {
             return concreteType.GetInterfaces().FirstOrDefault(
-                iface => iface.IsGenericType &&
-                         iface.GetGenericTypeDefinition() == typeof(IDictionary<,>) &&
-                         iface.GetGenericArguments()[0] == typeof(string));
+                iFace => iFace.IsGenericType &&
+                         iFace.GetGenericTypeDefinition() == typeof(IDictionary<,>) &&
+                         iFace.GetGenericArguments()[0] == typeof(string));
         }
 
 
