@@ -139,14 +139,14 @@ namespace fNbt.Serialization {
 
         public override Expression HandleNbtTag(string tagName, PropertyInfo property, NullPolicy selfPolicy) {
             // Add tag directly to the list
-            return MakeNbtTagHandler(property, tagName, selfPolicy, expr => expr);
+            return MakeNbtTagPropertyHandler(property, tagName, property.PropertyType, selfPolicy, expr => expr);
         }
 
 
         public override Expression HandleNbtFile(string tagName, PropertyInfo property, NullPolicy selfPolicy) {
             // Add NbtFile's root tag directly to the list
             PropertyInfo rootTagProp = typeof(NbtFile).GetProperty("RootTag");
-            return MakeNbtTagHandler(property, tagName, selfPolicy,
+            return MakeNbtTagPropertyHandler(property, tagName, typeof(NbtCompound), selfPolicy,
                                      expr => Expression.MakeMemberAccess(expr, rootTagProp));
         }
 
@@ -165,41 +165,10 @@ namespace fNbt.Serialization {
 
 
         public override Expression HandleCompoundObject(string tagName, PropertyInfo property, NullPolicy selfPolicy) {
-            return MakeNbtTagHandler(
-                property, tagName, selfPolicy,
+            return MakeNbtTagPropertyHandler(
+                property, tagName, typeof(NbtCompound), selfPolicy,
                 expr => callResolver.MakeCall(property.PropertyType,
                                               Expression.Constant(tagName, typeof(string)), expr));
-        }
-
-
-        // Creates expression that handles a property directly convertible to an NbtTag object.
-        // Value of <property> should be convertible by <conversionFunc> to an expression that evaluates to an NbtTag object.
-        // At run time, if the value is not null, the NbtTag is added to <varRootTag> (which is an NbtCompound).
-        // Otherwise if value is null,
-        // a) If NullPolicy=Error, a NullReferenceException is thrown
-        // b) If NullPolicy=Ignore, nothing happens
-        // c) If NullPolicy=InsertDefault, an empty NbtCompound tag is added to <varRootTag>
-        [NotNull]
-        Expression MakeNbtTagHandler([NotNull] PropertyInfo property, [NotNull] string tagName, NullPolicy selfPolicy,
-                                     [NotNull] Func<ParameterExpression, Expression> conversionFunc) {
-            // declare a local var, which will hold the property's value
-            ParameterExpression varValue = Expression.Parameter(property.PropertyType);
-
-            // Primary path, adds the root tag of the NbtFile
-            Expression makeTagExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, conversionFunc(varValue));
-
-            // Fallback path, in case value is null and NullPolicy is InsertDefaults
-            ConstructorInfo tagCtor = property.PropertyType.GetConstructor(new[]{typeof(string)});
-            Expression defaultVal = Expression.New(tagCtor, Expression.Constant(tagName));
-            Expression defaultValExpr = Expression.Call(varRootTag, NbtCompoundAddMethod, defaultVal);
-
-            // Getter for the property value
-            Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
-
-            // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
-            return NbtCompiler.MakeNullHandler(varValue, getPropertyExpr, selfPolicy,
-                                               makeTagExpr, defaultValExpr,
-                                               MakePropertyNullMessage(property));
         }
 
 
@@ -241,7 +210,7 @@ namespace fNbt.Serialization {
             Expression getCountExpr = Expression.Call(varIList, countGetterImpl);
             Expression handleOneElementExpr = MakeElementHandler(
                 elementType, NbtCompiler.NullStringExpr, getElementExpr, elementPolicy, elementNullMsg,
-                tag => Expression.Call(varIList, NbtListAddMethod, tag));
+                tag => Expression.Call(varListTag, NbtListAddMethod, tag));
 
             // Arrange tag construction in a loop
             LabelTarget loopBreak = Expression.Label(typeof(void));
@@ -379,6 +348,10 @@ namespace fNbt.Serialization {
                                       [NotNull] Expression tagValueExpr,
                                       NullPolicy elementPolicy, [NotNull] string nullElementMsg,
                                       [NotNull] Func<Expression, Expression> addTagExprFunc) {
+            if (tagValueExpr.Type != elementType) {
+                tagValueExpr = Expression.Convert(tagValueExpr, elementType);
+            }
+
             if (elementType.IsPrimitive || elementType.IsEnum) {
                 //=== Serializing primitives and enums ===
                 // tag.Add( new NbtTag(kvp.Key, kvp.Value) );
@@ -409,10 +382,6 @@ namespace fNbt.Serialization {
                 Type iListImpl = SerializationUtil.GetGenericInterfaceImpl(elementType, typeof(IList<>));
                 Type iDictImpl = SerializationUtil.GetStringIDictionaryImpl(elementType);
 
-                if (tagValueExpr.Type != elementType) {
-                    tagValueExpr = Expression.Convert(tagValueExpr, elementType);
-                }
-
                 // check if this type can handle its own serialization
                 if (typeof(INbtSerializable).IsAssignableFrom(elementType)) {
                     // element is INbtSerializable
@@ -421,12 +390,17 @@ namespace fNbt.Serialization {
                     return addTagExprFunc(newTagExpr);
 
                 } else if (typeof(NbtTag).IsAssignableFrom(elementType)) {
-                    // TODO: element is NbtTag
-                    throw new NotImplementedException();
+                    // element is NbtTag
+                    return MakeNbtTagHandler(
+                        elementType, elementType, tagNameExpr, tagValueExpr, elementPolicy, nullElementMsg,
+                        expr => expr, addTagExprFunc);
 
                 } else if (typeof(NbtFile).IsAssignableFrom(elementType)) {
-                    // TODO: element is NbtFile
-                    throw new NotImplementedException();
+                    // element is NbtFile
+                    PropertyInfo rootTagProp = typeof(NbtFile).GetProperty("RootTag");
+                    return MakeNbtTagHandler(
+                        typeof(NbtCompound), typeof(NbtFile), tagNameExpr, tagValueExpr, elementPolicy, nullElementMsg,
+                        expr => Expression.MakeMemberAccess(expr, rootTagProp), addTagExprFunc);
 
                 } else if (iListImpl != null) {
                     // element is IList<?>
@@ -458,6 +432,60 @@ namespace fNbt.Serialization {
                                                        addSerializedCompoundExpr, addEmptyCompoundExpr, nullElementMsg);
                 }
             }
+        }
+        
+
+        // Creates expression that handles a property that's directly convertible to an NbtTag object.
+        // Wrapper for the more-general MakeNbtTagHandler(...) function.
+        // Value of <property> should be convertible by <conversionFunc> to an expression that evaluates to an NbtTag object.
+        // At run time, if the value is not null, the NbtTag is added to <varRootTag> (which is an NbtCompound).
+        [NotNull]
+        Expression MakeNbtTagPropertyHandler([NotNull] PropertyInfo property, [NotNull] string tagName,
+                                             Type tagType, NullPolicy selfPolicy,
+                                             [NotNull] Func<ParameterExpression, Expression> conversionFunc) {
+            // Getter for the property value
+            Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
+            string nullMsg = MakePropertyNullMessage(property);
+            Expression tagNameExpr = Expression.Constant(tagName, typeof(string));
+
+            // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
+            return MakeNbtTagHandler(tagType, property.PropertyType, tagNameExpr, getPropertyExpr, selfPolicy, nullMsg,
+                conversionFunc, tagExpr => Expression.Call(varRootTag, NbtCompoundAddMethod, tagExpr));
+        }
+
+
+        // Creates an expression that handles an expression that's directly convertible to an NbtTag object.
+        // Value of <property> should be convertible by <conversionFunc> to an expression that evaluates to an NbtTag object.
+        // At run time, if the value is not null, the NbtTag is added to <varRootTag> (which is an NbtCompound).
+        // Otherwise if value is null,
+        // a) If NullPolicy=Error, a NullReferenceException is thrown
+        // b) If NullPolicy=Ignore, nothing happens
+        // c) If NullPolicy=InsertDefault, an empty NbtCompound tag is added to <varRootTag>
+        [NotNull]
+        Expression MakeNbtTagHandler([NotNull] Type tagType, [NotNull] Type valueType, [NotNull] Expression tagNameExpr,
+                                     [NotNull] Expression getPropertyExpr, NullPolicy selfPolicy,
+                                     [NotNull] String nullMsg,
+                                     [NotNull] Func<ParameterExpression, Expression> conversionFunc,
+                                     [NotNull] Func<Expression, Expression> processTagExpr) {
+            // declare a local var, which will hold the property's value
+            ParameterExpression varValue = Expression.Parameter(valueType, "value");
+
+            // Primary path, adds the root tag of the NbtFile
+            Expression makeTagExpr = processTagExpr(conversionFunc(varValue));
+
+            // Fallback path, in case value is null and NullPolicy is InsertDefaults
+            ConstructorInfo tagCtor;
+            if (tagType == typeof(NbtTag)) {
+                tagCtor = NbtCompoundCtor;
+            } else {
+                tagCtor = tagType.GetConstructor(new[] { typeof(string) });
+            }
+            Expression defaultVal = Expression.New(tagCtor, tagNameExpr);
+            Expression defaultValExpr = processTagExpr(defaultVal);
+
+            // Generate the appropriate enclosing expressions, which choose path depending on NullPolicy
+            return NbtCompiler.MakeNullHandler(varValue, getPropertyExpr, selfPolicy,
+                                               makeTagExpr, defaultValExpr, nullMsg);
         }
 
 
