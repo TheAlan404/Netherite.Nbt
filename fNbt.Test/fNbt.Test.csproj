@@ -84,6 +84,7 @@
   <ItemGroup>
     <Compile Include="CompoundTests.cs" />
     <Compile Include="MiscTests.cs" />
+    <Compile Include="NbtCompilerTests.cs" />
     <Compile Include="NbtReaderTests.cs" />
     <Compile Include="NbtSerializerTests.cs" />
     <Compile Include="NbtWriterTest.cs" />
