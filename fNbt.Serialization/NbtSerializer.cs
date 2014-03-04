@@ -6,104 +6,52 @@ using System.Reflection;
 using fNbt.Serialization.Compiled;
 
 namespace fNbt.Serialization {
-
-    public interface INbtSerializer {
-        NbtTag MakeTag(object obj);
-        object MakeObject(NbtTag tag);
-    }
-
-
-    public class NbtCompiledSerializer<T> : INbtSerializer {
-        static NbtSerialize<T> compiledSerializeDelegate;
-        static NbtDeserialize<T> compiledDeserializeDelegate;
-        public NbtTag MakeTag(object obj) {
-            throw new NotImplementedException();
-        }
-
-        public object MakeObject(NbtTag tag) {
-            throw new NotImplementedException();
-        }
-    }
-
-
     public class NbtSerializer : INbtSerializer {
-        public NbtTag MakeTag(object obj) {
-            throw new NotImplementedException();
-        }
-
-
-        public object MakeObject(NbtTag tag) {
-            throw new NotImplementedException();
-        }
-
-
-        public NbtCompiledSerializer Compile() {}
-
-        public NbtCompiledSerializer Compile(SerializerOptions options) {}
-    }
-
-
-    public class NbtSerializer<T> {
-
-        #region Caching and options
-        static SerializerOptions options;
-
-        static NbtSerializer<T> instance;
-
-        public static NbtSerializer<T> Get( SerializerOptions neededOptions ) {
-            if (instance != null && SatisfiesOptions(neededOptions)) {
-                return instance;
-            }else{
-                return Make(neededOptions);
-            }
-        }
-
-
-        static bool SatisfiesOptions(SerializerOptions neededOptions) {
-            return
-                // either we have CompiledSerialize, or we don't need it
-                (options & SerializerOptions.CompiledSerialize) >=
-                (neededOptions & SerializerOptions.CompiledSerialize) &&
-                // either we have CompiledDeserialize, or we don't need it
-                (options & SerializerOptions.CompiledDeserialize) >=
-                (neededOptions & SerializerOptions.CompiledDeserialize);
-        }
-
-
-        static readonly object instanceLock = new object();
-        static NbtSerializer<T> Make(SerializerOptions neededOptions) {
-            lock (instanceLock) {
-                if (instance == null) {
-                    instance = new NbtSerializer<T>();
-                }
-
-                if ((options & SerializerOptions.CompiledSerialize) < (neededOptions & SerializerOptions.CompiledSerialize)) {
-                    compiledSerializeDelegate = NbtCompiler.GetSerializer<T>();
-                    options |= SerializerOptions.CompiledSerialize;
-                }
-
-                if ((options & SerializerOptions.CompiledDeserialize) < (neededOptions & SerializerOptions.CompiledDeserialize)) {
-                    compiledDeserializeDelegate = NbtCompiler.GetDeserializer<T>();
-                    options |= SerializerOptions.CompiledDeserialize;
-                }
-
-                return instance;
-            }
-        }
-
-        #endregion
-
+        NbtSerialize compiledSerializeDelegate;
+        NbtDeserialize compiledDeserializeDelegate;
+        readonly Type contractType;
         PropertyInfo[] properties;
         Dictionary<PropertyInfo, string> propertyTagNames;
         Dictionary<PropertyInfo, NullPolicy> nullPolicies;
         Dictionary<PropertyInfo, NullPolicy> elementNullPolicies;
         bool propertyInfoRead;
 
+        public void Compile() {
+            if (compiledSerializeDelegate == null) {
+                compiledSerializeDelegate = NbtCompiler.GetSerializer(contractType);
+            }
+            if (compiledDeserializeDelegate == null) {
+                compiledDeserializeDelegate = NbtCompiler.GetDeserializer(contractType);
+            }
+            // These fields are only needed for non-compiled serialization. Let's free that memory!
+            properties = null;
+            propertyTagNames = null;
+            nullPolicies = null;
+            elementNullPolicies = null;
+        }
+
+        internal NbtSerializer(Type contractType) {
+            this.contractType = contractType;
+        }
+
+        public NbtTag MakeTag(object obj) {
+            if (!contractType.IsInstanceOfType(obj)) {
+                throw new ArgumentException("Invalid type! Expected an object of type " + contractType);
+            }
+            throw new NotImplementedException();
+        }
+
+
+        public object MakeObject(NbtTag tag) {
+            throw new NotImplementedException();
+        }
+
+
 
         void ReadPropertyInfo() {
             try {
                 properties =
-                    typeof(T).GetProperties()
+                    contractType.GetProperties()
                         .Where(p => !Attribute.GetCustomAttributes(p, typeof(NbtIgnoreAttribute)).Any())
                         .ToArray();
                 propertyTagNames = new Dictionary<PropertyInfo, string>();
@@ -222,7 +170,7 @@ namespace fNbt.Serialization {
                             case NullPolicy.Error:
                                 throw new NullReferenceException("Null elements not allowed for tag " + tagName);
                             case NullPolicy.InsertDefault:
-                                list.Add(Serialize(SerializationUtil.GetDefaultValue(elementType), true));
+                                list.Add(Serialize(SerializationUtil.GetDefaultValue(elementType), true)); // TODO: skip iserializable
                                 break;
                             case NullPolicy.Ignore:
                                 continue;
@@ -266,12 +214,12 @@ namespace fNbt.Serialization {
         }
 
 
-        public NbtTag Serialize(T value) {
+        public NbtTag Serialize(object value) {
             return Serialize(value, "");
         }
 
 
-        public NbtTag Serialize(T value, string tagName,
+        public NbtTag Serialize(object value, string tagName,
                                 NullPolicy thisNullPolicy = NullPolicy.Error,
                                 NullPolicy elementNullPolicy = NullPolicy.Error) {
             if (compiledSerializeDelegate != null) {
@@ -414,8 +362,8 @@ namespace fNbt.Serialization {
 
 
         public object Deserialize(NbtTag tag, bool skipInterfaceCheck = false) {
-            if (!skipInterfaceCheck && typeof(INbtSerializable).IsAssignableFrom(typeof(T))) {
-                var instance = (INbtSerializable)Activator.CreateInstance(typeof(T));
+            if (!skipInterfaceCheck && typeof(INbtSerializable).IsAssignableFrom(contractType)) {
+                var instance = (INbtSerializable)Activator.CreateInstance(contractType); // TODO: options.constructor
                 instance.Deserialize(tag);
                 return instance;
             }
@@ -475,7 +423,7 @@ namespace fNbt.Serialization {
                     if (!propertyInfoRead) ReadPropertyInfo();
                     var compound = (NbtCompound)tag;
 
-                    object resultObject = Activator.CreateInstance(typeof(T));
+                    object resultObject = Activator.CreateInstance(contractType);
                     foreach (PropertyInfo property in properties) {
                         if (!property.CanWrite) continue;
                         string name = propertyTagNames[property];
@@ -511,6 +459,23 @@ namespace fNbt.Serialization {
                 default:
                     return DeserializeSimpleType(tag);
             }
+        }
+    }
+
+
+    // Convenience class for working with strongly-typed NbtSerializers. Handy if type is known at compile time.
+    public class NbtSerializer<T> : NbtSerializer {
+        internal NbtSerializer()
+            : base(typeof(T)) { }
+
+
+        public NbtTag MakeTag(T obj) {
+            return base.MakeTag(obj);
+        }
+
+
+        public T MakeObject(NbtTag tag) {
+            return (T)base.MakeObject(tag);
         }
     }
 }

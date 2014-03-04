@@ -15,10 +15,10 @@ using System.Diagnostics;
 #endif
 
 namespace fNbt.Serialization.Compiled {
-    delegate NbtCompound NbtSerialize<T>(string tagName, T value);
+    delegate NbtCompound NbtSerialize(string tagName, object value);
 
 
-    delegate T NbtDeserialize<T>(T baseObject, NbtCompound tag);
+    delegate object NbtDeserialize(object baseObject, NbtCompound tag);
 
 
     static class NbtCompiler {
@@ -29,16 +29,6 @@ namespace fNbt.Serialization.Compiled {
         // new NullReferenceException(string)
         static readonly ConstructorInfo NullReferenceExceptionCtor =
             typeof(NullReferenceException).GetConstructor(new[] { typeof(string) });
-
-        // NbtCompiler.CreateSerializer<T>()
-        static readonly MethodInfo CreateSerializerForTypeInfo =
-            typeof( NbtCompiler ).GetMethods()
-                               .First( mi => mi.Name == "GetSerializer" && mi.IsGenericMethod );
-
-        // NbtCompiler.CreateDeserializer<T>()
-        static readonly MethodInfo CreateDeserializerForTypeInfo =
-            typeof( NbtCompiler ).GetMethods()
-                               .First( mi => mi.Name == "GetDeserializer" && mi.IsGenericMethod );
 
         // (string)null -- used to select appropriate constructor/method overloads when creating unnamed tags
         internal static readonly Expression NullStringExpr = Expression.Constant(null, typeof(string));
@@ -63,8 +53,8 @@ namespace fNbt.Serialization.Compiled {
         // Global serializer/deserializer cache
         static readonly object SerializerLock = new object();
         static readonly object DeserializerLock = new object();
-        static readonly Dictionary<Type, Delegate> SerializerCache = new Dictionary<Type, Delegate>();
-        static readonly Dictionary<Type, Delegate> DeserializerCache = new Dictionary<Type, Delegate>();
+        static readonly Dictionary<Type, NbtSerialize> SerializerCache = new Dictionary<Type, NbtSerialize>();
+        static readonly Dictionary<Type, NbtDeserialize> DeserializerCache = new Dictionary<Type, NbtDeserialize>();
 
         // Used to track self-referencing and cross-referencing types that require
         // dynamic invocation by CallResolver. It's safe to have this field be static because
@@ -72,37 +62,12 @@ namespace fNbt.Serialization.Compiled {
         static readonly Dictionary<Type, Expression> ParentSerializers = new Dictionary<Type, Expression>();
 
 
-        [NotNull]
-        public static NbtSerialize<T> GetSerializer<T>() {
-            lock (SerializerLock) {
-                Delegate result;
-                if (SerializerCache.TryGetValue(typeof(T), out result)) {
-                    return (NbtSerialize<T>)result;
-                }
-                NbtSerialize<T> newResult = CreateSerializer<T>();
-                return newResult;
-            }
-        }
-
 
         [NotNull]
-        public static NbtDeserialize<T> GetDeserializer<T>() {
-            lock (DeserializerLock) {
-                Delegate result;
-                if (DeserializerCache.TryGetValue(typeof(T), out result)) {
-                    return (NbtDeserialize<T>)result;
-                }
-                NbtDeserialize<T> newResult = CreateDeserializer<T>();
-                return newResult;
-            }
-        }
-
-
-        [NotNull]
-        public static Delegate GetSerializer([NotNull] Type t) {
+        public static NbtSerialize GetSerializer([NotNull] Type t) {
             if (t == null) throw new ArgumentNullException("t");
             lock (SerializerLock) {
-                Delegate result;
+                NbtSerialize result;
                 if (!SerializerCache.TryGetValue(t, out result)) {
                     result = CreateSerializer(t);
                 }
@@ -111,46 +76,40 @@ namespace fNbt.Serialization.Compiled {
         }
 
 
-        // create and invoke a variant of CreateSerializer<T> for given type
         [NotNull]
-        static Delegate CreateSerializer([NotNull] Type t) {
+        public static NbtDeserialize GetDeserializer([NotNull] Type t) {
             if (t == null) throw new ArgumentNullException("t");
-            MethodInfo genericMethodToCall =
-                CreateSerializerForTypeInfo.MakeGenericMethod(new[] { t });
-            return (Delegate)genericMethodToCall.Invoke(null, new object[0]);
+            lock (SerializerLock) {
+                NbtDeserialize result;
+                if (!DeserializerCache.TryGetValue(t, out result)) {
+                    result = CreateDeserializer(t);
+                }
+                return result;
+            }
         }
 
 
         // create and invoke a variant of CreateDeserializer<T> for given type
         [NotNull]
-        static Delegate CreateDeserializer( [NotNull] Type t ) {
-            if( t == null ) throw new ArgumentNullException( "t" );
-            MethodInfo genericMethodToCall =
-                CreateDeserializerForTypeInfo.MakeGenericMethod( new[] { t } );
-            return (Delegate)genericMethodToCall.Invoke( null, new object[0] );
-        }
-
-
-        [NotNull]
-        static NbtDeserialize<T> CreateDeserializer<T>() {
+        static NbtDeserialize CreateDeserializer( [NotNull] Type t ) {
             throw new NotImplementedException(); // TODO
         }
 
 
         // Generates specialized methods for serializing objects of given Type to NBT
         [NotNull]
-        static NbtSerialize<T> CreateSerializer<T>() {
+        static NbtSerialize CreateSerializer(Type type) {
             // This allows our function to call itself, while it is still being built up.
-            NbtSerialize<T> placeholderDelegate = null;
+            NbtSerialize placeholderDelegate = null;
             // A closure is modified intentionally, at the end of this method:
             // placeholderDelegate will be replaced with reference to the compiled function.
             // ReSharper disable once AccessToModifiedClosure
-            Expression<Func<NbtSerialize<T>>> placeholderExpr = () => placeholderDelegate;
-            ParentSerializers.Add(typeof(T), placeholderExpr);
+            Expression<Func<NbtSerialize>> placeholderExpr = () => placeholderDelegate;
+            ParentSerializers.Add(type, placeholderExpr);
             try {
                 // Define function arguments
                 ParameterExpression argTagName = Expression.Parameter(typeof(string), "tagName");
-                ParameterExpression argValue = Expression.Parameter(typeof(T), "value");
+                ParameterExpression argValue = Expression.Parameter(type, "value");
 
                 // Create our resolver and emitter
                 var callResolver = new CallResolver();
@@ -161,7 +120,7 @@ namespace fNbt.Serialization.Compiled {
 
                 // Build up the type-specific list of expressions that perform serialization
                 List<Expression> propSerializersList =
-                    MakePropertySerializers(codeEmitter, typeof(T));
+                    MakePropertySerializers(codeEmitter, type);
 
                 if (callResolver.HasParameters) {
                     propSerializersList.InsertRange(0, callResolver.GetParameterAssignmentList());
@@ -203,8 +162,8 @@ namespace fNbt.Serialization.Compiled {
                     Expression.Label(returnTarget, Expression.Constant(null, typeof(NbtCompound))));
 
                 // compile
-                Expression<NbtSerialize<T>> methodLambda =
-                    Expression.Lambda<NbtSerialize<T>>(method, argTagName, argValue);
+                Expression<NbtSerialize> methodLambda =
+                    Expression.Lambda<NbtSerialize>(method, argTagName, argValue);
 
 #if DEBUG_NBTSERIALIZE_COMPILER
                 // When in debug mode, print the expression tree to stdout.
@@ -217,15 +176,15 @@ namespace fNbt.Serialization.Compiled {
                 Debug.WriteLine(debugView);
 #endif
 
-                NbtSerialize<T> compiledMethod = methodLambda.Compile();
+                NbtSerialize compiledMethod = methodLambda.Compile();
 
                 // modify the closure created earlier, to allow recursive calls
                 placeholderDelegate = compiledMethod;
 
-                SerializerCache.Add(typeof(T), compiledMethod);
+                SerializerCache.Add(type, compiledMethod);
                 return compiledMethod;
             } finally {
-                ParentSerializers.Remove(typeof(T));
+                ParentSerializers.Remove(type);
             }
         }
 
@@ -403,7 +362,7 @@ namespace fNbt.Serialization.Compiled {
 
 
             [NotNull]
-            public Expression MakeCall([NotNull] Type type, [CanBeNull] Expression tagNameExpr,
+            public Expression MakeCall([NotNull] Type type, [NotNull] Expression tagNameExpr,
                                        [NotNull] Expression objectExpr) {
                 Expression serializerExpr;
                 if (ParentSerializers.TryGetValue(type, out serializerExpr)) {
@@ -413,8 +372,7 @@ namespace fNbt.Serialization.Compiled {
                     // it has the correct behavior.
                     ParameterExpression paramExpr;
                     if (!parameters.TryGetValue(type, out paramExpr)) {
-                        Type delegateType = typeof(NbtSerialize<>).MakeGenericType(new[] { type });
-                        paramExpr = Expression.Parameter(delegateType, "serializerFor" + type.Name);
+                        paramExpr = Expression.Parameter(typeof(NbtSerialize), "serializerFor" + type.Name);
                         parameters.Add(type, paramExpr);
                     }
 
