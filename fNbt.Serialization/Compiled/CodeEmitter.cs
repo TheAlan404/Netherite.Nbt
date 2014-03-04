@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
 
-namespace fNbt.Serialization {
+namespace fNbt.Serialization.Compiled {
     internal abstract class CodeEmitter {
         [NotNull]
         public abstract ParameterExpression ReturnValue { get; }

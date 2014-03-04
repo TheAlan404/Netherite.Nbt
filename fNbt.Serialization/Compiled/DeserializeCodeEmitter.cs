@@ -2,7 +2,7 @@ using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace fNbt.Serialization {
+namespace fNbt.Serialization.Compiled {
     class DeserializeCodeEmitter : CodeEmitter {
         public override ParameterExpression ReturnValue {
             get { throw new NotImplementedException(); }

@@ -14,14 +14,14 @@ using JetBrains.Annotations;
 using System.Diagnostics;
 #endif
 
-namespace fNbt.Serialization {
-    public delegate NbtCompound NbtSerialize<T>(string tagName, T value);
+namespace fNbt.Serialization.Compiled {
+    delegate NbtCompound NbtSerialize<T>(string tagName, T value);
 
 
-    public delegate T NbtDeserialize<T>(T baseObject, NbtCompound tag);
+    delegate T NbtDeserialize<T>(T baseObject, NbtCompound tag);
 
 
-    public static class NbtCompiler {
+    static class NbtCompiler {
         // new ArgumentNullException(string)
         static readonly ConstructorInfo ArgumentNullExceptionCtor =
             typeof(ArgumentNullException).GetConstructor(new[] { typeof(string) });

@@ -3,17 +3,95 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using fNbt.Serialization.Compiled;
 
 namespace fNbt.Serialization {
-    public class NbtSerializer {
-        public Type Type { get; set; }
+
+    public interface INbtSerializer {
+        NbtTag MakeTag(object obj);
+        object MakeObject(NbtTag tag);
+    }
 
 
-        /// <summary> Decorates the given property or field with the specified. </summary>
-        public NbtSerializer(Type type) {
-            Type = type;
+    public class NbtCompiledSerializer<T> : INbtSerializer {
+        static NbtSerialize<T> compiledSerializeDelegate;
+        static NbtDeserialize<T> compiledDeserializeDelegate;
+        public NbtTag MakeTag(object obj) {
+            throw new NotImplementedException();
         }
 
+        public object MakeObject(NbtTag tag) {
+            throw new NotImplementedException();
+        }
+    }
+
+
+    public class NbtSerializer : INbtSerializer {
+        public NbtTag MakeTag(object obj) {
+            throw new NotImplementedException();
+        }
+
+
+        public object MakeObject(NbtTag tag) {
+            throw new NotImplementedException();
+        }
+
+
+        public NbtCompiledSerializer Compile() {}
+
+        public NbtCompiledSerializer Compile(SerializerOptions options) {}
+    }
+
+
+    public class NbtSerializer<T> {
+
+        #region Caching and options
+        static SerializerOptions options;
+
+        static NbtSerializer<T> instance;
+
+        public static NbtSerializer<T> Get( SerializerOptions neededOptions ) {
+            if (instance != null && SatisfiesOptions(neededOptions)) {
+                return instance;
+            }else{
+                return Make(neededOptions);
+            }
+        }
+
+
+        static bool SatisfiesOptions(SerializerOptions neededOptions) {
+            return
+                // either we have CompiledSerialize, or we don't need it
+                (options & SerializerOptions.CompiledSerialize) >=
+                (neededOptions & SerializerOptions.CompiledSerialize) &&
+                // either we have CompiledDeserialize, or we don't need it
+                (options & SerializerOptions.CompiledDeserialize) >=
+                (neededOptions & SerializerOptions.CompiledDeserialize);
+        }
+
+
+        static readonly object instanceLock = new object();
+        static NbtSerializer<T> Make(SerializerOptions neededOptions) {
+            lock (instanceLock) {
+                if (instance == null) {
+                    instance = new NbtSerializer<T>();
+                }
+
+                if ((options & SerializerOptions.CompiledSerialize) < (neededOptions & SerializerOptions.CompiledSerialize)) {
+                    compiledSerializeDelegate = NbtCompiler.GetSerializer<T>();
+                    options |= SerializerOptions.CompiledSerialize;
+                }
+
+                if ((options & SerializerOptions.CompiledDeserialize) < (neededOptions & SerializerOptions.CompiledDeserialize)) {
+                    compiledDeserializeDelegate = NbtCompiler.GetDeserializer<T>();
+                    options |= SerializerOptions.CompiledDeserialize;
+                }
+
+                return instance;
+            }
+        }
+
+        #endregion
 
         PropertyInfo[] properties;
         Dictionary<PropertyInfo, string> propertyTagNames;
@@ -25,7 +103,7 @@ namespace fNbt.Serialization {
         void ReadPropertyInfo() {
             try {
                 properties =
-                    Type.GetProperties()
+                    typeof(T).GetProperties()
                         .Where(p => !Attribute.GetCustomAttributes(p, typeof(NbtIgnoreAttribute)).Any())
                         .ToArray();
                 propertyTagNames = new Dictionary<PropertyInfo, string>();
@@ -42,7 +120,7 @@ namespace fNbt.Serialization {
                     propertyTagNames.Add(property, tagName);
 
                     // read IgnoreOnNull attribute
-                    NullPolicyAttribute nullPolicyAttr =
+                    var nullPolicyAttr =
                         (NullPolicyAttribute)Attribute.GetCustomAttribute(property, typeof(NullPolicyAttribute));
                     if (nullPolicyAttr != null) {
                         if (nullPolicyAttr.SelfPolicy != NullPolicy.Default) {
@@ -188,16 +266,25 @@ namespace fNbt.Serialization {
         }
 
 
-        public NbtTag Serialize(object value, bool skipInterfaceCheck = false) {
-            return Serialize(value, "", skipInterfaceCheck);
+        public NbtTag Serialize(T value) {
+            return Serialize(value, "");
         }
 
 
-        public NbtTag Serialize(object value, string tagName, bool skipInterfaceCheck = false,
+        public NbtTag Serialize(T value, string tagName,
                                 NullPolicy thisNullPolicy = NullPolicy.Error,
                                 NullPolicy elementNullPolicy = NullPolicy.Error) {
+            if (compiledSerializeDelegate != null) {
+                return compiledSerializeDelegate(tagName, value);
+            }
+
             if (value == null) {
-                return new NbtCompound(tagName);
+                switch (thisNullPolicy) {
+                    case NullPolicy.InsertDefault:
+                        return new NbtCompound(tagName);
+                    default:
+                        throw new ArgumentNullException("value");
+                }
             }
 
             Type realType = value.GetType();
@@ -227,15 +314,19 @@ namespace fNbt.Serialization {
                 return SerializeList(tagName, valueAsArray, elementType, elementNullPolicy);
             }
 
-            if (!skipInterfaceCheck && value is INbtSerializable) {
-                return ((INbtSerializable)value).Serialize(tagName);
+            // value is INbtSerializable
+            var serializable = value as INbtSerializable;
+            if ( serializable != null) {
+                return serializable.Serialize(tagName);
             }
 
-            // Serialize ILists
+            // value is IList<?>
             if (realType.IsGenericType && realType.GetGenericTypeDefinition() == typeof(List<>)) {
                 Type listType = realType.GetGenericArguments()[0];
                 return SerializeList(tagName, (IList)value, listType, elementNullPolicy);
             }
+
+            // TODO: value is IDictionary<string,?>
 
             // Skip serializing NbtTags and NbtFiles
             var valueAsTag = value as NbtTag;
@@ -277,7 +368,7 @@ namespace fNbt.Serialization {
                 } else if (propType.IsArray || propType == typeof(string)) {
                     tag = Serialize(propValue, propTagName);
                 } else {
-                    var innerSerializer = new NbtSerializer(property.PropertyType);
+                    var innerSerializer = Get(property.PropertyType);
                     tag = innerSerializer.Serialize(propValue, propTagName);
                 }
                 compound.Add(tag);
@@ -323,8 +414,8 @@ namespace fNbt.Serialization {
 
 
         public object Deserialize(NbtTag tag, bool skipInterfaceCheck = false) {
-            if (!skipInterfaceCheck && typeof(INbtSerializable).IsAssignableFrom(Type)) {
-                var instance = (INbtSerializable)Activator.CreateInstance(Type);
+            if (!skipInterfaceCheck && typeof(INbtSerializable).IsAssignableFrom(typeof(T))) {
+                var instance = (INbtSerializable)Activator.CreateInstance(typeof(T));
                 instance.Deserialize(tag);
                 return instance;
             }
@@ -340,7 +431,7 @@ namespace fNbt.Serialization {
                             type = typeof(byte[]);
                             break;
                         case NbtTagType.List:
-                            type = Type.GetElementType() ?? typeof(object);
+                            type = typeof(T).GetElementType() ?? typeof(object);
                             break;
                         case NbtTagType.Double:
                             type = typeof(double);
@@ -373,7 +464,7 @@ namespace fNbt.Serialization {
                             array.SetValue(DeserializeSimpleType(list[i]), i);
                         }
                     } else {
-                        var innerSerializer = new NbtSerializer(type);
+                        var innerSerializer = SerializerCache.Get(type);
                         for (int i = 0; i < array.Length; i++) {
                             array.SetValue(innerSerializer.Deserialize(list[i]), i);
                         }
@@ -384,7 +475,7 @@ namespace fNbt.Serialization {
                     if (!propertyInfoRead) ReadPropertyInfo();
                     var compound = (NbtCompound)tag;
 
-                    object resultObject = Activator.CreateInstance(Type);
+                    object resultObject = Activator.CreateInstance(typeof(T));
                     foreach (PropertyInfo property in properties) {
                         if (!property.CanWrite) continue;
                         string name = propertyTagNames[property];
@@ -397,7 +488,7 @@ namespace fNbt.Serialization {
                             data = Activator.CreateInstance(property.PropertyType);
                             ((INbtSerializable)data).Deserialize(node);
                         } else {
-                            data = new NbtSerializer(property.PropertyType).Deserialize(node);
+                            data = SerializerCache.Get(property.PropertyType).Deserialize(node);
                         }
 
                         // Some manual casting for edge cases

@@ -117,6 +117,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\fNbt.Serialization\fNbt.Serialization.csproj">
+      <Project>{95238d45-ec60-419f-90e1-7064ea738079}</Project>
+      <Name>fNbt.Serialization</Name>
+    </ProjectReference>
     <ProjectReference Include="..\fNbt\fNbt.csproj">
       <Project>{4488498D-976D-4DA3-BF72-109531AF0488}</Project>
       <Name>fNbt</Name>

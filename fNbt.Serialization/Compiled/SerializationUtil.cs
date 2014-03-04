@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 
-namespace fNbt.Serialization {
+namespace fNbt.Serialization.Compiled {
     internal static class SerializationUtil {
         // Gets default value for directly-mapped reference types, to substitute a null
         public static object GetDefaultValue(Type type) {
