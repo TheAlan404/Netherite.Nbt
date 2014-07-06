@@ -219,12 +219,14 @@ namespace fNbt {
 
 
         /// <summary> Gets a collection containing all tag names in this NbtCompound. </summary>
+        [NotNull]
         public IEnumerable<string> Names {
             get { return tags.Keys; }
         }
 
 
         /// <summary> Gets a collection containing all tags in this NbtCompound. </summary>
+        [NotNull]
         public IEnumerable<NbtTag> Tags {
             get { return tags.Values; }
         }

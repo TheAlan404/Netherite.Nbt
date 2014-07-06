@@ -8,7 +8,7 @@ namespace fNbt.Test {
     internal class NbtSerializerTests {
         [Test]
         public void ValueTest() {
-            TestFiles.ValueTestClass testObject = TestFiles.MakeValueTestObject();
+            var testObject = TestFiles.MakeValueTestObject();
             var serializer = new NbtSerializer(testObject.GetType());
 
             NbtTag serializedTag = serializer.Serialize(testObject, "root");
