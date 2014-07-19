@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using fNbt.Serialization;
 using NUnit.Framework;
 
 namespace fNbt.Test {
@@ -85,16 +84,6 @@ namespace fNbt.Test {
                     })
                 }
             };
-        }
-
-
-        [TagName("Root")]
-        public class SerializerConversionClass {
-            public sbyte SByteProp { get; set; }
-            public bool BoolProp { get; set; }
-            public ushort UInt16Prop { get; set; }
-            public uint UInt32Prop { get; set; }
-            public ulong UInt64Prop { get; set; }
         }
 
 
@@ -318,35 +307,6 @@ namespace fNbt.Test {
                 new NbtIntArray("intArray", new[] { 20, 21, 22 }),
                 new NbtString("string", "123")
             };
-        }
-
-
-        public static ValueTestClass MakeValueTestObject() {
-            return new ValueTestClass {
-                @byte = 1,
-                @short = 2,
-                @int = 3,
-                @long = 4L,
-                @float = 5f,
-                @double = 6d,
-                byteArray = new byte[] { 10, 11, 12 },
-                intArray = new[] { 20, 21, 22 },
-                @string = "123"
-            };
-        }
-
-
-        [TagName("root")]
-        public class ValueTestClass {
-            public byte @byte { get; set; }
-            public short @short { get; set; }
-            public int @int { get; set; }
-            public long @long { get; set; }
-            public float @float { get; set; }
-            public double @double { get; set; }
-            public byte[] byteArray { get; set; }
-            public int[] intArray { get; set; }
-            public string @string { get; set; }
         }
 
 
