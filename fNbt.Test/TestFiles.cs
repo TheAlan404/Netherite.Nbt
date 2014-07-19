@@ -114,7 +114,8 @@ namespace fNbt.Test {
                         }
                     }
                 },
-                new NbtInt("fifth")
+                new NbtInt("fifth"),
+                new NbtByteArray("hugeArray", new byte[1024*1024])
             };
             byte[] testData = new NbtFile(root).SaveToBuffer(NbtCompression.None);
             return new MemoryStream(testData);

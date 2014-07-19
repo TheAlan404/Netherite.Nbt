@@ -112,7 +112,7 @@ namespace fNbt {
                 int bytesSkipped = 0;
                 while (bytesSkipped < bytesToSkip) {
                     int bytesToRead = Math.Min(SeekBufferSize, bytesToSkip - bytesSkipped);
-                    int bytesReadThisTime = BaseStream.Read(seekBuffer, bytesSkipped, bytesToRead);
+                    int bytesReadThisTime = BaseStream.Read(seekBuffer, 0, bytesToRead);
                     if (bytesReadThisTime == 0) {
                         throw new EndOfStreamException();
                     }

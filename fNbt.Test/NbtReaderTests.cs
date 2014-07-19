@@ -200,6 +200,8 @@ namespace fNbt.Test {
             Assert.AreEqual(reader.TagName, "fourth-list");
             Assert.IsTrue(reader.ReadToNextSibling());
             Assert.AreEqual(reader.TagName, "fifth");
+            Assert.IsTrue(reader.ReadToNextSibling());
+            Assert.AreEqual(reader.TagName, "hugeArray");
             Assert.IsFalse(reader.ReadToNextSibling());
         }
 
@@ -230,7 +232,7 @@ namespace fNbt.Test {
             Assert.AreEqual(reader.TagName, "inComp1");
             Assert.AreEqual(reader.Skip(), 2);
             Assert.AreEqual(reader.TagName, "fourth-list");
-            Assert.AreEqual(reader.Skip(), 10);
+            Assert.AreEqual(reader.Skip(), 11);
             Assert.IsFalse(reader.ReadToFollowing());
         }
 
@@ -472,9 +474,20 @@ namespace fNbt.Test {
 
 
         [Test]
-        public void NonSeekableStreamSkip() {
+        public void NonSeekableStreamSkip1() {
             byte[] fileBytes = File.ReadAllBytes("TestFiles/bigtest.nbt");
             using (var ms = new MemoryStream(fileBytes)) {
+                using (var nss = new NonSeekableStream(ms)) {
+                    var reader = new NbtReader(nss);
+                    reader.ReadToFollowing();
+                    reader.Skip();
+                }
+            }
+        }
+
+        [Test]
+        public void NonSeekableStreamSkip2() {
+            using (var ms = TestFiles.MakeReaderTest()) {
                 using (var nss = new NonSeekableStream(ms)) {
                     var reader = new NbtReader(nss);
                     reader.ReadToFollowing();
