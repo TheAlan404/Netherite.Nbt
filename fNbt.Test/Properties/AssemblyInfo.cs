@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("github.com/fragmer/fNbt")]
 [assembly: AssemblyProduct("fNbt.Test")]
-[assembly: AssemblyCopyright("2012-2013 Matvei Stefarov")]
+[assembly: AssemblyCopyright("2012-2014 Matvei Stefarov")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -35,5 +35,5 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("0.6.0.0")]
-[assembly: AssemblyFileVersion("0.6.0.0")]
+[assembly: AssemblyVersion("0.6.1.0")]
+[assembly: AssemblyFileVersion("0.6.1.0")]
