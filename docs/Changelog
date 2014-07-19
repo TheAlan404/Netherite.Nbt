@@ -1,3 +1,11 @@
+0.6.1 (fNbt)
+- NbtReader now supports non-seekable streams.
+- Fixed issues loading from/saving to non-seekable steams in NbtFile.
+- NbtFile.LoadFromStream/SaveToStream now accurately report bytes read/written
+    for NBT data over 2 GiB in size.
+- API change:
+    All NbtFile loading/saving methods now return long instead of int.
+
 0.6.0 (fNbt)
 - Raised .NET framework requirements from 2.0+ to 3.5+
 - Added NbtWriter, for linearly writing NBT streams, similarly to XmlWriter.
