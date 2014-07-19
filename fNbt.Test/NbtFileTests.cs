@@ -48,7 +48,7 @@ namespace fNbt.Test {
         [Test]
         public void LoadingBigFileUncompressed() {
             var file = new NbtFile();
-            int length = file.LoadFromFile(TestFiles.Big);
+            long length = file.LoadFromFile(TestFiles.Big);
             TestFiles.AssertNbtBigFile(file);
             Assert.AreEqual(length, new FileInfo(TestFiles.Big).Length);
         }
@@ -57,7 +57,7 @@ namespace fNbt.Test {
         [Test]
         public void LoadingBigFileGZip() {
             var file = new NbtFile();
-            int length = file.LoadFromFile(TestFiles.BigGZip);
+            long length = file.LoadFromFile(TestFiles.BigGZip);
             TestFiles.AssertNbtBigFile(file);
             Assert.AreEqual(length, new FileInfo(TestFiles.BigGZip).Length);
         }
@@ -66,7 +66,7 @@ namespace fNbt.Test {
         [Test]
         public void LoadingBigFileZLib() {
             var file = new NbtFile();
-            int length = file.LoadFromFile(TestFiles.BigZLib);
+            long length = file.LoadFromFile(TestFiles.BigZLib);
             TestFiles.AssertNbtBigFile(file);
             Assert.AreEqual(length, new FileInfo(TestFiles.BigZLib).Length);
         }
@@ -76,7 +76,7 @@ namespace fNbt.Test {
         public void LoadingBigFileBuffer() {
             byte[] fileBytes = File.ReadAllBytes(TestFiles.Big);
             var file = new NbtFile();
-            int length = file.LoadFromBuffer(fileBytes, 0, fileBytes.Length, NbtCompression.AutoDetect, null);
+            long length = file.LoadFromBuffer(fileBytes, 0, fileBytes.Length, NbtCompression.AutoDetect, null);
             TestFiles.AssertNbtBigFile(file);
             Assert.AreEqual(length, new FileInfo(TestFiles.Big).Length);
         }
@@ -132,7 +132,7 @@ namespace fNbt.Test {
             var loadedFile = new NbtFile(Path.Combine(TestFiles.DirName, fileName));
             loadedFile.BigEndian = bigEndian;
             long bytesWritten = loadedFile.SaveToFile(Path.Combine(TestDirName, fileName), compression);
-            int bytesRead = loadedFile.LoadFromFile(Path.Combine(TestDirName, fileName), NbtCompression.AutoDetect, null);
+            long bytesRead = loadedFile.LoadFromFile(Path.Combine(TestDirName, fileName), NbtCompression.AutoDetect, null);
             Assert.AreEqual(bytesWritten, bytesRead);
             TestFiles.AssertNbtBigFile(loadedFile);
         }

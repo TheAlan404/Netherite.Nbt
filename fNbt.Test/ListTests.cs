@@ -255,7 +255,7 @@ namespace fNbt.Test {
 
             // test loading
             var readFile = new NbtFile();
-            int bytesRead = readFile.LoadFromBuffer(data, 0, data.Length, NbtCompression.None);
+            long bytesRead = readFile.LoadFromBuffer(data, 0, data.Length, NbtCompression.None);
             Assert.AreEqual(bytesRead, data.Length);
 
             // check contents of loaded file
@@ -281,7 +281,7 @@ namespace fNbt.Test {
             // check saving/loading lists of all possible value types
             var testFile = new NbtFile(TestFiles.MakeListTest());
             byte[] buffer = testFile.SaveToBuffer(NbtCompression.None);
-            int bytesRead = testFile.LoadFromBuffer(buffer, 0, buffer.Length, NbtCompression.None);
+            long bytesRead = testFile.LoadFromBuffer(buffer, 0, buffer.Length, NbtCompression.None);
             Assert.AreEqual(bytesRead, buffer.Length);
         }
 
@@ -306,7 +306,7 @@ namespace fNbt.Test {
             }
             {
                 var file = new NbtFile();
-                int bytesRead = file.LoadFromBuffer(data, 0, data.Length, NbtCompression.None);
+                long bytesRead = file.LoadFromBuffer(data, 0, data.Length, NbtCompression.None);
                 Assert.AreEqual(bytesRead, data.Length);
                 Assert.AreEqual(file.RootTag.Get<NbtList>("OuterList").Count, 1);
                 Assert.AreEqual(file.RootTag.Get<NbtList>("OuterList").Get<NbtCompound>(0).Name, null);

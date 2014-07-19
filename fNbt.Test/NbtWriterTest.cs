@@ -205,7 +205,7 @@ namespace fNbt.Test {
                 }
                 ms.Position = 0;
                 var file = new NbtFile();
-                int bytesRead = file.LoadFromBuffer(ms.ToArray(), 0, (int)ms.Length, NbtCompression.None);
+                long bytesRead = file.LoadFromBuffer(ms.ToArray(), 0, (int)ms.Length, NbtCompression.None);
                 Assert.AreEqual(bytesRead, ms.Length);
                 TestFiles.AssertValueTest(file);
             }
