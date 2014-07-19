@@ -135,7 +135,7 @@ namespace fNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
-        public int LoadFromFile([NotNull] string fileName) {
+        public long LoadFromFile([NotNull] string fileName) {
             return LoadFromFile(fileName, NbtCompression.AutoDetect, null);
         }
 
@@ -153,7 +153,7 @@ namespace fNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
-        public int LoadFromFile([NotNull] string fileName, NbtCompression compression, [CanBeNull] TagSelector selector) {
+        public long LoadFromFile([NotNull] string fileName, NbtCompression compression, [CanBeNull] TagSelector selector) {
             if (fileName == null)
                 throw new ArgumentNullException("fileName");
 
@@ -166,7 +166,7 @@ namespace fNbt {
                                                     FileOptions.SequentialScan)) {
                 LoadFromStream(readFileStream, compression, selector);
                 FileName = fileName;
-                return (int)readFileStream.Position;
+                return readFileStream.Position;
             }
         }
 
@@ -187,7 +187,7 @@ namespace fNbt {
         /// <exception cref="EndOfStreamException"> If NBT stream extends beyond the given <paramref name="length"/>. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
-        public int LoadFromBuffer([NotNull] byte[] buffer, int index, int length, NbtCompression compression,
+        public long LoadFromBuffer([NotNull] byte[] buffer, int index, int length, NbtCompression compression,
                                   [CanBeNull] TagSelector selector) {
             if (buffer == null)
                 throw new ArgumentNullException("buffer");
@@ -195,7 +195,7 @@ namespace fNbt {
             using (var ms = new MemoryStream(buffer, index, length)) {
                 LoadFromStream(ms, compression, selector);
                 FileName = null;
-                return (int)ms.Position;
+                return ms.Position;
             }
         }
 
@@ -214,14 +214,14 @@ namespace fNbt {
         /// <exception cref="EndOfStreamException"> If NBT stream extends beyond the given <paramref name="length"/>. </exception>
         /// <exception cref="InvalidDataException"> If file compression could not be detected or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
-        public int LoadFromBuffer([NotNull] byte[] buffer, int index, int length, NbtCompression compression) {
+        public long LoadFromBuffer([NotNull] byte[] buffer, int index, int length, NbtCompression compression) {
             if (buffer == null)
                 throw new ArgumentNullException("buffer");
 
             using (var ms = new MemoryStream(buffer, index, length)) {
                 LoadFromStream(ms, compression, null);
                 FileName = null;
-                return (int)ms.Position;
+                return ms.Position;
             }
         }
 
