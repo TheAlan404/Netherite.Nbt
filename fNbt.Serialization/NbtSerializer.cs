@@ -1,20 +1,32 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using fNbt.Serialization.Compiled;
+using JetBrains.Annotations;
 
 namespace fNbt.Serialization {
-    public class NbtSerializer : INbtSerializer {
+    public class NbtSerializer {
+        public NbtSerializer(Type contractType)
+            : this(contractType, SerializerOptions.Defaults) {}
+
+
+        public NbtSerializer([NotNull] Type contractType, [NotNull] SerializerOptions options) {
+            if (contractType == null) throw new ArgumentNullException("contractType");
+            if (options == null) throw new ArgumentNullException("options");
+            this.contractType = contractType;
+            this.options = options;
+            typeMetadata = ReadPropertyInfo(contractType);
+        }
+
+
+        readonly SerializerOptions options;
+        TypeMetadata typeMetadata;
+        readonly Type contractType;
         NbtSerialize compiledSerializeDelegate;
         NbtDeserialize compiledDeserializeDelegate;
-        readonly Type contractType;
-        PropertyInfo[] properties;
-        Dictionary<PropertyInfo, string> propertyTagNames;
-        Dictionary<PropertyInfo, NullPolicy> nullPolicies;
-        Dictionary<PropertyInfo, NullPolicy> elementNullPolicies;
-        bool propertyInfoRead;
+
 
         public void Compile() {
             if (compiledSerializeDelegate == null) {
@@ -24,17 +36,19 @@ namespace fNbt.Serialization {
                 compiledDeserializeDelegate = NbtCompiler.GetDeserializer(contractType);
             }
             // These fields are only needed for non-compiled serialization. Let's free that memory!
-            properties = null;
-            propertyTagNames = null;
-            nullPolicies = null;
-            elementNullPolicies = null;
+            typeMetadata = null;
         }
 
-        internal NbtSerializer(Type contractType) {
-            this.contractType = contractType;
-        }
 
         public NbtTag MakeTag(object obj) {
+            if (!contractType.IsInstanceOfType(obj)) {
+                throw new ArgumentException("Invalid type! Expected an object of type " + contractType);
+            }
+            throw new NotImplementedException();
+        }
+
+
+        public NbtTag FillTag(object obj, NbtTag tag) {
             if (!contractType.IsInstanceOfType(obj)) {
                 throw new ArgumentException("Invalid type! Expected an object of type " + contractType);
             }
@@ -47,54 +61,30 @@ namespace fNbt.Serialization {
         }
 
 
+        public object FillObject(object obj, NbtTag tag) {
+            throw new NotImplementedException();
+        }
 
-        void ReadPropertyInfo() {
-            try {
-                properties =
-                    contractType.GetProperties()
-                        .Where(p => !Attribute.GetCustomAttributes(p, typeof(NbtIgnoreAttribute)).Any())
-                        .ToArray();
-                propertyTagNames = new Dictionary<PropertyInfo, string>();
 
-                foreach (PropertyInfo property in properties) {
-                    // read tag name
-                    Attribute[] nameAttributes = Attribute.GetCustomAttributes(property, typeof(TagNameAttribute));
-                    string tagName;
-                    if (nameAttributes.Length != 0) {
-                        tagName = ((TagNameAttribute)nameAttributes[0]).Name;
-                    } else {
-                        tagName = property.Name;
-                    }
-                    propertyTagNames.Add(property, tagName);
+        static readonly ConcurrentDictionary<Type, TypeMetadata> TypeMetadataCache =
+            new ConcurrentDictionary<Type, TypeMetadata>();
 
-                    // read IgnoreOnNull attribute
-                    var nullPolicyAttr =
-                        (NullPolicyAttribute)Attribute.GetCustomAttribute(property, typeof(NullPolicyAttribute));
-                    if (nullPolicyAttr != null) {
-                        if (nullPolicyAttr.SelfPolicy != NullPolicy.Default) {
-                            if (nullPolicies == null) {
-                                nullPolicies = new Dictionary<PropertyInfo, NullPolicy>();
-                            }
-                            nullPolicies.Add(property, nullPolicyAttr.SelfPolicy);
-                        }
-                        if (nullPolicyAttr.ElementPolicy != NullPolicy.Default) {
-                            if (elementNullPolicies == null) {
-                                elementNullPolicies = new Dictionary<PropertyInfo, NullPolicy>();
-                            }
-                            elementNullPolicies.Add(property, nullPolicyAttr.ElementPolicy);
-                        }
+
+        // Read and store metadata about given type, for non-compiled serialization/deserialization
+        // This only needs to be called once, on the very first serialization/deserialization call.
+        static TypeMetadata ReadPropertyInfo(Type type) {
+            TypeMetadata typeMeta;
+            if (!TypeMetadataCache.TryGetValue(type, out typeMeta)) {
+                // If meta cache does not contain this type yet, lock and double-check
+                lock (TypeMetadataCache) {
+                    if (!TypeMetadataCache.TryGetValue(type, out typeMeta)) {
+                        // If meta cache still does not contain this type, fetch info and store it in cache
+                        typeMeta = new TypeMetadata(type);
+                        TypeMetadataCache.TryAdd(type, typeMeta);
                     }
                 }
-                propertyInfoRead = true;
-            } catch {
-                // roll back on error
-                properties = null;
-                nullPolicies = null;
-                elementNullPolicies = null;
-                propertyTagNames = null;
-                propertyInfoRead = false;
-                throw;
             }
+            return typeMeta;
         }
 
 
@@ -170,13 +160,13 @@ namespace fNbt.Serialization {
                             case NullPolicy.Error:
                                 throw new NullReferenceException("Null elements not allowed for tag " + tagName);
                             case NullPolicy.InsertDefault:
-                                list.Add(Serialize(SerializationUtil.GetDefaultValue(elementType), true)); // TODO: skip iserializable
+                                list.Add(Serialize(SerializationUtil.GetDefaultValue(elementType), null)); // TODO: skip iserializable
                                 break;
                             case NullPolicy.Ignore:
                                 continue;
                         }
                     } else {
-                        list.Add(Serialize(valueAsArray[i], true));
+                        list.Add(Serialize(valueAsArray[i], null));
                     }
                 }
             } else {
@@ -204,9 +194,9 @@ namespace fNbt.Serialization {
 
 
         NullPolicy GetElementPolicy(PropertyInfo prop) {
-            if (nullPolicies != null) {
+            if (typeMetadata.NullPolicies != null) {
                 NullPolicy result;
-                if (nullPolicies.TryGetValue(prop, out result)) {
+                if (typeMetadata.NullPolicies.TryGetValue(prop, out result)) {
                     return result;
                 }
             }
@@ -288,9 +278,8 @@ namespace fNbt.Serialization {
 
             // Fallback for compound tags
             var compound = new NbtCompound(tagName);
-            if (!propertyInfoRead) ReadPropertyInfo();
 
-            foreach (PropertyInfo property in properties) {
+            foreach (PropertyInfo property in typeMetadata.Properties) {
                 if (!property.CanRead) continue;
                 Type propType = property.PropertyType;
                 object propValue = property.GetValue(value, null);
@@ -309,14 +298,14 @@ namespace fNbt.Serialization {
                     }
                 }
 
-                string propTagName = propertyTagNames[property];
+                string propTagName = typeMetadata.PropertyTagNames[property];
                 NbtTag tag;
                 if (propType.IsPrimitive) {
                     tag = SerializePrimitiveType(propTagName, propValue);
                 } else if (propType.IsArray || propType == typeof(string)) {
                     tag = Serialize(propValue, propTagName);
                 } else {
-                    var innerSerializer = Get(property.PropertyType);
+                    var innerSerializer = new NbtSerializer(property.PropertyType, options);
                     tag = innerSerializer.Serialize(propValue, propTagName);
                 }
                 compound.Add(tag);
@@ -379,7 +368,7 @@ namespace fNbt.Serialization {
                             type = typeof(byte[]);
                             break;
                         case NbtTagType.List:
-                            type = typeof(T).GetElementType() ?? typeof(object);
+                            type = contractType.GetElementType() ?? typeof(object);
                             break;
                         case NbtTagType.Double:
                             type = typeof(double);
@@ -412,7 +401,7 @@ namespace fNbt.Serialization {
                             array.SetValue(DeserializeSimpleType(list[i]), i);
                         }
                     } else {
-                        var innerSerializer = SerializerCache.Get(type);
+                        var innerSerializer = new NbtSerializer(type, options);
                         for (int i = 0; i < array.Length; i++) {
                             array.SetValue(innerSerializer.Deserialize(list[i]), i);
                         }
@@ -420,13 +409,12 @@ namespace fNbt.Serialization {
                     return array;
 
                 case NbtTagType.Compound:
-                    if (!propertyInfoRead) ReadPropertyInfo();
                     var compound = (NbtCompound)tag;
 
                     object resultObject = Activator.CreateInstance(contractType);
-                    foreach (PropertyInfo property in properties) {
+                    foreach (PropertyInfo property in typeMetadata.Properties) {
                         if (!property.CanWrite) continue;
-                        string name = propertyTagNames[property];
+                        string name = typeMetadata.PropertyTagNames[property];
 
                         NbtTag node;
                         if (!compound.TryGet(name, out node)) continue;
@@ -436,7 +424,7 @@ namespace fNbt.Serialization {
                             data = Activator.CreateInstance(property.PropertyType);
                             ((INbtSerializable)data).Deserialize(node);
                         } else {
-                            data = SerializerCache.Get(property.PropertyType).Deserialize(node);
+                            data = new NbtSerializer(property.PropertyType, options).Deserialize(node);
                         }
 
                         // Some manual casting for edge cases

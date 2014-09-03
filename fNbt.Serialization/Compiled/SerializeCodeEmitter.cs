@@ -55,7 +55,7 @@ namespace fNbt.Serialization.Compiled {
 
         public override Expression HandlePrimitiveOrEnum(string tagName, PropertyInfo property) {
             // Find a mapping from PropertyType to closest NBT equivalent
-            Type convertedType = GetConvertedType(property.PropertyType);
+            Type convertedType = SerializationUtil.GetConvertedType(property.PropertyType);
 
             // property getter
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
@@ -524,7 +524,7 @@ namespace fNbt.Serialization.Compiled {
         [NotNull]
         static Expression MakeConversionToDirectType([NotNull] Type valueType, [NotNull] Expression tagValueExpr) {
             // Add casting/conversion, if needed
-            Type convertedType = GetConvertedType(valueType);
+            Type convertedType = SerializationUtil.GetConvertedType(valueType);
 
             // boxed values returned by Array.GetValue() needs to be cast to bool first
             if (valueType != tagValueExpr.Type) {
@@ -545,30 +545,12 @@ namespace fNbt.Serialization.Compiled {
         }
 
 
-        // Finds an NBT primitive that is closest to the given type.
-        // If given type must is not a primitive or enum, then the original type is returned.
-        // For example: bool -> byte; char -> short, etc
-        [NotNull]
-        static Type GetConvertedType([NotNull] Type rawType) {
-            if (rawType == null) throw new ArgumentNullException("rawType");
-            if (rawType.IsEnum) {
-                rawType = Enum.GetUnderlyingType(rawType);
-            }
-
-            Type convertedType;
-            if (!SerializationUtil.PrimitiveConversionMap.TryGetValue(rawType, out convertedType)) {
-                convertedType = rawType;
-            }
-
-            return convertedType;
-        }
-
 
         // Finds a NbtTagType for given value type.
         // NbtTagType.Compound is returned for any value type that is not a primitive/enum/array/IList<T>
         // For example: int -> NbtTagType.Int; List<string> -> NbtTagType.List; etc
         static NbtTagType GetNbtTagType([NotNull] Type rawValueType) {
-            Type convertedType = GetConvertedType(rawValueType);
+            Type convertedType = SerializationUtil.GetConvertedType(rawValueType);
 
             Type directTagType;
             if (SerializationUtil.TypeToTagMap.TryGetValue(convertedType, out directTagType)) {

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using fNbt.Serialization.Compiled;
 
 namespace fNbt.Serialization {
     public static class NbtConvert {
@@ -20,31 +22,45 @@ namespace fNbt.Serialization {
 
 
         public static NbtTag MakeTag(Type type, object obj, string tagName, SerializerOptions options) {
-            return FillTag(type, obj, tagName, ConstructTag(type), options);
-        }
-
-
-        public static NbtTag FillTag<T>(T obj, string tagName, NbtTag tag) {
-            return FillTag(typeof(T), obj, tagName, tag, SerializerOptions.Defaults);
-        }
-
-
-        public static NbtTag FillTag<T>(T obj, string tagName, NbtTag tag, SerializerOptions options) {
-            return FillTag(typeof(T), obj, tagName, tag, options);
-        }
-
-
-        public static NbtTag FillTag(Type type, object obj, string tagName, NbtTag tag) {
-            return FillTag(type, obj, tagName, tag, SerializerOptions.Defaults);
-        }
-
-
-        public static NbtTag FillTag(Type type, object obj, string tagName, NbtTag tag, SerializerOptions options) {
             throw new NotImplementedException();
         }
 
 
-        static NbtTag ConstructTag(Type type) {
+        public static NbtTag FillTag<T>(T obj, NbtTag tag) {
+            return FillTag(typeof(T), obj, tag, SerializerOptions.Defaults);
+        }
+
+
+        public static NbtTag FillTag<T>(T obj, NbtTag tag, SerializerOptions options) {
+            return FillTag(typeof(T), obj, tag, options);
+        }
+
+
+        public static NbtTag FillTag(Type type, object obj, NbtTag tag) {
+            return FillTag(type, obj, tag, SerializerOptions.Defaults);
+        }
+
+
+        public static NbtTag FillTag(Type type, object obj, NbtTag tag, SerializerOptions options) {
+            throw new NotImplementedException();
+        }
+
+
+        static NbtTag ConstructTag(Type valueType) {
+            // TODO: construct an NBT tag that can represent values of given type
+            if (SerializationUtil.IsDirectlyMappedType(valueType)) {
+                Type tagType = SerializationUtil.FindTagType(valueType);
+                return (NbtTag)Activator.CreateInstance(tagType);
+            } else if (typeof(NbtTag).IsAssignableFrom(valueType) ) {
+                // NbtTag
+                return (NbtTag)Activator.CreateInstance(valueType); // TODO: optimize
+            }
+            Type iListImpl = SerializationUtil.GetGenericInterfaceImpl(valueType, typeof(IList<>));
+            if (iListImpl != null) {
+                // Lists and arrays
+                return new NbtList();
+            }
+            // INbtSerializable, NbtTag, IDictionary, and everything else
             return new NbtCompound();
         }
 

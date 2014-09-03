@@ -43,11 +43,9 @@
     <Compile Include="Compiled\CodeEmitter.cs" />
     <Compile Include="Compiled\DeserializeCodeEmitter.cs" />
     <Compile Include="INbtSerializable.cs" />
-    <Compile Include="INbtSerializer.cs" />
     <Compile Include="MissingPolicy.cs" />
     <Compile Include="MissingPolicyAttribute.cs" />
     <Compile Include="Compiled\NbtCompiler.cs" />
-    <Compile Include="NbtConstructorAttribute.cs" />
     <Compile Include="NbtConvert.cs" />
     <Compile Include="NbtIgnoreAttribute.cs" />
     <Compile Include="NbtSerializer.cs" />
@@ -58,6 +56,7 @@
     <Compile Include="Compiled\SerializeCodeEmitter.cs" />
     <Compile Include="SerializerOptions.cs" />
     <Compile Include="TagNameAttribute.cs" />
+    <Compile Include="TypeMetadata.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\fNbt\fNbt.csproj">

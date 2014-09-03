@@ -31,8 +31,16 @@ namespace fNbt.Serialization.Compiled {
         }
 
 
+        // Returns an appropriate NbtTag, or null if no direct mapping could be found
+        public static Type FindTagType(Type valueType) {
+            Type tagType;
+            TypeToTagMap.TryGetValue(valueType, out tagType);
+            return tagType;
+        }
+
+
         // mapping of directly-usable types to their NbtTag subtypes
-        public static readonly Dictionary<Type, Type> TypeToTagMap = new Dictionary<Type, Type> {
+        internal static readonly Dictionary<Type, Type> TypeToTagMap = new Dictionary<Type, Type> {
             { typeof(byte), typeof(NbtByte) },
             { typeof(short), typeof(NbtShort) },
             { typeof(int), typeof(NbtInt) },
@@ -45,7 +53,7 @@ namespace fNbt.Serialization.Compiled {
         };
 
 
-        public static readonly Dictionary<Type, NbtTagType> TypeToTagTypeEnum = new Dictionary<Type, NbtTagType> {
+        internal static readonly Dictionary<Type, NbtTagType> TypeToTagTypeEnum = new Dictionary<Type, NbtTagType> {
             { typeof(NbtByte), NbtTagType.Byte },
             { typeof(NbtByteArray), NbtTagType.ByteArray },
             { typeof(NbtDouble), NbtTagType.Double },
@@ -60,8 +68,8 @@ namespace fNbt.Serialization.Compiled {
         };
 
 
-        // mapping of convertible value types to directly-usable primitive types
-        public static readonly Dictionary<Type, Type> PrimitiveConversionMap = new Dictionary<Type, Type> {
+        // Mapping of convertible value types to directly-usable primitive types
+        static readonly Dictionary<Type, Type> PrimitiveConversionMap = new Dictionary<Type, Type> {
             { typeof(bool), typeof(byte) },
             { typeof(sbyte), typeof(byte) },
             { typeof(ushort), typeof(short) },
@@ -70,6 +78,25 @@ namespace fNbt.Serialization.Compiled {
             { typeof(ulong), typeof(long) },
             { typeof(decimal), typeof(double) }
         };
+
+
+        // Finds an NBT primitive that is closest to the given type.
+        // If given type must is not a primitive or enum, then the original type is returned.
+        // For example: bool -> byte; char -> short, etc
+        [NotNull]
+        public static Type GetConvertedType([NotNull] Type rawType) {
+            if (rawType == null) throw new ArgumentNullException("rawType");
+            if (rawType.IsEnum) {
+                rawType = Enum.GetUnderlyingType(rawType);
+            }
+
+            Type convertedType;
+            if (!PrimitiveConversionMap.TryGetValue(rawType, out convertedType)) {
+                convertedType = rawType;
+            }
+
+            return convertedType;
+        }
 
 
         [CanBeNull]
