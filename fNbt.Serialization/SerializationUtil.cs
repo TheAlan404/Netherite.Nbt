@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 
-namespace fNbt.Serialization.Compiled {
+namespace fNbt.Serialization {
+    /// <summary> Contains shared code and data used by various serialization-related classes. </summary>
     internal static class SerializationUtil {
         // Gets default value for directly-mapped reference types, to substitute a null
         public static object GetDefaultValue(Type type) {
@@ -24,14 +24,15 @@ namespace fNbt.Serialization.Compiled {
 
 
         public static bool IsDirectlyMappedType(Type type) {
-            return type.IsPrimitive || type.IsEnum ||
-                   type == typeof(byte[]) ||
-                   type == typeof(int[]) ||
-                   type == typeof(string);
+            return !type.IsGenericType && // to catch Nullable<T>
+                   (type.IsPrimitive || type.IsEnum ||
+                    type == typeof(byte[]) ||
+                    type == typeof(int[]) ||
+                    type == typeof(string));
         }
 
 
-        // Returns an appropriate NbtTag, or null if no direct mapping could be found
+        // Returns type of an appropriate NbtTag subclass, or null if no direct mapping could be found
         public static Type FindTagType(Type valueType) {
             Type tagType;
             TypeToTagMap.TryGetValue(valueType, out tagType);
@@ -53,7 +54,7 @@ namespace fNbt.Serialization.Compiled {
         };
 
 
-        internal static readonly Dictionary<Type, NbtTagType> TypeToTagTypeEnum = new Dictionary<Type, NbtTagType> {
+        static readonly Dictionary<Type, NbtTagType> TypeToTagTypeEnum = new Dictionary<Type, NbtTagType> {
             { typeof(NbtByte), NbtTagType.Byte },
             { typeof(NbtByteArray), NbtTagType.ByteArray },
             { typeof(NbtDouble), NbtTagType.Double },
@@ -66,6 +67,16 @@ namespace fNbt.Serialization.Compiled {
             { typeof(NbtCompound), NbtTagType.Compound },
             { typeof(NbtList), NbtTagType.List }
         };
+
+
+        public static NbtTagType FindTagTypeEnum(Type tagType) {
+            NbtTagType result;
+            if (TypeToTagTypeEnum.TryGetValue(tagType, out result)) {
+                return result;
+            } else {
+                return NbtTagType.Unknown;
+            }
+        }
 
 
         // Mapping of convertible value types to directly-usable primitive types
@@ -81,7 +92,7 @@ namespace fNbt.Serialization.Compiled {
 
 
         // Finds an NBT primitive that is closest to the given type.
-        // If given type must is not a primitive or enum, then the original type is returned.
+        // If given type primitive or enum, then the original type is returned.
         // For example: bool -> byte; char -> short, etc
         [NotNull]
         public static Type GetConvertedType([NotNull] Type rawType) {
@@ -118,7 +129,7 @@ namespace fNbt.Serialization.Compiled {
         }
 
 
-        public static Type GetStringIDictionaryImpl( Type concreteType ) {
+        public static Type GetStringIDictionaryImpl(Type concreteType) {
             return concreteType.GetInterfaces().FirstOrDefault(
                 iFace => iFace.IsGenericType &&
                          iFace.GetGenericTypeDefinition() == typeof(IDictionary<,>) &&
@@ -154,6 +165,99 @@ namespace fNbt.Serialization.Compiled {
                 int methodIndex = Array.IndexOf(implMap.InterfaceMethods, interfaceMethod);
                 MethodInfo concreteMethod = implMap.TargetMethods[methodIndex];
                 return concreteMethod;
+            }
+        }
+
+
+        static readonly Dictionary<Type, Func<NbtTag>> TagConstructors = new Dictionary<Type, Func<NbtTag>> {
+            { typeof(NbtByte), () => new NbtByte() },
+            { typeof(NbtByteArray), () => new NbtByteArray() },
+            { typeof(NbtCompound), () => new NbtCompound() },
+            { typeof(NbtDouble), () => new NbtDouble() },
+            { typeof(NbtFloat), () => new NbtFloat() },
+            { typeof(NbtInt), () => new NbtInt() },
+            { typeof(NbtIntArray), () => new NbtIntArray() },
+            { typeof(NbtList), () => new NbtList() },
+            { typeof(NbtLong), () => new NbtLong() },
+            { typeof(NbtShort), () => new NbtShort() },
+            { typeof(NbtString), () => new NbtString() }
+        };
+
+
+        public static Type FintTagTypeForValue(Type valueType) {
+            if (valueType == null) throw new ArgumentNullException("valueType");
+
+            Type convertedValueType = GetConvertedType(valueType);
+            if (IsDirectlyMappedType(convertedValueType)) {
+                // value can be mapped directly
+                return FindTagType(valueType);
+            } else if (typeof(NbtTag).IsAssignableFrom(valueType)) {
+                // value is already an NbtTag -- nothing to construct!
+                return null;
+            }
+
+            // Check if value is Nullable<T>
+            if (valueType.IsGenericType && valueType.GetGenericTypeDefinition() == typeof(Nullable<>)) {
+                throw new NotSupportedException("Serialization of nullable types is not supported at this time.");
+            }
+
+            // Check if value is an array
+            if (valueType.IsArray) {
+                if (valueType.GetArrayRank() > 1) {
+                    throw new NotSupportedException(
+                        "Serialization of multi-dimensional arrays is not supported at this time.");
+                }
+                Type elementType = valueType.GetElementType();
+                if (IsDirectlyMappedType(elementType)) {
+                    // Array that might be convertible to byte[] or int[]
+                    if (IsSafelyConvertibleToByte(elementType)) {
+                        return typeof(NbtByteArray);
+                    } else if (IsSafelyConvertibleToInt(elementType)) {
+                        return typeof(NbtIntArray);
+                    }
+                }
+                // Arrays cannot fit into byte[]/int[] -- use a list instead.
+                return typeof(NbtList);
+            }
+
+            // Check if value is a list
+            Type iListImpl = GetGenericInterfaceImpl(valueType, typeof(IList<>));
+            if (iListImpl != null) {
+                // Lists and arrays
+                return typeof(NbtList);
+            }
+            // INbtSerializable, NbtTag, IDictionary, and everything else
+            return typeof(NbtCompound);
+        }
+
+        
+        // Checks if values of given type can be cast to byte without data loss
+        static bool IsSafelyConvertibleToByte([NotNull] Type valueType) {
+            if (valueType == null) throw new ArgumentNullException("valueType");
+            return valueType == typeof(bool) ||
+                   valueType == typeof(byte) || valueType == typeof(sbyte);
+        }
+
+
+        // Checks if values of given type can be cast to int without data loss
+        static bool IsSafelyConvertibleToInt([NotNull] Type valueType) {
+            if (valueType == null) throw new ArgumentNullException("valueType");
+            return valueType == typeof(bool) ||
+                   valueType == typeof(byte) || valueType == typeof(sbyte) ||
+                   valueType == typeof(short) || valueType == typeof(ushort) ||
+                   valueType == typeof(int) || valueType == typeof(uint);
+        }
+
+
+        /// <summary> Creates a blank tag of a type appropriate for serializing values of given type. </summary>
+        /// <returns> A blank NbtTag -OR- null if given valueType already derives from NbtTag. </returns>
+        [CanBeNull]
+        public static NbtTag ConstructTag([NotNull] Type valueType) {
+            Type tagType = FintTagTypeForValue(valueType);
+            if (tagType != null) {
+                return TagConstructors[tagType]();
+            } else {
+                return null;
             }
         }
     }

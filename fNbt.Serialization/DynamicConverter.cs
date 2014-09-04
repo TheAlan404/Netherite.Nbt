@@ -1,94 +1,24 @@
-using System;
+﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
-using fNbt.Serialization.Compiled;
 using JetBrains.Annotations;
 
 namespace fNbt.Serialization {
-    public class NbtSerializer {
-        public NbtSerializer(Type contractType)
-            : this(contractType, SerializerOptions.Defaults) {}
+    internal struct DynamicConverter {
+        readonly Type contractType;
+        readonly SerializerOptions options;
+        readonly TypeMetadata typeMetadata;
 
 
-        public NbtSerializer([NotNull] Type contractType, [NotNull] SerializerOptions options) {
-            if (contractType == null) throw new ArgumentNullException("contractType");
-            if (options == null) throw new ArgumentNullException("options");
+        public DynamicConverter(Type contractType, SerializerOptions options) {
             this.contractType = contractType;
             this.options = options;
-            typeMetadata = ReadPropertyInfo(contractType);
+            typeMetadata = TypeMetadata.ReadTypeMetadata(contractType);
         }
 
 
-        readonly SerializerOptions options;
-        TypeMetadata typeMetadata;
-        readonly Type contractType;
-        NbtSerialize compiledSerializeDelegate;
-        NbtDeserialize compiledDeserializeDelegate;
-
-
-        public void Compile() {
-            if (compiledSerializeDelegate == null) {
-                compiledSerializeDelegate = NbtCompiler.GetSerializer(contractType);
-            }
-            if (compiledDeserializeDelegate == null) {
-                compiledDeserializeDelegate = NbtCompiler.GetDeserializer(contractType);
-            }
-            // These fields are only needed for non-compiled serialization. Let's free that memory!
-            typeMetadata = null;
-        }
-
-
-        public NbtTag MakeTag(object obj) {
-            if (!contractType.IsInstanceOfType(obj)) {
-                throw new ArgumentException("Invalid type! Expected an object of type " + contractType);
-            }
-            throw new NotImplementedException();
-        }
-
-
-        public NbtTag FillTag(object obj, NbtTag tag) {
-            if (!contractType.IsInstanceOfType(obj)) {
-                throw new ArgumentException("Invalid type! Expected an object of type " + contractType);
-            }
-            throw new NotImplementedException();
-        }
-
-
-        public object MakeObject(NbtTag tag) {
-            throw new NotImplementedException();
-        }
-
-
-        public object FillObject(object obj, NbtTag tag) {
-            throw new NotImplementedException();
-        }
-
-
-        static readonly ConcurrentDictionary<Type, TypeMetadata> TypeMetadataCache =
-            new ConcurrentDictionary<Type, TypeMetadata>();
-
-
-        // Read and store metadata about given type, for non-compiled serialization/deserialization
-        // This only needs to be called once, on the very first serialization/deserialization call.
-        static TypeMetadata ReadPropertyInfo(Type type) {
-            TypeMetadata typeMeta;
-            if (!TypeMetadataCache.TryGetValue(type, out typeMeta)) {
-                // If meta cache does not contain this type yet, lock and double-check
-                lock (TypeMetadataCache) {
-                    if (!TypeMetadataCache.TryGetValue(type, out typeMeta)) {
-                        // If meta cache still does not contain this type, fetch info and store it in cache
-                        typeMeta = new TypeMetadata(type);
-                        TypeMetadataCache.TryAdd(type, typeMeta);
-                    }
-                }
-            }
-            return typeMeta;
-        }
-
-
-        NbtTag SerializePrimitiveType(string tagName, object value) {
+        static NbtTag SerializeDirectlyMappedType(string tagName, object value) {
             Type valueType = value.GetType();
             if (valueType == typeof(byte)) {
                 return new NbtByte(tagName, (byte)value);
@@ -114,13 +44,15 @@ namespace fNbt.Serialization {
                 return new NbtShort(tagName, (short)(ushort)value);
             } else if (valueType == typeof(char)) {
                 return new NbtShort(tagName, (short)(char)value);
+            } else if (valueType == typeof(decimal)) {
+                return new NbtDouble(tagName, (double)(decimal)value);
             } else {
-                throw new NotSupportedException();
+                throw new NotSupportedException(valueType + " is not a directly mapped type");
             }
         }
 
 
-        NbtTag SerializeList(string tagName, IList valueAsArray, Type elementType, NullPolicy elementNullPolicy) {
+        NbtTag SerializeIList(string tagName, IList valueAsArray, Type elementType, NullPolicy elementNullPolicy) {
             NbtTagType listType;
             if (elementType == typeof(byte) || elementType == typeof(sbyte) || elementType == typeof(bool)) {
                 listType = NbtTagType.Byte;
@@ -149,7 +81,7 @@ namespace fNbt.Serialization {
             if (elementType.IsPrimitive) {
                 // speedy serialization for basic types
                 for (int i = 0; i < valueAsArray.Count; i++) {
-                    list.Add(SerializePrimitiveType(null, valueAsArray[i]));
+                    list.Add(SerializeDirectlyMappedType(null, valueAsArray[i]));
                 }
             } else if (SerializationUtil.IsDirectlyMappedType(elementType)) {
                 // speedy serialization for directly-mapped types
@@ -160,7 +92,8 @@ namespace fNbt.Serialization {
                             case NullPolicy.Error:
                                 throw new NullReferenceException("Null elements not allowed for tag " + tagName);
                             case NullPolicy.InsertDefault:
-                                list.Add(Serialize(SerializationUtil.GetDefaultValue(elementType), null)); // TODO: skip iserializable
+                                list.Add(Serialize(SerializationUtil.GetDefaultValue(elementType), null));
+                                    // TODO: skip iserializable
                                 break;
                             case NullPolicy.Ignore:
                                 continue;
@@ -171,7 +104,6 @@ namespace fNbt.Serialization {
                 }
             } else {
                 // serialize complex types
-                var innerSerializer = new NbtSerializer(elementType);
                 for (int i = 0; i < valueAsArray.Count; i++) {
                     var value = valueAsArray[i];
                     if (value == null) {
@@ -185,7 +117,7 @@ namespace fNbt.Serialization {
                                 break;
                         }
                     } else {
-                        list.Add(innerSerializer.Serialize(valueAsArray[i], null));
+                        list.Add(Serialize(valueAsArray[i], null));
                     }
                 }
             }
@@ -200,26 +132,21 @@ namespace fNbt.Serialization {
                     return result;
                 }
             }
-            return NullPolicy.Default;
+            return options.DefaultNullPolicy;
         }
 
 
-        public NbtTag Serialize(object value) {
-            return Serialize(value, "");
-        }
-
-
-        public NbtTag Serialize(object value, string tagName,
-                                NullPolicy thisNullPolicy = NullPolicy.Error,
-                                NullPolicy elementNullPolicy = NullPolicy.Error) {
-            if (compiledSerializeDelegate != null) {
-                return compiledSerializeDelegate(tagName, value);
-            }
-
+        /// <summary> Serialize a single value of any type to a new tag. </summary>
+        [NotNull]
+        NbtTag Serialize([CanBeNull] object value, [CanBeNull] string tagName,
+            NullPolicy thisNullPolicy = NullPolicy.Default, NullPolicy elementNullPolicy = NullPolicy.Default) {
             if (value == null) {
                 switch (thisNullPolicy) {
                     case NullPolicy.InsertDefault:
-                        return new NbtCompound(tagName);
+                        Type tagType = SerializationUtil.FindTagType(contractType);
+                        NbtTag tag = SerializationUtil.ConstructTag(tagType);
+                        tag.Name = tagName;
+                        return tag;
                     default:
                         throw new ArgumentNullException("value");
                 }
@@ -227,7 +154,7 @@ namespace fNbt.Serialization {
 
             Type realType = value.GetType();
             if (realType.IsPrimitive) {
-                return SerializePrimitiveType(tagName, value);
+                return SerializeDirectlyMappedType(tagName, value);
             }
 
             var valueAsString = value as string;
@@ -249,19 +176,19 @@ namespace fNbt.Serialization {
                 }
 
                 Type elementType = realType.GetElementType();
-                return SerializeList(tagName, valueAsArray, elementType, elementNullPolicy);
+                return SerializeIList(tagName, valueAsArray, elementType, elementNullPolicy);
             }
 
             // value is INbtSerializable
             var serializable = value as INbtSerializable;
-            if ( serializable != null) {
+            if (serializable != null) {
                 return serializable.Serialize(tagName);
             }
 
             // value is IList<?>
             if (realType.IsGenericType && realType.GetGenericTypeDefinition() == typeof(List<>)) {
                 Type listType = realType.GetGenericArguments()[0];
-                return SerializeList(tagName, (IList)value, listType, elementNullPolicy);
+                return SerializeIList(tagName, (IList)value, listType, elementNullPolicy);
             }
 
             // TODO: value is IDictionary<string,?>
@@ -301,12 +228,11 @@ namespace fNbt.Serialization {
                 string propTagName = typeMetadata.PropertyTagNames[property];
                 NbtTag tag;
                 if (propType.IsPrimitive) {
-                    tag = SerializePrimitiveType(propTagName, propValue);
+                    tag = SerializeDirectlyMappedType(propTagName, propValue);
                 } else if (propType.IsArray || propType == typeof(string)) {
                     tag = Serialize(propValue, propTagName);
                 } else {
-                    var innerSerializer = new NbtSerializer(property.PropertyType, options);
-                    tag = innerSerializer.Serialize(propValue, propTagName);
+                    tag = Serialize(propValue, propTagName);
                 }
                 compound.Add(tag);
             }
@@ -350,9 +276,9 @@ namespace fNbt.Serialization {
         }
 
 
-        public object Deserialize(NbtTag tag, bool skipInterfaceCheck = false) {
+        object Deserialize(NbtTag tag, bool skipInterfaceCheck = false) {
             if (!skipInterfaceCheck && typeof(INbtSerializable).IsAssignableFrom(contractType)) {
-                var instance = (INbtSerializable)Activator.CreateInstance(contractType); // TODO: options.constructor
+                var instance = (INbtSerializable)Activator.CreateInstance(contractType);
                 instance.Deserialize(tag);
                 return instance;
             }
@@ -401,9 +327,8 @@ namespace fNbt.Serialization {
                             array.SetValue(DeserializeSimpleType(list[i]), i);
                         }
                     } else {
-                        var innerSerializer = new NbtSerializer(type, options);
                         for (int i = 0; i < array.Length; i++) {
-                            array.SetValue(innerSerializer.Deserialize(list[i]), i);
+                            array.SetValue(Deserialize(list[i]), i);
                         }
                     }
                     return array;
@@ -424,7 +349,7 @@ namespace fNbt.Serialization {
                             data = Activator.CreateInstance(property.PropertyType);
                             ((INbtSerializable)data).Deserialize(node);
                         } else {
-                            data = new NbtSerializer(property.PropertyType, options).Deserialize(node);
+                            data = Deserialize(node);
                         }
 
                         // Some manual casting for edge cases
@@ -434,6 +359,7 @@ namespace fNbt.Serialization {
                         if (property.PropertyType == typeof(sbyte) && data is byte) {
                             data = (sbyte)(byte)data;
                         }
+                        // TODO: map direct types
 
                         if (property.PropertyType.IsInstanceOfType(data)) {
                             property.SetValue(resultObject, data, null);
@@ -447,23 +373,6 @@ namespace fNbt.Serialization {
                 default:
                     return DeserializeSimpleType(tag);
             }
-        }
-    }
-
-
-    // Convenience class for working with strongly-typed NbtSerializers. Handy if type is known at compile time.
-    public class NbtSerializer<T> : NbtSerializer {
-        internal NbtSerializer()
-            : base(typeof(T)) { }
-
-
-        public NbtTag MakeTag(T obj) {
-            return base.MakeTag(obj);
-        }
-
-
-        public T MakeObject(NbtTag tag) {
-            return (T)base.MakeObject(tag);
         }
     }
 }

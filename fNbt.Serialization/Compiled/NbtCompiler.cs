@@ -62,7 +62,6 @@ namespace fNbt.Serialization.Compiled {
         static readonly Dictionary<Type, Expression> ParentSerializers = new Dictionary<Type, Expression>();
 
 
-
         [NotNull]
         public static NbtSerialize GetSerializer([NotNull] Type t) {
             if (t == null) throw new ArgumentNullException("t");
@@ -79,7 +78,7 @@ namespace fNbt.Serialization.Compiled {
         [NotNull]
         public static NbtDeserialize GetDeserializer([NotNull] Type t) {
             if (t == null) throw new ArgumentNullException("t");
-            lock (SerializerLock) {
+            lock (DeserializerLock) {
                 NbtDeserialize result;
                 if (!DeserializerCache.TryGetValue(t, out result)) {
                     result = CreateDeserializer(t);

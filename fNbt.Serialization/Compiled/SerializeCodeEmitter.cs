@@ -545,7 +545,6 @@ namespace fNbt.Serialization.Compiled {
         }
 
 
-
         // Finds a NbtTagType for given value type.
         // NbtTagType.Compound is returned for any value type that is not a primitive/enum/array/IList<T>
         // For example: int -> NbtTagType.Int; List<string> -> NbtTagType.List; etc
@@ -554,7 +553,7 @@ namespace fNbt.Serialization.Compiled {
 
             Type directTagType;
             if (SerializationUtil.TypeToTagMap.TryGetValue(convertedType, out directTagType)) {
-                return SerializationUtil.TypeToTagTypeEnum[directTagType];
+                return SerializationUtil.FindTagTypeEnum(directTagType);
             }
 
             Type iListImpl = SerializationUtil.GetGenericInterfaceImpl(rawValueType, typeof(IList<>));
