@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using fNbt.Serialization.Compiled;
 
 namespace fNbt.Serialization {
     public static class NbtConvert {
@@ -22,7 +20,8 @@ namespace fNbt.Serialization {
 
 
         public static NbtTag MakeTag(Type type, object obj, string tagName, SerializerOptions options) {
-            throw new NotImplementedException();
+            NbtTag tag = SerializationUtil.ConstructTag(type);
+            return FillTag(type, obj, tag, options);
         }
 
 
@@ -42,7 +41,8 @@ namespace fNbt.Serialization {
 
 
         public static NbtTag FillTag(Type type, object obj, NbtTag tag, SerializerOptions options) {
-            throw new NotImplementedException();
+            new DynamicConverter(type, options).FillTag(obj, tag);
+            return tag;
         }
 
 
@@ -64,8 +64,8 @@ namespace fNbt.Serialization {
 
 
         public static object MakeObject(Type type, NbtTag tag, SerializerOptions options) {
-            // TODO: create a new object with data from given NBT tag
-            throw new NotImplementedException();
+            object instance = Activator.CreateInstance(type);
+            return FillObject(type, instance, tag, options);
         }
 
 
@@ -85,18 +85,20 @@ namespace fNbt.Serialization {
 
 
         public static object FillObject(Type type, object obj, NbtTag tag, SerializerOptions options) {
-            // TODO: populate existing object with data from given NBT tag
-            throw new NotImplementedException();
+            new DynamicConverter(type, options).FillObject(obj, tag);
+            return obj;
         }
 
 
         //==== MAKING CONVERTERS ==================================================
+
         public static NbtConverter<T> MakeConverter<T>() {
-            return MakeConverter<T>(SerializerOptions.Defaults);
+            return new NbtConverter<T>();
         }
 
-        public static NbtConverter<T> MakeConverter<T>(SerializerOptions options) {
-            throw new NotImplementedException();
+
+        public static NbtConverter MakeConverter(Type valueType) {
+            return new NbtConverter(valueType);
         }
     }
 }

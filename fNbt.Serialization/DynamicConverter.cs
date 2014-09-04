@@ -18,6 +18,19 @@ namespace fNbt.Serialization {
         }
 
 
+        public void FillTag([CanBeNull] object obj, [NotNull] NbtTag tag) {
+            if (tag == null) throw new ArgumentNullException("tag");
+            throw new NotImplementedException();
+        }
+
+
+        public void FillObject([NotNull] object obj, [NotNull] NbtTag tag) {
+            if (obj == null) throw new ArgumentNullException("obj");
+            if (tag == null) throw new ArgumentNullException("tag");
+            throw new NotImplementedException();
+        }
+
+
         static NbtTag SerializeDirectlyMappedType(string tagName, object value) {
             Type valueType = value.GetType();
             if (valueType == typeof(byte)) {
