@@ -39,6 +39,16 @@ namespace fNbt {
         }
 
 
+        /// <summary> Creates a copy of given NbtInt tag. </summary>
+        /// <param name="other"> Tag to copy. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
+        public NbtInt([NotNull] NbtInt other) {
+            if (other == null) throw new ArgumentNullException("other");
+            Name = other.Name;
+            Value = other.Value;
+        }
+
+
         internal override bool ReadTag(NbtBinaryReader readStream) {
             if (readStream.Selector != null && !readStream.Selector(this)) {
                 readStream.ReadInt32();
@@ -65,6 +75,11 @@ namespace fNbt {
 
         internal override void WriteData(NbtBinaryWriter writeStream) {
             writeStream.Write(Value);
+        }
+
+
+        public override object Clone() {
+            return new NbtInt(Name, Value);
         }
 
 

@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 namespace fNbt {
     /// <summary> Base class for different kinds of named binary tags. </summary>
-    public abstract class NbtTag {
+    public abstract class NbtTag : ICloneable {
         /// <summary> Parent compound tag, either NbtList or NbtCompound, if any.
         /// May be <c>null</c> for detached tags. </summary>
         [CanBeNull]
@@ -347,6 +347,11 @@ namespace fNbt {
         public override string ToString() {
             return ToString(DefaultIndentString);
         }
+
+
+        /// <summary> Creates a deep copy of this tag. </summary>
+        /// <returns> A new NbtTag object that is a deep copy of this instance. </returns>
+        public abstract object Clone();
 
 
         /// <summary> Prints contents of this tag, and any child tags, to a string.

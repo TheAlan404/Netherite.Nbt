@@ -138,6 +138,19 @@ namespace fNbt {
             }
         }
 
+        
+        /// <summary> Creates a deep copy of given NbtList. </summary>
+        /// <param name="other"> An existing NbtList to copy. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
+        public NbtList([NotNull] NbtList other) {
+            if (other == null) throw new ArgumentNullException("other");
+            Name = other.Name;
+            listType = other.listType;
+            foreach ( NbtTag tag in other.tags) {
+                tags.Add((NbtTag)tag.Clone());
+            }
+        }
+
 
         /// <summary> Gets or sets the tag at the specified index. </summary>
         /// <returns> The tag at the specified index. </returns>
@@ -567,6 +580,11 @@ namespace fNbt {
         }
 
         #endregion
+
+
+        public override object Clone() {
+            return new NbtList(this);
+        }
 
 
         internal override void PrettyPrint(StringBuilder sb, string indentString, int indentLevel) {

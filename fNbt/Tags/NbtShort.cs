@@ -39,6 +39,16 @@ namespace fNbt {
         }
 
 
+        /// <summary> Creates a copy of given NbtShort tag. </summary>
+        /// <param name="other"> Tag to copy. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
+        public NbtShort([NotNull] NbtShort other) {
+            if (other == null) throw new ArgumentNullException("other");
+            Name = other.Name;
+            Value = other.Value;
+        }
+
+
         #region Reading / Writing
 
         internal override bool ReadTag(NbtBinaryReader readStream) {
@@ -70,6 +80,11 @@ namespace fNbt {
         }
 
         #endregion
+
+
+        public override object Clone() {
+            return new NbtShort(Name, Value);
+        }
 
 
         internal override void PrettyPrint(StringBuilder sb, string indentString, int indentLevel) {

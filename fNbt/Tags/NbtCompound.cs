@@ -12,7 +12,7 @@ namespace fNbt {
             get { return NbtTagType.Compound; }
         }
 
-        readonly Dictionary<string, NbtTag> tags = new Dictionary<string, NbtTag>();
+        readonly Dictionary<string, NbtTag> tags;
 
 
         /// <summary> Creates an empty unnamed NbtByte tag. </summary>
@@ -22,6 +22,7 @@ namespace fNbt {
         /// <summary> Creates an empty NbtByte tag with the given name. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtCompound([CanBeNull] string tagName) {
+            tags = new Dictionary<string, NbtTag>();
             Name = tagName;
         }
 
@@ -45,6 +46,18 @@ namespace fNbt {
             Name = tagName;
             foreach (NbtTag tag in tags) {
                 Add(tag);
+            }
+        }
+
+
+        /// <summary> Creates a deep copy of given NbtCompound. </summary>
+        /// <param name="other"> An existing NbtCompound to copy. May not be <c>null</c>. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
+        public NbtCompound([NotNull] NbtCompound other) {
+            if (other == null) throw new ArgumentNullException("other");
+            Name = other.Name;
+            foreach (NbtTag tag in other.tags.Values) {
+                Add((NbtTag)tag.Clone());
             }
         }
 
@@ -514,6 +527,11 @@ namespace fNbt {
         }
 
         #endregion
+
+
+        public override object Clone() {
+            return new NbtCompound(this);
+        }
 
 
         internal override void PrettyPrint(StringBuilder sb, string indentString, int indentLevel) {
