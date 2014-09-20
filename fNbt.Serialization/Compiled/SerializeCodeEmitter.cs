@@ -71,6 +71,8 @@ namespace fNbt.Serialization.Compiled {
 
         // Generates an expression that creates an NbtTag for given property of a directly-mappable types.
         // Directly-mappable types are: primitives, enums, byte[], int[], and string.
+        // HandlePrimitiveOrEnum is actually more efficient (and preferred by NbtCompiler) for primitives and enums,
+        // because it skips boxing and NullPolicy checks. This one is pretty much only used for byte[]/int[]/string.
         public override Expression HandleDirectlyMappedType(string tagName, PropertyInfo property, NullPolicy selfPolicy) {
             // declare a local var, which will hold the property's value
             ParameterExpression varValue = Expression.Parameter(property.PropertyType);
