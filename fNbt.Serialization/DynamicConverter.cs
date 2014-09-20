@@ -6,31 +6,37 @@ using JetBrains.Annotations;
 
 namespace fNbt.Serialization {
     internal struct DynamicConverter {
-        readonly Type contractType;
-        readonly SerializerOptions options;
+        readonly Type type;
+        readonly ConversionOptions options;
         readonly TypeMetadata typeMetadata;
 
 
-        public DynamicConverter(Type contractType, SerializerOptions options) {
-            this.contractType = contractType;
+        public DynamicConverter([NotNull] Type type, [NotNull] ConversionOptions options) {
+            if (type == null) throw new ArgumentNullException("type");
+            if (options == null) throw new ArgumentNullException("options");
+            this.type = type;
             this.options = options;
-            typeMetadata = TypeMetadata.ReadTypeMetadata(contractType);
+            typeMetadata = TypeMetadata.ReadTypeMetadata(type);
         }
 
 
-        public void FillTag([CanBeNull] object obj, [NotNull] NbtTag tag) {
+        public NbtTag FillTag([CanBeNull] object obj, [NotNull] NbtTag tag) {
             if (tag == null) throw new ArgumentNullException("tag");
+            throw new NotImplementedException();
         }
 
 
-        public void FillObject([NotNull] object obj, [NotNull] NbtTag tag) {
+        public object FillObject([NotNull] object obj, [NotNull] NbtTag tag) {
             if (obj == null) throw new ArgumentNullException("obj");
             if (tag == null) throw new ArgumentNullException("tag");
             throw new NotImplementedException();
         }
 
 
-        static NbtTag MakePrimitive(string tagName, object value, Type type) {
+        static NbtTag HandlePrimitiveOrEnum(string tagName, object value, Type type) {
+            Type convertedType = SerializationUtil.GetConvertedType(type);
+
+
             // Native NBT types
             if (type == typeof(int)) {
                 return new NbtInt(tagName, (int)value);
@@ -70,11 +76,15 @@ namespace fNbt.Serialization {
 
 
         bool IsIgnored(PropertyInfo prop) {
-            bool isIgnoredByOptions = (options.IgnoredProperties != null) &&
-                                      options.IgnoredProperties.Contains(prop.Name);
-            if (isIgnoredByOptions) return true;
-            return (typeMetadata.IgnoredProperties != null) &&
-                   typeMetadata.IgnoredProperties.Contains(prop);
+            if ((options.IgnoredProperties != null) &&
+                options.IgnoredProperties.Contains(prop.Name)) {
+                // ignored by options
+                return true;
+            } else {
+                // ignored by type attributes
+                return (typeMetadata.IgnoredProperties != null) &&
+                       typeMetadata.IgnoredProperties.Contains(prop);
+            }
         }
 
 

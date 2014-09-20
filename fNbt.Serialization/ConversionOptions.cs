@@ -2,10 +2,10 @@ using System;
 using System.Linq;
 
 namespace fNbt.Serialization {
-    public class SerializerOptions : IEquatable<SerializerOptions> {
-        public static SerializerOptions Defaults { get; private set; }
-        static SerializerOptions() {
-            Defaults = new SerializerOptions();
+    public class ConversionOptions : IEquatable<ConversionOptions> {
+        public static ConversionOptions Defaults { get; private set; }
+        static ConversionOptions() {
+            Defaults = new ConversionOptions();
         }
 
 
@@ -15,7 +15,7 @@ namespace fNbt.Serialization {
         public bool IgnoreISerializable { get; set; }
         public string[] IgnoredProperties { get; set; }
 
-        public SerializerOptions() {
+        public ConversionOptions() {
             DefaultNullPolicy = NullPolicy.Error;
             DefaultElementNullPolicy = NullPolicy.Error;
             DefaultMissingPolicy = MissingPolicy.Error;
@@ -35,7 +35,7 @@ namespace fNbt.Serialization {
             }
         }
 
-        public bool Equals(SerializerOptions other) {
+        public bool Equals(ConversionOptions other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return DefaultNullPolicy == other.DefaultNullPolicy &&
@@ -49,7 +49,7 @@ namespace fNbt.Serialization {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((SerializerOptions)obj);
+            return Equals((ConversionOptions)obj);
         }
     }
 }

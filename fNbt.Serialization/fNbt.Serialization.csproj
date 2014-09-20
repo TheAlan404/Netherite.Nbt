@@ -55,7 +55,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerializationUtil.cs" />
     <Compile Include="Compiled\SerializeCodeEmitter.cs" />
-    <Compile Include="SerializerOptions.cs" />
+    <Compile Include="ConversionOptions.cs" />
     <Compile Include="TagNameAttribute.cs" />
     <Compile Include="TypeMetadata.cs" />
   </ItemGroup>

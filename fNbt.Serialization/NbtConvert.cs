@@ -4,89 +4,92 @@ namespace fNbt.Serialization {
     public static class NbtConvert {
         //==== OBJECT TO TAG ==================================================
 
-        public static NbtTag MakeTag<T>(T obj, string tagName) {
-            return MakeTag(typeof(T), obj, tagName, SerializerOptions.Defaults);
+        public static NbtTag MakeTag<T>(string tagName, T obj) {
+            return MakeTag(tagName, obj, typeof(T), ConversionOptions.Defaults);
         }
 
 
-        public static NbtTag MakeTag<T>(T obj, string tagName, SerializerOptions options) {
-            return MakeTag(typeof(T), obj, tagName, options);
+        public static NbtTag MakeTag<T>(string tagName, T obj, ConversionOptions options) {
+            return MakeTag(tagName, obj, typeof(T), options);
         }
 
 
-        public static NbtTag MakeTag(Type type, object obj, string tagName) {
-            return MakeTag(type, obj, tagName, SerializerOptions.Defaults);
+        public static NbtTag MakeTag(string tagName, object obj, Type type) {
+            return MakeTag(tagName, obj, type, ConversionOptions.Defaults);
         }
 
 
-        public static NbtTag MakeTag(Type type, object obj, string tagName, SerializerOptions options) {
+        public static NbtTag MakeTag(string tagName, object obj, Type type, ConversionOptions options) {
             NbtTag tag = SerializationUtil.ConstructTag(type);
-            return FillTag(type, obj, tag, options);
+            if (tag != null) {
+                tag.Name = tagName;
+                return FillTag(tag, obj, type, options);
+            } else {
+                throw new NotSupportedException("Conversion of " + type + " objects is not supported.");
+            }
         }
 
 
-        public static NbtTag FillTag<T>(T obj, NbtTag tag) {
-            return FillTag(typeof(T), obj, tag, SerializerOptions.Defaults);
+        public static NbtTag FillTag<T>(NbtTag tag, T obj) {
+            return FillTag(tag, obj, typeof(T), ConversionOptions.Defaults);
         }
 
 
-        public static NbtTag FillTag<T>(T obj, NbtTag tag, SerializerOptions options) {
-            return FillTag(typeof(T), obj, tag, options);
+        public static NbtTag FillTag<T>(NbtTag tag, T obj, ConversionOptions options) {
+            return FillTag(tag, obj, typeof(T), options);
         }
 
 
-        public static NbtTag FillTag(Type type, object obj, NbtTag tag) {
-            return FillTag(type, obj, tag, SerializerOptions.Defaults);
+        public static NbtTag FillTag(NbtTag tag, object obj, Type type ) {
+            return FillTag(tag, obj, type, ConversionOptions.Defaults);
         }
 
 
-        public static NbtTag FillTag(Type type, object obj, NbtTag tag, SerializerOptions options) {
-            new DynamicConverter(type, options).FillTag(obj, tag);
-            return tag;
+        public static NbtTag FillTag(NbtTag tag, object obj, Type type, ConversionOptions options) {
+            return new DynamicConverter(type, options).FillTag(obj, tag);
         }
 
 
         //==== TAG TO OBJECT ==================================================
 
         public static T MakeObject<T>(NbtTag tag) {
-            return (T)MakeObject(typeof(T), tag, SerializerOptions.Defaults);
+            return (T)MakeObject(tag, typeof(T), ConversionOptions.Defaults);
         }
 
 
-        public static T MakeObject<T>(NbtTag tag, SerializerOptions options) {
-            return (T)MakeObject(typeof(T), tag, options);
+        public static T MakeObject<T>(NbtTag tag, ConversionOptions options) {
+            return (T)MakeObject(tag, typeof(T), options);
         }
 
 
-        public static object MakeObject(Type type, NbtTag tag) {
-            return MakeObject(type, tag, SerializerOptions.Defaults);
+        public static object MakeObject(NbtTag tag, Type type) {
+            return MakeObject(tag, type, ConversionOptions.Defaults);
         }
 
 
-        public static object MakeObject(Type type, NbtTag tag, SerializerOptions options) {
-            object instance = Activator.CreateInstance(type);
-            return FillObject(type, instance, tag, options);
+        public static object MakeObject(NbtTag tag, Type type, ConversionOptions options) {
+            object instance = Activator.CreateInstance(type); // todo: optimize
+            return FillObject(tag, instance, type, options);
         }
 
 
         public static T FillObject<T>(NbtTag tag, T obj) {
-            return (T)FillObject(typeof(T), obj, tag, SerializerOptions.Defaults);
+            return (T)FillObject(tag, obj, typeof(T), ConversionOptions.Defaults);
         }
 
 
-        public static T FillObject<T>(NbtTag tag, T obj, SerializerOptions options) {
-            return (T)FillObject(typeof(T), obj, tag, options);
+        public static T FillObject<T>(NbtTag tag, T obj, ConversionOptions options) {
+            return (T)FillObject(tag, obj, typeof(T), options);
         }
 
 
-        public static object FillObject(Type type, NbtTag tag, object obj) {
-            return FillObject(type, obj, tag, SerializerOptions.Defaults);
+        public static object FillObject(NbtTag tag, object obj, Type type) {
+            return FillObject(tag, obj, type, ConversionOptions.Defaults);
         }
 
 
-        public static object FillObject(Type type, object obj, NbtTag tag, SerializerOptions options) {
-            new DynamicConverter(type, options).FillObject(obj, tag);
-            return obj;
+        public static object FillObject(NbtTag tag, object obj, Type type, ConversionOptions options) {
+            return new DynamicConverter(type, options).FillObject(obj, tag);
         }
 
 
