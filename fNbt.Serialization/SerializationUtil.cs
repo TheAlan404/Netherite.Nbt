@@ -184,7 +184,7 @@ namespace fNbt.Serialization {
         };
 
 
-        public static Type FintTagTypeForValue(Type valueType) {
+        public static Type FindTagTypeForValue(Type valueType) {
             if (valueType == null) throw new ArgumentNullException("valueType");
 
             Type convertedValueType = GetConvertedType(valueType);
@@ -253,7 +253,7 @@ namespace fNbt.Serialization {
         /// <returns> A blank NbtTag -OR- null if given valueType already derives from NbtTag. </returns>
         [CanBeNull]
         public static NbtTag ConstructTag([NotNull] Type valueType) {
-            Type tagType = FintTagTypeForValue(valueType);
+            Type tagType = FindTagTypeForValue(valueType);
             if (tagType != null) {
                 return TagConstructors[tagType]();
             } else {

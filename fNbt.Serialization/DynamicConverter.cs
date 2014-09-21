@@ -1,12 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
 
 namespace fNbt.Serialization {
     internal struct DynamicConverter {
+        static readonly object[] EmptyParams = new object[0];
+
         readonly Type type;
         readonly ConversionOptions options;
         readonly TypeMetadata typeMetadata;
@@ -109,28 +111,106 @@ namespace fNbt.Serialization {
         }
 
 
+        // Handles INbtConvertible, NbtTag, and NbtFile
         [CanBeNull]
-        NbtTag HandleINbtSerializable([CanBeNull] string tagName, [CanBeNull] INbtSerializable value,
-                                      [NotNull] PropertyInfo pinfo) {
+        NbtTag HandleNbtConvertible<T>([CanBeNull] string tagName, [CanBeNull] T value, [NotNull] PropertyInfo pinfo,
+                               Func<string,T,NbtTag> conversionFunc, Func<string,NbtTag> defaultValueFunc ) {
             if (pinfo == null) throw new ArgumentNullException("pinfo");
             if (value == null) {
                 NullPolicy np = GetNullPolicy(pinfo);
                 switch (np) {
                     case NullPolicy.InsertDefault:
-                        return new NbtCompound(tagName);
+                        return defaultValueFunc(tagName);
                     case NullPolicy.Ignore:
                         return null;
                     default: // Default and Error
                         throw MakeNullException(pinfo);
                 }
             }
-            return value.Serialize(tagName);
+            return conversionFunc(tagName,value);
+        }
+
+
+        NbtTag HandleArray([CanBeNull] string tagName, [CanBeNull] Array value, [NotNull] PropertyInfo pinfo) {
+            if (pinfo == null) throw new ArgumentNullException("pinfo");
+
+            if (value == null) {
+                NullPolicy np = GetNullPolicy(pinfo);
+                switch (np) {
+                    case NullPolicy.Ignore:
+                        return null;
+                    case NullPolicy.InsertDefault:
+                        return MakeEmptyList(tagName, pinfo.PropertyType.GetElementType());
+                    default:
+                        throw MakeNullException(pinfo);
+                }
+            }
+            
+            if (value.Length == 0) {
+                return MakeEmptyList(tagName, pinfo.PropertyType.GetElementType());
+            }
+
+            NullPolicy elementNullPolicy = GetElementNullPolicy(pinfo);
+            NbtList newList = new NbtList(tagName);
+            for (int i = 0; i < value.Length; i++) {
+                newList.Add(HandleElement(null, value.GetValue(i), elementNullPolicy));
+            }
+            return newList;
+        }
+
+
+        NbtTag HandleIList([CanBeNull] string tagName, Type iListImpl, object value, PropertyInfo pinfo) {
+            Type elementType = iListImpl.GetGenericArguments()[0];
+            if (value == null) {
+                NullPolicy np = GetNullPolicy(pinfo);
+                switch (np) {
+                    case NullPolicy.Ignore:
+                        return null;
+                    case NullPolicy.InsertDefault:
+                        return MakeEmptyList(tagName, elementType);
+                    default:
+                        throw MakeNullException(pinfo);
+                }
+            }
+
+            // Get list length
+            MethodInfo countGetter = SerializationUtil.GetGenericInterfaceMethodImpl(
+                    pinfo.PropertyType, typeof(ICollection<>), "get_Count", Type.EmptyTypes);
+            int count = (int)countGetter.Invoke(value, EmptyParams);
+            if (count == 0) {
+                return MakeEmptyList(tagName, elementType);
+            }
+
+            // TODO: See if there is a faster way to get elements from an IList<T>
+            MethodInfo itemGetter = SerializationUtil.GetGenericInterfaceMethodImpl(
+                pinfo.PropertyType, iListImpl, "get_Item", new[] { typeof(int) });
+            object[] indexHolder = new object[1];
+
+            NullPolicy elementNullPolicy = GetElementNullPolicy(pinfo);
+            NbtList newList = new NbtList(tagName);
+            for (int i = 0; i < count; i++) {
+                indexHolder[0] = i;
+                newList.Add(HandleElement(null, itemGetter.Invoke(value, indexHolder), elementNullPolicy));
+            }
+            return newList;
+        }
+
+
+
+        static NbtList MakeEmptyList(string tagName, Type rawElementType) {
+            Type elTagTypeHandle = SerializationUtil.FindTagTypeForValue(rawElementType);
+            NbtTagType listType = SerializationUtil.FindTagTypeEnum(elTagTypeHandle);
+            return new NbtList(tagName, listType);
+        }
+
+
+        NbtTag HandleElement(string tagName, object value, NullPolicy nullPolicy) {
+            throw new NotImplementedException();
         }
 
 
         static SerializationException MakeNullException(PropertyInfo pinfo) {
-            string errorMsg =
-                            String.Format(
+            string errorMsg = String.Format(
                     "Cannot serialize property {0} of given {1} object: Value is null, and NullPolicy is set to Error.",
                     pinfo.Name,
                     pinfo.DeclaringType);

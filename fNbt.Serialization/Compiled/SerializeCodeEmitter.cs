@@ -129,7 +129,9 @@ namespace fNbt.Serialization.Compiled {
             // Getter for the property value
             Expression getPropertyExpr = Expression.MakeMemberAccess(argValue, property);
             
+            // Find the element type (the 'T' in IList<T>)
             Type elementType = iListImpl.GetGenericArguments()[0];
+
             Expression tagNameExpr = Expression.Constant(tagName, typeof(string));
             string selfNullMsg = MakePropertyNullMessage(property);
             string elementNullMsg = MakeElementNullMessage(property);
@@ -204,7 +206,7 @@ namespace fNbt.Serialization.Compiled {
             } else {
                 // For non-array IList<> types, grab this.Count getter (which maps to get_Count())
                 countGetterImpl = SerializationUtil.GetGenericInterfaceMethodImpl(
-                    listType, typeof(ICollection<>), "get_Count", new Type[0]);
+                    listType, typeof(ICollection<>), "get_Count", Type.EmptyTypes);
                 // ...and the getter for indexer this[int], which maps to get_Item(int)
                 itemGetterImpl = SerializationUtil.GetGenericInterfaceMethodImpl(
                     listType, typeof(IList<>), "get_Item", new[] { typeof(int) });
