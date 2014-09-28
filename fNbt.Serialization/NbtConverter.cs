@@ -59,7 +59,7 @@ namespace fNbt.Serialization {
         }
 
 
-        public T MakeObject(NbtTag tag) {
+        new public T MakeObject(NbtTag tag) {
             return (T)base.MakeObject(tag);
         }
     }

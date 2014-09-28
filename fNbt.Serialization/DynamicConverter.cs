@@ -159,8 +159,13 @@ namespace fNbt.Serialization {
         }
 
 
-        NbtTag HandleIList([CanBeNull] string tagName, Type iListImpl, object value, PropertyInfo pinfo) {
-            Type elementType = iListImpl.GetGenericArguments()[0];
+        NbtTag HandleIList([CanBeNull] string tagName, object value, PropertyInfo pinfo) {
+            return HandleIListInner(tagName, pinfo, (dynamic)value);
+        }
+        
+        
+        NbtTag HandleIListInner<T>([CanBeNull] string tagName, PropertyInfo pinfo, List<T> value ) {
+            Type elementType = typeof(T);
             if (value == null) {
                 NullPolicy np = GetNullPolicy(pinfo);
                 switch (np) {
@@ -174,27 +179,18 @@ namespace fNbt.Serialization {
             }
 
             // Get list length
-            MethodInfo countGetter = SerializationUtil.GetGenericInterfaceMethodImpl(
-                    pinfo.PropertyType, typeof(ICollection<>), "get_Count", Type.EmptyTypes);
-            int count = (int)countGetter.Invoke(value, EmptyParams);
+            int count = value.Count;
             if (count == 0) {
                 return MakeEmptyList(tagName, elementType);
             }
-
-            // TODO: See if there is a faster way to get elements from an IList<T>
-            MethodInfo itemGetter = SerializationUtil.GetGenericInterfaceMethodImpl(
-                pinfo.PropertyType, iListImpl, "get_Item", new[] { typeof(int) });
-            object[] indexHolder = new object[1];
-
+            
             NullPolicy elementNullPolicy = GetElementNullPolicy(pinfo);
             NbtList newList = new NbtList(tagName);
-            for (int i = 0; i < count; i++) {
-                indexHolder[0] = i;
-                newList.Add(HandleElement(null, itemGetter.Invoke(value, indexHolder), elementNullPolicy));
+            foreach (T element in value) {
+                newList.Add(HandleElement(null, element, elementNullPolicy));
             }
             return newList;
         }
-
 
 
         static NbtList MakeEmptyList(string tagName, Type rawElementType) {
