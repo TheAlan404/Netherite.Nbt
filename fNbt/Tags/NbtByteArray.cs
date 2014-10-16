@@ -31,7 +31,7 @@ namespace fNbt {
 
         /// <summary> Creates an unnamed NbtByte tag, containing an empty array of bytes. </summary>
         public NbtByteArray()
-            : this(null, ZeroArray) {}
+            : this((string)null) {}
 
 
         /// <summary> Creates an unnamed NbtByte tag, containing the given array of bytes. </summary>
@@ -45,8 +45,10 @@ namespace fNbt {
 
         /// <summary> Creates an NbtByte tag with the given name, containing an empty array of bytes. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
-        public NbtByteArray([CanBeNull] string tagName)
-            : this(tagName, ZeroArray) {}
+        public NbtByteArray([CanBeNull] string tagName) {
+            if (tagName == null) throw new ArgumentNullException("tagName");
+            bytes = ZeroArray;
+        }
 
 
         /// <summary> Creates an NbtByte tag with the given name, containing the given array of bytes. </summary>
@@ -58,7 +60,7 @@ namespace fNbt {
         public NbtByteArray([CanBeNull] string tagName, [NotNull] byte[] value) {
             if (value == null) throw new ArgumentNullException("value");
             Name = tagName;
-            Value = (byte[])value.Clone();
+            bytes = (byte[])value.Clone();
         }
 
 
@@ -69,7 +71,7 @@ namespace fNbt {
         public NbtByteArray([NotNull] NbtByteArray other) {
             if (other == null) throw new ArgumentNullException("other");
             Name = other.Name;
-            Value = (byte[])other.Value.Clone();
+            bytes = (byte[])other.Value.Clone();
         }
 
 
@@ -123,7 +125,7 @@ namespace fNbt {
 
 
         public override object Clone() {
-            return new NbtByteArray(Name,Value);
+            return new NbtByteArray(Name, Value);
         }
 
 

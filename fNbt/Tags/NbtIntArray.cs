@@ -32,7 +32,7 @@ namespace fNbt {
 
         /// <summary> Creates an unnamed NbtIntArray tag, containing an empty array of ints. </summary>
         public NbtIntArray()
-            : this(null, ZeroArray) {}
+            : this((string)null) {}
 
 
         /// <summary> Creates an unnamed NbtIntArray tag, containing the given array of ints. </summary>
@@ -46,8 +46,10 @@ namespace fNbt {
 
         /// <summary> Creates an NbtIntArray tag with the given name, containing an empty array of ints. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
-        public NbtIntArray([CanBeNull] string tagName)
-            : this(tagName, ZeroArray) {}
+        public NbtIntArray([CanBeNull] string tagName) {
+            Name = tagName;
+            ints = ZeroArray;
+        }
 
 
         /// <summary> Creates an NbtIntArray tag with the given name, containing the given array of ints. </summary>
@@ -60,7 +62,7 @@ namespace fNbt {
             if (value == null)
                 throw new ArgumentNullException("value");
             Name = tagName;
-            Value = (int[])value.Clone();
+            ints = (int[])value.Clone();
         }
         
 
@@ -71,7 +73,7 @@ namespace fNbt {
         public NbtIntArray([NotNull] NbtIntArray other) {
             if (other == null) throw new ArgumentNullException("other");
             Name = other.Name;
-            Value = (int[])other.Value.Clone();
+            ints = (int[])other.Value.Clone();
         }
 
 
