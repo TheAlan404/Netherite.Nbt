@@ -12,7 +12,8 @@ namespace fNbt {
             get { return NbtTagType.List; }
         }
 
-        [NotNull] readonly List<NbtTag> tags;
+        [NotNull]
+        readonly List<NbtTag> tags = new List<NbtTag>();
 
 
         /// <summary> Gets or sets the tag type of this list. All tags in this NbtTag must be of the same type. </summary>
@@ -123,7 +124,6 @@ namespace fNbt {
         /// <exception cref="ArgumentException"> If given tags do not match <paramref name="givenListType"/>, or are of mixed types. </exception>
         public NbtList([CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags, NbtTagType givenListType) {
             Name = tagName;
-            this.tags = new List<NbtTag>();
             listType = givenListType;
 
             if (givenListType < NbtTagType.Byte ||
@@ -131,14 +131,13 @@ namespace fNbt {
                 throw new ArgumentOutOfRangeException("givenListType");
             }
 
-            if (tags == null)
-                return;
+            if (tags == null) return;
             foreach (NbtTag tag in tags) {
                 Add(tag);
             }
         }
 
-        
+
         /// <summary> Creates a deep copy of given NbtList. </summary>
         /// <param name="other"> An existing NbtList to copy. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
@@ -146,7 +145,7 @@ namespace fNbt {
             if (other == null) throw new ArgumentNullException("other");
             Name = other.Name;
             listType = other.listType;
-            foreach ( NbtTag tag in other.tags) {
+            foreach (NbtTag tag in other.tags) {
                 tags.Add((NbtTag)tag.Clone());
             }
         }
