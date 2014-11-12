@@ -90,7 +90,7 @@ namespace fNbt {
         public NbtFile() {
             BigEndian = BigEndianByDefault;
             BufferSize = DefaultBufferSize;
-            RootTag = new NbtCompound("");
+            rootTag = new NbtCompound("");
         }
 
 

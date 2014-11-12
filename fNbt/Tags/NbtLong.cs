@@ -83,7 +83,7 @@ namespace fNbt {
 
 
         public override object Clone() {
-            return new NbtLong(Name, Value);
+            return new NbtLong(this);
         }
 
 

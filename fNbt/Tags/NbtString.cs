@@ -92,7 +92,7 @@ namespace fNbt {
 
 
         public override object Clone() {
-            return new NbtString(Name, Value);
+            return new NbtString(this);
         }
 
 
