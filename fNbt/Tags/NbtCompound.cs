@@ -12,7 +12,7 @@ namespace fNbt {
             get { return NbtTagType.Compound; }
         }
 
-        readonly Dictionary<string, NbtTag> tags;
+        readonly Dictionary<string, NbtTag> tags = new Dictionary<string, NbtTag>();
 
 
         /// <summary> Creates an empty unnamed NbtByte tag. </summary>
@@ -22,7 +22,6 @@ namespace fNbt {
         /// <summary> Creates an empty NbtByte tag with the given name. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtCompound([CanBeNull] string tagName) {
-            tags = new Dictionary<string, NbtTag>();
             Name = tagName;
         }
 
