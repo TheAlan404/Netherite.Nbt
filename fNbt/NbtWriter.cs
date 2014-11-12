@@ -11,6 +11,10 @@ namespace fNbt {
     public sealed class NbtWriter {
         const int MaxStreamCopyBufferSize = 8*1024;
 
+        // Write at most 512 MiB at a time.
+        // This works around an overflow in BufferedStream.Write(byte[]) that happens on 1 GiB+ writes.
+        const int MaxWriteChunk = 512*1024*1024;
+
         readonly NbtBinaryWriter writer;
         NbtTagType listType;
         NbtTagType parentType;
@@ -367,8 +371,13 @@ namespace fNbt {
         public void WriteByteArray([NotNull] byte[] data, int offset, int count) {
             CheckArray(data, offset, count);
             EnforceConstraints(null, NbtTagType.ByteArray);
-            writer.Write(data.Length);
-            writer.Write(data, 0, data.Length);
+            writer.Write(count);
+            int written = 0;
+            while (written < count) {
+                int toWrite = Math.Min(MaxWriteChunk, count - written);
+                writer.Write(data, offset + written, toWrite);
+                written += toWrite;
+            }
         }
 
 
@@ -405,12 +414,17 @@ namespace fNbt {
             writer.Write((byte)NbtTagType.ByteArray);
             writer.Write(tagName);
             writer.Write(count);
-            writer.Write(data, offset, count);
+            int written = 0;
+            while (written < count) {
+                int toWrite = Math.Min(MaxWriteChunk, count - written);
+                writer.Write(data, offset + written, toWrite);
+                written += toWrite;
+            }
         }
 
 
         /// <summary> Writes an unnamed byte array tag, copying data from a stream. </summary>
-        /// <remarks> A temporary buffer will be allocated, of size up to 8096 bytes.
+        /// <remarks> A temporary buffer will be allocated, of size up to 8192 bytes.
         /// To manually specify a buffer, use one of the other WriteByteArray() overloads. </remarks>
         /// <param name="dataSource"> A Stream from which data will be copied. </param>
         /// <param name="count"> The number of bytes to write. Must not be negative. </param>
@@ -463,7 +477,7 @@ namespace fNbt {
 
 
         /// <summary> Writes a named byte array tag, copying data from a stream. </summary>
-        /// <remarks> A temporary buffer will be allocated, of size up to 8096 bytes.
+        /// <remarks> A temporary buffer will be allocated, of size up to 8192 bytes.
         /// To manually specify a buffer, use one of the other WriteByteArray() overloads. </remarks>
         /// <param name="tagName"> Name to give to this byte array tag. May not be null. </param>
         /// <param name="dataSource"> A Stream from which data will be copied. </param>
@@ -508,6 +522,8 @@ namespace fNbt {
                 throw new ArgumentOutOfRangeException("count", "count may not be negative");
             } else if (buffer.Length == 0 && count > 0) {
                 throw new ArgumentException("buffer size must be greater than 0 when count is greater than 0", "buffer");
+            } else if (buffer.Length > MaxWriteChunk) {
+                throw new ArgumentException("buffer size must not be greater than " + MaxWriteChunk, "buffer");
             }
             EnforceConstraints(tagName, NbtTagType.ByteArray);
             writer.Write((byte)NbtTagType.ByteArray);
@@ -688,9 +704,10 @@ namespace fNbt {
 
         void WriteByteArrayFromStreamImpl([NotNull] Stream dataSource, int count, [NotNull] byte[] buffer) {
             writer.Write(count);
+            int maxBytesToWrite = Math.Min(buffer.Length, MaxWriteChunk);
             int bytesWritten = 0;
             while (bytesWritten < count) {
-                int bytesToRead = Math.Min(count - bytesWritten, buffer.Length);
+                int bytesToRead = Math.Min(count - bytesWritten, maxBytesToWrite);
                 int bytesRead = dataSource.Read(buffer, 0, bytesToRead);
                 writer.BaseStream.Write(buffer, 0, bytesRead);
                 bytesWritten += bytesRead;
