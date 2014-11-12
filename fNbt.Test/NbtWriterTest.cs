@@ -10,6 +10,7 @@ namespace fNbt.Test {
             // write one named tag for every value type, and read it back
             using (var ms = new MemoryStream()) {
                 var writer = new NbtWriter(ms, "root");
+                Assert.AreEqual(writer.BaseStream, ms);
                 {
                     writer.WriteByte("byte", 1);
                     writer.WriteShort("short", 2);
@@ -43,9 +44,34 @@ namespace fNbt.Test {
             using (var ms = new MemoryStream()) {
                 var writer = new NbtWriter(ms, "root");
                 {
+                    byte[] buffer = new byte[1024];
                     using (var dataStream = new NonSeekableStream(new MemoryStream(data))) {
-                        writer.WriteByteArray("byteArray", dataStream, data.Length);
+                        writer.WriteByteArray("byteArray1", dataStream, data.Length);
                     }
+                    using (var dataStream = new NonSeekableStream(new MemoryStream(data))) {
+                        writer.WriteByteArray("byteArray2", dataStream, data.Length, buffer);
+                    }
+                    using (var dataStream = new NonSeekableStream(new MemoryStream(data))) {
+                        writer.WriteByteArray("byteArray3", dataStream, 1);
+                    }
+                    using (var dataStream = new NonSeekableStream(new MemoryStream(data))) {
+                        writer.WriteByteArray("byteArray4", dataStream, 1, buffer);
+                    }
+
+                    writer.BeginList("innerLists", NbtTagType.ByteArray, 4);
+                    using (var dataStream = new NonSeekableStream(new MemoryStream(data))) {
+                        writer.WriteByteArray(dataStream, data.Length);
+                    }
+                    using (var dataStream = new NonSeekableStream(new MemoryStream(data))) {
+                        writer.WriteByteArray(dataStream, data.Length, buffer);
+                    }
+                    using (var dataStream = new NonSeekableStream(new MemoryStream(data))) {
+                        writer.WriteByteArray(dataStream, 1);
+                    }
+                    using (var dataStream = new NonSeekableStream(new MemoryStream(data))) {
+                        writer.WriteByteArray(dataStream, 1, buffer);
+                    }
+                    writer.EndList();
                 }
                 writer.EndCompound();
                 writer.Finish();
@@ -53,7 +79,19 @@ namespace fNbt.Test {
                 ms.Position = 0;
                 var file = new NbtFile();
                 file.LoadFromStream(ms, NbtCompression.None);
-                CollectionAssert.AreEqual(file.RootTag["byteArray"].ByteArrayValue, data);
+                CollectionAssert.AreEqual(file.RootTag["byteArray1"].ByteArrayValue, data);
+                CollectionAssert.AreEqual(file.RootTag["byteArray2"].ByteArrayValue, data);
+                Assert.AreEqual(file.RootTag["byteArray3"].ByteArrayValue.Length, 1);
+                Assert.AreEqual(file.RootTag["byteArray3"].ByteArrayValue[0], data[0]);
+                Assert.AreEqual(file.RootTag["byteArray4"].ByteArrayValue.Length, 1);
+                Assert.AreEqual(file.RootTag["byteArray4"].ByteArrayValue[0], data[0]);
+
+                CollectionAssert.AreEqual(file.RootTag["innerLists"][0].ByteArrayValue, data);
+                CollectionAssert.AreEqual(file.RootTag["innerLists"][1].ByteArrayValue, data);
+                Assert.AreEqual(file.RootTag["innerLists"][2].ByteArrayValue.Length, 1);
+                Assert.AreEqual(file.RootTag["innerLists"][2].ByteArrayValue[0], data[0]);
+                Assert.AreEqual(file.RootTag["innerLists"][3].ByteArrayValue.Length, 1);
+                Assert.AreEqual(file.RootTag["innerLists"][3].ByteArrayValue[0], data[0]);
             }
         }
 
@@ -214,6 +252,10 @@ namespace fNbt.Test {
 
         [Test]
         public void ErrorTest() {
+            byte[] dummyByteArray = { 1, 2, 3, 4, 5 };
+            int[] dummyIntArray = { 1, 2, 3, 4, 5 };
+            MemoryStream dummyStream = new MemoryStream(dummyByteArray);
+
             using (var ms = new MemoryStream()) {
                 // null constructor parameters, or a non-writable stream
                 Assert.Throws<ArgumentNullException>(() => new NbtWriter(null, "root"));
@@ -263,12 +305,40 @@ namespace fNbt.Test {
                     Assert.Throws<NbtFormatException>(writer.EndList);
 
                     // write null values where unacceptable
-                    Assert.Throws<ArgumentNullException>(() => writer.WriteString("NullString", null));
-                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullByteArray", null));
-                    Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray("NullIntArray", null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteString(null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteString("NullString", null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 5, null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 0, 5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullByteArray", null, 0, 5));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null,0,5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray("NullIntArray", null,0,5));
+
+                    // trying to write array with out-of-range offset/count
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyByteArray, -1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyByteArray, 0, -1));
+                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray(dummyByteArray, 0, 6));
+                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray(dummyByteArray, 1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, -1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, 0, -1));
+                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, 0, 6));
+                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, 1, 5));
+
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteIntArray(dummyIntArray, -1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteIntArray(dummyIntArray, 0, -1));
+                    Assert.Throws<ArgumentException>(() => writer.WriteIntArray(dummyIntArray, 0, 6));
+                    Assert.Throws<ArgumentException>(() => writer.WriteIntArray(dummyIntArray, 1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, -1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 0, -1));
+                    Assert.Throws<ArgumentException>(() => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 0, 6));
+                    Assert.Throws<ArgumentException>(() => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 1, 5));
+                    
+                    // out-of-range values for stream-reading overloads of WriteByteArray
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyStream, -1));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyStream, -1, dummyByteArray));
+                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray(dummyStream, 5, new byte[0]));
 
                     // trying to read from non-readable stream
                     Assert.Throws<ArgumentException>(

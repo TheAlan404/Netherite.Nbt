@@ -111,6 +111,9 @@ namespace fNbt.Test {
         public void TestNbtSmallFileSavingUncompressedStream() {
             NbtFile file = TestFiles.MakeSmallFile();
             var nbtStream = new MemoryStream();
+            Assert.Throws<ArgumentNullException>(() => file.SaveToStream(null, NbtCompression.None));
+            Assert.Throws<ArgumentException>(() => file.SaveToStream(nbtStream, NbtCompression.AutoDetect));
+            Assert.Throws<ArgumentOutOfRangeException>(() => file.SaveToStream(nbtStream, (NbtCompression)255));
             file.SaveToStream(nbtStream, NbtCompression.None);
             FileStream testFileStream = File.OpenRead(TestFiles.Small);
             FileAssert.AreEqual(testFileStream, nbtStream);
@@ -225,6 +228,26 @@ namespace fNbt.Test {
                     NbtFile.ReadRootTagName(nss, compression, true, 0);
                 }
             }
+        }
+
+
+        [Test]
+        public void GlobalsTest() {
+            Assert.AreEqual(new NbtFile(new NbtCompound("Foo")).BufferSize, NbtFile.DefaultBufferSize);
+            Assert.Throws<ArgumentOutOfRangeException>(() => NbtFile.DefaultBufferSize = -1);
+            NbtFile.DefaultBufferSize = 12345;
+            Assert.AreEqual(NbtFile.DefaultBufferSize, 12345);
+
+            // Newly-created NbtFiles should use default buffer size
+            NbtFile tempFile = new NbtFile(new NbtCompound("Foo"));
+            Assert.AreEqual(tempFile.BufferSize, NbtFile.DefaultBufferSize);
+            Assert.Throws<ArgumentOutOfRangeException>(() => tempFile.BufferSize = -1);
+            tempFile.BufferSize = 54321;
+            Assert.AreEqual(tempFile.BufferSize, 54321);
+
+            // Changing default buffer size should not retroactively change already-existing NbtFiles' buffer size.
+            NbtFile.DefaultBufferSize = 8192;
+            Assert.AreEqual(tempFile.BufferSize, 54321);
         }
 
 

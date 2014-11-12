@@ -77,9 +77,11 @@ namespace fNbt.Test {
             Assert.AreEqual(parent["Child"]["NestedChildList"][0], nestedInt);
 
             // Accessing nested compound tags using Get and Get<T>
+            Assert.IsNull(parent.Get<NbtCompound>("NonExistingChild"));
             Assert.AreEqual(parent.Get<NbtCompound>("Child").Get<NbtCompound>("NestedChild"), nestedChild);
             Assert.AreEqual(parent.Get<NbtCompound>("Child").Get<NbtList>("NestedChildList"), nestedChildList);
             Assert.AreEqual(parent.Get<NbtCompound>("Child").Get<NbtList>("NestedChildList")[0], nestedInt);
+            Assert.IsNull(parent.Get("NonExistingChild"));
             Assert.AreEqual((parent.Get("Child") as NbtCompound).Get("NestedChild"), nestedChild);
             Assert.AreEqual((parent.Get("Child") as NbtCompound).Get("NestedChildList"), nestedChildList);
             Assert.AreEqual((parent.Get("Child") as NbtCompound).Get("NestedChildList")[0], nestedInt);
@@ -89,8 +91,10 @@ namespace fNbt.Test {
 
             // Using TryGet and TryGet<T>
             NbtTag dummyTag;
+            Assert.IsFalse(parent.TryGet("NonExistingChild", out dummyTag));
             Assert.IsTrue(parent.TryGet("Child", out dummyTag));
             NbtCompound dummyCompoundTag;
+            Assert.IsFalse(parent.TryGet("NonExistingChild", out dummyCompoundTag));
             Assert.IsTrue(parent.TryGet("Child", out dummyCompoundTag));
 
             // Trying to use integer indexers on non-NbtList tags
@@ -179,11 +183,11 @@ namespace fNbt.Test {
             // adding null
             Assert.Throws<ArgumentNullException>(() => test.Add(null));
 
-            // contains existing name
+            // contains existing name/object
             Assert.IsTrue(test.Contains("Foo"));
-
-            // contains existing object
             Assert.IsTrue(test.Contains(foo));
+            Assert.Throws<ArgumentNullException>(() => test.Contains((string)null));
+            Assert.Throws<ArgumentNullException>(() => test.Contains((NbtTag)null));
 
             // contains non-existent name
             Assert.IsFalse(test.Contains("Bar"));
@@ -192,6 +196,7 @@ namespace fNbt.Test {
             Assert.IsFalse(test.Contains(new NbtInt("Foo")));
 
             // removing non-existent name
+            Assert.Throws<ArgumentNullException>(() => test.Remove((string)null));
             Assert.IsFalse(test.Remove("Bar"));
 
             // removing existing name
@@ -204,6 +209,7 @@ namespace fNbt.Test {
             test.Add(foo);
 
             // removing existing object
+            Assert.Throws<ArgumentNullException>(() => test.Remove((NbtTag)null));
             Assert.IsTrue(test.Remove(foo));
 
             // clearing an empty NbtCompound
