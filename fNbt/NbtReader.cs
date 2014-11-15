@@ -141,7 +141,7 @@ namespace fNbt {
         public int TagsRead { get; private set; }
 
         /// <summary> Gets the depth of the current tag in the hierarchy.
-        /// <c>RootTag</c> is at depth 0, its descendant tags are 1, etc. </summary>
+        /// <c>RootTag</c> is at depth 1, its descendant tags are 2, etc. </summary>
         public int Depth { get; private set; }
 
 
