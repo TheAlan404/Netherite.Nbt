@@ -17,7 +17,20 @@ namespace fNbt.Test {
                 Assert.AreEqual(reader.RootName, "Level");
             }
         }
-
+        
+        [Test]
+        public void PrintBigFileUncompressedNoSkip() {
+            using (FileStream fs = File.OpenRead("TestFiles/bigtest.nbt")) {
+                var reader = new NbtReader(fs);
+                reader.SkipEndTags = false;
+                Assert.AreEqual(reader.BaseStream, fs);
+                while (reader.ReadToFollowing()) {
+                    Console.Write("@" + reader.TagStartOffset + " ");
+                    Console.WriteLine(reader.ToString());
+                }
+                Assert.AreEqual(reader.RootName, "Level");
+            }
+        }
 
         [Test]
         public void CacheTagValuesTest() {
@@ -184,6 +197,40 @@ namespace fNbt.Test {
             Assert.AreEqual(reader.ParentTagLength, 1);
             Assert.AreEqual(reader.TagLength, 0);
             Assert.AreEqual(reader.TagsRead, 10);
+
+            Assert.IsTrue(reader.ReadToFollowing("fifth"));
+            Assert.AreEqual(reader.TagName, "fifth");
+            Assert.AreEqual(reader.TagType, NbtTagType.Int);
+            Assert.AreEqual(reader.ListType, NbtTagType.Unknown);
+            Assert.IsTrue(reader.HasValue);
+            Assert.IsFalse(reader.IsCompound);
+            Assert.IsFalse(reader.IsList);
+            Assert.IsFalse(reader.IsListElement);
+            Assert.IsFalse(reader.HasLength);
+            Assert.AreEqual(reader.ListIndex, 0);
+            Assert.AreEqual(reader.Depth, 2);
+            Assert.AreEqual(reader.ParentName, "root");
+            Assert.AreEqual(reader.ParentTagType, NbtTagType.Compound);
+            Assert.AreEqual(reader.ParentTagLength, 0);
+            Assert.AreEqual(reader.TagLength, 0);
+            Assert.AreEqual(reader.TagsRead, 18);
+            
+            Assert.IsTrue(reader.ReadToFollowing());
+            Assert.AreEqual(reader.TagName, "hugeArray" );
+            Assert.AreEqual(reader.TagType,NbtTagType.ByteArray);
+            Assert.AreEqual(reader.ListType, NbtTagType.Unknown);
+            Assert.IsTrue(reader.HasValue);
+            Assert.IsFalse(reader.IsCompound);
+            Assert.IsFalse(reader.IsList);
+            Assert.IsFalse(reader.IsListElement);
+            Assert.IsTrue(reader.HasLength);
+            Assert.AreEqual(reader.ListIndex, 0);
+            Assert.AreEqual(reader.Depth, 2);
+            Assert.AreEqual(reader.ParentName, "root");
+            Assert.AreEqual(reader.ParentTagType, NbtTagType.Compound);
+            Assert.AreEqual(reader.ParentTagLength, 0);
+            Assert.AreEqual(reader.TagLength, 1024*1024);
+            Assert.AreEqual(reader.TagsRead, 19);
         }
 
 
@@ -245,6 +292,7 @@ namespace fNbt.Test {
             while (!reader.IsAtStreamEnd) {
                 reader.ReadAsTag();
             }
+            Assert.Throws<EndOfStreamException>(() =>reader.ReadAsTag());
         }
 
 

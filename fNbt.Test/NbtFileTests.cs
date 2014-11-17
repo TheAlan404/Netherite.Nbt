@@ -251,6 +251,30 @@ namespace fNbt.Test {
         }
 
 
+        [Test]
+        public void HugeFileWrite() {
+            // Here we cheat and reuse the same byte array for 4 tags.
+            NbtByteArray payload1 = new NbtByteArray("payload1");
+            NbtByteArray payload2 = new NbtByteArray("payload2");
+            NbtByteArray payload3 = new NbtByteArray("payload3");
+            NbtByteArray payload4 = new NbtByteArray("payload4");
+            // We use Value setter instead of passing array to the constructor to avoid cloning it.
+            payload1.Value = new byte[1024*1024*1024];
+            payload2.Value = payload2.Value;
+            payload3.Value = payload3.Value;
+            payload4.Value = payload4.Value;
+            NbtCompound root = new NbtCompound("root") {
+                payload1,
+                payload2,
+                payload3,
+                payload4
+            };
+            NbtFile file = new NbtFile(root);
+            String path = Path.Combine(TestDirName, "hugeFileTest.nbt");
+            Assert.DoesNotThrow(() => file.SaveToFile(path, NbtCompression.GZip));
+        }
+
+
         [TearDown]
         public void NbtFileTestTearDown() {
             if (Directory.Exists(TestDirName)) {
