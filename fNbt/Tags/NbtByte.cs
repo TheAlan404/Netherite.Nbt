@@ -34,7 +34,7 @@ namespace fNbt {
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         /// <param name="value"> Value to assign to this tag. </param>
         public NbtByte([CanBeNull] string tagName, byte value) {
-            Name = tagName;
+            name = tagName;
             Value = value;
         }
 
@@ -44,7 +44,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
         public NbtByte([NotNull] NbtByte other) {
             if (other == null) throw new ArgumentNullException("other");
-            Name = other.Name;
+            name = other.name;
             Value = other.Value;
         }
 

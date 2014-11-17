@@ -360,9 +360,7 @@ namespace fNbt {
 
 
         void SkipValue() {
-            if (!atValue) {
-                throw new NbtFormatException(NoValueToReadError);
-            }
+            // Make sure to check for "atValue" before calling this method
             switch (TagType) {
                 case NbtTagType.Byte:
                     reader.ReadByte();

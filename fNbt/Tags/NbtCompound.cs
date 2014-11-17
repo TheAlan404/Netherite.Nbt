@@ -22,7 +22,7 @@ namespace fNbt {
         /// <summary> Creates an empty NbtByte tag with the given name. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtCompound([CanBeNull] string tagName) {
-            Name = tagName;
+            name = tagName;
         }
 
 
@@ -42,7 +42,7 @@ namespace fNbt {
         public NbtCompound([CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags) {
             if (tags == null)
                 throw new ArgumentNullException("tags");
-            Name = tagName;
+            name = tagName;
             foreach (NbtTag tag in tags) {
                 Add(tag);
             }
@@ -54,7 +54,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
         public NbtCompound([NotNull] NbtCompound other) {
             if (other == null) throw new ArgumentNullException("other");
-            Name = other.Name;
+            name = other.name;
             foreach (NbtTag tag in other.tags.Values) {
                 Add((NbtTag)tag.Clone());
             }

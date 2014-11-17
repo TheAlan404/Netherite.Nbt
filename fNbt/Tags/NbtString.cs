@@ -43,7 +43,7 @@ namespace fNbt {
         public NbtString([CanBeNull] string tagName, [NotNull] string value) {
             if (value == null)
                 throw new ArgumentNullException("value");
-            Name = tagName;
+            name = tagName;
             Value = value;
         }
 
@@ -53,7 +53,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
         public NbtString([NotNull] NbtString other) {
             if (other == null) throw new ArgumentNullException("other");
-            Name = other.Name;
+            name = other.name;
             Value = other.Value;
         }
 

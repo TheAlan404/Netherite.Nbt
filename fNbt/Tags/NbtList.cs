@@ -123,7 +123,7 @@ namespace fNbt {
         /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
         /// <exception cref="ArgumentException"> If given tags do not match <paramref name="givenListType"/>, or are of mixed types. </exception>
         public NbtList([CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags, NbtTagType givenListType) {
-            Name = tagName;
+            name = tagName;
             listType = givenListType;
 
             if (givenListType < NbtTagType.Byte ||
@@ -143,7 +143,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
         public NbtList([NotNull] NbtList other) {
             if (other == null) throw new ArgumentNullException("other");
-            Name = other.Name;
+            name = other.name;
             listType = other.listType;
             foreach (NbtTag tag in other.tags) {
                 tags.Add((NbtTag)tag.Clone());
