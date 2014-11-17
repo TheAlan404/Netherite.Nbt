@@ -1,3 +1,11 @@
+0.6.2 (fNbt)
+- NbtTags now implement ICloneable and provide copy constructors.
+- fNbt is now compatible with /checked compiler option.
+- Fixed an OverflowException in .NET 4.0+ when writing arrays of size 1 GiB
+	(or larger) to a BufferedStream.
+- Fixed a few edge cases in NbtReader when reading corrupt files.
+- Minor optimizations and documentation fixes.
+
 0.6.1 (fNbt)
 - NbtReader now supports non-seekable streams.
 - Fixed issues loading from/saving to non-seekable steams in NbtFile.
