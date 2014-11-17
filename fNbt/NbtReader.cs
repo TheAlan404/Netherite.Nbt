@@ -176,6 +176,7 @@ namespace fNbt {
                     state = NbtParseState.Error;
                     // read first tag, make sure it's a compound
                     if (reader.ReadTagType() != NbtTagType.Compound) {
+                        state = NbtParseState.Error;
                         throw new NbtFormatException("Given NBT stream does not start with a TAG_Compound");
                     }
                     Depth = 1;
@@ -198,7 +199,13 @@ namespace fNbt {
                     if (canSeekStream) {
                         TagStartOffset = (int)(reader.BaseStream.Position - streamStartOffset);
                     }
+
+                    NbtParseState oldState = state;
+                    // set state to error in case reader.ReadTagType throws.
+                    state = NbtParseState.Error;
                     TagType = reader.ReadTagType();
+                    state = oldState;
+
                     if (TagType == NbtTagType.End) {
                         TagName = null;
                         TagsRead++;
@@ -270,11 +277,10 @@ namespace fNbt {
                     // nothing left to read!
                     return false;
 
-                case NbtParseState.Error:
-                    // previous call produced a parsing error
+                default:
+                    // Parsing error, or unexpected state.
                     throw new InvalidReaderStateException(ErroneousStateError);
             }
-            return true;
         }
 
 

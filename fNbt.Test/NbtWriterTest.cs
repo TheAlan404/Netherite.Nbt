@@ -22,7 +22,9 @@ namespace fNbt.Test {
                     writer.WriteIntArray("intArray", new[] { 20, 21, 22 });
                     writer.WriteString("string", "123");
                 }
+                Assert.IsFalse(writer.IsDone);
                 writer.EndCompound();
+                Assert.IsTrue(writer.IsDone);
                 writer.Finish();
 
                 ms.Position = 0;
@@ -30,6 +32,20 @@ namespace fNbt.Test {
                 file.LoadFromStream(ms, NbtCompression.None);
 
                 TestFiles.AssertValueTest(file);
+            }
+        }
+
+
+        [Test]
+        public void HugeNbtWriterTest() {
+            // There is a bug in .NET Framework 4.0+ that causes BufferedStream.Write(Byte[],Int32,Int32)
+            // to throw an OverflowException when writing in chunks of 1 GiB or more.
+            // We work around that by splitting up writes into at-most 512 MiB segments.
+            using (BufferedStream bs = new BufferedStream(Stream.Null)) {
+                NbtWriter writer = new NbtWriter(bs, "root");
+                writer.WriteByteArray("payload4", new byte[1024*1024*1024]);
+                writer.EndCompound();
+                writer.Finish();
             }
         }
 
@@ -220,7 +236,9 @@ namespace fNbt.Test {
                     writer.EndList();
                 }
                 writer.EndList();
+                Assert.IsFalse(writer.IsDone);
                 writer.EndCompound();
+                Assert.IsTrue(writer.IsDone);
                 writer.Finish();
 
                 ms.Position = 0;
@@ -239,6 +257,7 @@ namespace fNbt.Test {
                         writer.WriteTag(tag);
                     }
                     writer.EndCompound();
+                    Assert.IsTrue(writer.IsDone);
                     writer.Finish();
                 }
                 ms.Position = 0;
@@ -313,31 +332,40 @@ namespace fNbt.Test {
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 0, 5));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullByteArray", null, 0, 5));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null));
-                    Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null,0,5));
-                    Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray("NullIntArray", null,0,5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null, 0, 5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray("NullIntArray", null, 0, 5));
 
                     // trying to write array with out-of-range offset/count
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyByteArray, -1, 5));
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyByteArray, 0, -1));
                     Assert.Throws<ArgumentException>(() => writer.WriteByteArray(dummyByteArray, 0, 6));
                     Assert.Throws<ArgumentException>(() => writer.WriteByteArray(dummyByteArray, 1, 5));
-                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, -1, 5));
-                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, 0, -1));
-                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, 0, 6));
-                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, 1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(
+                        () => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, -1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(
+                        () => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, 0, -1));
+                    Assert.Throws<ArgumentException>(
+                        () => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, 0, 6));
+                    Assert.Throws<ArgumentException>(
+                        () => writer.WriteByteArray("OutOfRangeByteArray", dummyByteArray, 1, 5));
 
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteIntArray(dummyIntArray, -1, 5));
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteIntArray(dummyIntArray, 0, -1));
                     Assert.Throws<ArgumentException>(() => writer.WriteIntArray(dummyIntArray, 0, 6));
                     Assert.Throws<ArgumentException>(() => writer.WriteIntArray(dummyIntArray, 1, 5));
-                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, -1, 5));
-                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 0, -1));
-                    Assert.Throws<ArgumentException>(() => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 0, 6));
-                    Assert.Throws<ArgumentException>(() => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 1, 5));
-                    
+                    Assert.Throws<ArgumentOutOfRangeException>(
+                        () => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, -1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(
+                        () => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 0, -1));
+                    Assert.Throws<ArgumentException>(
+                        () => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 0, 6));
+                    Assert.Throws<ArgumentException>(
+                        () => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 1, 5));
+
                     // out-of-range values for stream-reading overloads of WriteByteArray
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyStream, -1));
-                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyStream, -1, dummyByteArray));
+                    Assert.Throws<ArgumentOutOfRangeException>(
+                        () => writer.WriteByteArray(dummyStream, -1, dummyByteArray));
                     Assert.Throws<ArgumentException>(() => writer.WriteByteArray(dummyStream, 5, new byte[0]));
 
                     // trying to read from non-readable stream

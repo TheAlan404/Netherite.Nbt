@@ -21,8 +21,9 @@ namespace fNbt.Test {
         [Test]
         public void PrintBigFileUncompressedNoSkip() {
             using (FileStream fs = File.OpenRead("TestFiles/bigtest.nbt")) {
-                var reader = new NbtReader(fs);
-                reader.SkipEndTags = false;
+                var reader = new NbtReader(fs) {
+                    SkipEndTags = false
+                };
                 Assert.AreEqual(reader.BaseStream, fs);
                 while (reader.ReadToFollowing()) {
                     Console.Write("@" + reader.TagStartOffset + " ");
@@ -265,6 +266,10 @@ namespace fNbt.Test {
             reader.ReadToFollowing(); // at fourth-list
             Assert.IsTrue(reader.ReadToDescendant("inList2"));
             Assert.AreEqual(reader.TagName, "inList2");
+
+            // Ensure ReadToDescendant returns false when at end-of-stream
+            while (reader.ReadToFollowing()) {}
+            Assert.IsFalse(reader.ReadToDescendant("*"));
         }
 
 
@@ -533,6 +538,7 @@ namespace fNbt.Test {
             }
         }
 
+
         [Test]
         public void NonSeekableStreamSkip2() {
             using (var ms = TestFiles.MakeReaderTest()) {
@@ -540,6 +546,45 @@ namespace fNbt.Test {
                     var reader = new NbtReader(nss);
                     reader.ReadToFollowing();
                     reader.Skip();
+                }
+            }
+        }
+
+
+        [Test]
+        public void CorruptFileRead() {
+            byte[] badHeader = {
+                0x02, // TAG_Short ID (instead of TAG_Compound ID)
+                0x00, 0x01,  0x66, // Root name: 'f'
+                0x00 // end tag
+            };
+            Assert.Throws<NbtFormatException>(() => TryReadBadFile(badHeader));
+
+            byte[] badStringLength = {
+                0x0A, // Compound tag
+                0xFF, 0xFF,  0x66, // Root name 'f' (with string length given as "-1")
+                0x00 // end tag
+            };
+            Assert.Throws<NbtFormatException>(() => TryReadBadFile(badStringLength));
+
+            byte[] badSecondTag = {
+                0x0A, // Compound tag
+                0x00, 0x01,  0x66, // Root name: 'f'
+                0xFF, 0x01, 0x4E, 0x7F, 0xFF, // Short tag named 'N' with invalid tag ID (0xFF instead of 0x02)
+                0x00 // end tag
+            };
+            Assert.Throws<NbtFormatException>(() => TryReadBadFile(badSecondTag));
+        }
+
+
+        void TryReadBadFile(byte[] data) {
+            using (MemoryStream ms = new MemoryStream(data)) {
+                NbtReader reader = new NbtReader(ms);
+                try {
+                    while (reader.ReadToFollowing()) {}
+                } catch (Exception ex) {
+                    Assert.IsTrue(reader.IsInErrorState);
+                    throw;
                 }
             }
         }

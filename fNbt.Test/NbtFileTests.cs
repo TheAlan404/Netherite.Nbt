@@ -132,10 +132,12 @@ namespace fNbt.Test {
 
 
         void ReloadFileInternal(String fileName, NbtCompression compression, bool bigEndian) {
-            var loadedFile = new NbtFile(Path.Combine(TestFiles.DirName, fileName));
-            loadedFile.BigEndian = bigEndian;
+            var loadedFile = new NbtFile(Path.Combine(TestFiles.DirName, fileName)) {
+                BigEndian = bigEndian
+            };
             long bytesWritten = loadedFile.SaveToFile(Path.Combine(TestDirName, fileName), compression);
-            long bytesRead = loadedFile.LoadFromFile(Path.Combine(TestDirName, fileName), NbtCompression.AutoDetect, null);
+            long bytesRead = loadedFile.LoadFromFile(Path.Combine(TestDirName, fileName), NbtCompression.AutoDetect,
+                                                     null);
             Assert.AreEqual(bytesWritten, bytesRead);
             TestFiles.AssertNbtBigFile(loadedFile);
         }
@@ -252,26 +254,12 @@ namespace fNbt.Test {
 
 
         [Test]
-        public void HugeFileWrite() {
-            // Here we cheat and reuse the same byte array for 4 tags.
-            NbtByteArray payload1 = new NbtByteArray("payload1");
-            NbtByteArray payload2 = new NbtByteArray("payload2");
-            NbtByteArray payload3 = new NbtByteArray("payload3");
-            NbtByteArray payload4 = new NbtByteArray("payload4");
-            // We use Value setter instead of passing array to the constructor to avoid cloning it.
-            payload1.Value = new byte[1024*1024*1024];
-            payload2.Value = payload2.Value;
-            payload3.Value = payload3.Value;
-            payload4.Value = payload4.Value;
+        public void HugeNbtFileTest() {
             NbtCompound root = new NbtCompound("root") {
-                payload1,
-                payload2,
-                payload3,
-                payload4
+                new NbtByteArray("payload1", new byte[1024*1024*1024])
             };
             NbtFile file = new NbtFile(root);
-            String path = Path.Combine(TestDirName, "hugeFileTest.nbt");
-            Assert.DoesNotThrow(() => file.SaveToFile(path, NbtCompression.GZip));
+            file.SaveToStream(Stream.Null, NbtCompression.None);
         }
 
 
