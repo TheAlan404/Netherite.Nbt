@@ -61,7 +61,7 @@ namespace fNbt {
             }
         }
 
-        string name;
+        protected string name;
 
 
         /// <summary> Gets the full name of this tag, including all parent tag names, separated by dots. 

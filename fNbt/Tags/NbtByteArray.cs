@@ -17,7 +17,7 @@ namespace fNbt {
         }
 
 
-        /// <summary> Value/payload of this tag (an array of bytes). May not be <c>null</c>. </summary>
+        /// <summary> Value/payload of this tag (an array of bytes). Value is stored as-is and is NOT cloned. May not be <c>null</c>. </summary>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         [NotNull]
         public byte[] Value {
@@ -50,6 +50,7 @@ namespace fNbt {
         /// <summary> Creates an NbtByte tag with the given name, containing an empty array of bytes. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtByteArray([CanBeNull] string tagName) {
+            name = tagName;
             bytes = ZeroArray;
         }
 
@@ -62,7 +63,7 @@ namespace fNbt {
         /// overloads (that do not take a byte[]) and then set the Value property yourself. </remarks>
         public NbtByteArray([CanBeNull] string tagName, [NotNull] byte[] value) {
             if (value == null) throw new ArgumentNullException("value");
-            Name = tagName;
+            name = tagName;
             bytes = (byte[])value.Clone();
         }
 
@@ -73,7 +74,7 @@ namespace fNbt {
         /// <remarks> Byte array of given tag will be cloned. </remarks>
         public NbtByteArray([NotNull] NbtByteArray other) {
             if (other == null) throw new ArgumentNullException("other");
-            Name = other.Name;
+            name = other.name;
             bytes = (byte[])other.Value.Clone();
         }
 
