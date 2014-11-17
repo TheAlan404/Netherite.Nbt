@@ -42,6 +42,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DefineConstants>
     </DefineConstants>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup>
     <RootNamespace>fNbt</RootNamespace>

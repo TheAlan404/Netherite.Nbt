@@ -111,7 +111,7 @@ namespace fNbt.Test {
             // test getting/settings values of int array tag via indexer
             var byteArray = new NbtIntArray("Test");
             CollectionAssert.AreEqual(byteArray.Value, new int[0]);
-            byteArray.Value = new int[] {
+            byteArray.Value = new[] {
                 1, 2000, -3000000
             };
             Assert.AreEqual(byteArray[0], 1);

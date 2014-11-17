@@ -12,7 +12,7 @@ namespace fNbt {
         const int MaxStreamCopyBufferSize = 8*1024;
 
         // Write at most 512 MiB at a time.
-        // This works around an overflow in BufferedStream.Write(byte[]) that happens on 1 GiB+ writes.
+        // This works around an overflow in BufferedStream.Write(byte[],int,int) that happens on 1 GiB+ writes.
         const int MaxWriteChunk = 512*1024*1024;
 
         readonly NbtBinaryWriter writer;
@@ -414,6 +414,7 @@ namespace fNbt {
             writer.Write((byte)NbtTagType.ByteArray);
             writer.Write(tagName);
             writer.Write(count);
+
             int written = 0;
             while (written < count) {
                 int toWrite = Math.Min(MaxWriteChunk, count - written);

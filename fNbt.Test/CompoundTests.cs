@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 
 namespace fNbt.Test {
@@ -273,10 +274,7 @@ namespace fNbt.Test {
             CollectionAssert.AreEquivalent(tags, comp);
 
             // test GetEnumerator()
-            var enumeratedTags = new List<NbtTag>();
-            foreach (NbtTag tag in comp) {
-                enumeratedTags.Add(tag);
-            }
+            var enumeratedTags = comp.ToList();
             CollectionAssert.AreEquivalent(enumeratedTags, tagList);
         }
     }
