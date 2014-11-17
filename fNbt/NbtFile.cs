@@ -276,7 +276,7 @@ namespace fNbt {
 
                 case NbtCompression.ZLib:
                     if (stream.ReadByte() != 0x78) {
-                        throw new InvalidDataException("Incorrect ZLib header. Expected 0x78 0x9C");
+                        throw new InvalidDataException("Unrecognized ZLib header. Expected 0x78");
                     }
                     stream.ReadByte();
                     using (var decStream = new DeflateStream(stream, CompressionMode.Decompress, true)) {
