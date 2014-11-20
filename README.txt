@@ -28,11 +28,16 @@ applications that use fNbt; they are only used for testing.
 ==== DOWNLOAD =================================================================
 Latest version of fNbt requires .NET Framework 3.5+ (client or full profile).
 
- Compiled binary:  http://fcraft.net/fnbt/fNbt_v0.6.2.zip
+ Package @ NuGet:  https://www.nuget.org/packages/fNbt/
+
+ Compiled binary:  https://fcraft.net/fnbt/fNbt_v0.6.2.zip
+                   SHA1: 82b1cfcf114a3d5411f105e68e328fd5d75e34dd
 
  Amalgamation (single source file):
-    Non-annotated: http://fcraft.net/fnbt/fNbt_v0.6.2.cs
-        Annotated: http://fcraft.net/fnbt/fNbt_v0.6.2_Annotated.cs
+    Non-annotated: https://fcraft.net/fnbt/fNbt_v0.6.2.cs
+                   SHA1: 2aa56a68f0b8343dfebd54b2bfe1f1b6319a3e98
+        Annotated: https://fcraft.net/fnbt/fNbt_v0.6.2_Annotated.cs
+                   SHA1: 77f291e0738e0bae6718a71cc2e8f8ca2b2e0f54
                    (using JetBrains.Annotations, for ReSharper)
 
 
