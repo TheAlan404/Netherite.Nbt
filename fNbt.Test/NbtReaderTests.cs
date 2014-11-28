@@ -288,6 +288,7 @@ namespace fNbt.Test {
             Assert.AreEqual(reader.TagName, "fourth-list");
             Assert.AreEqual(reader.Skip(), 11);
             Assert.IsFalse(reader.ReadToFollowing());
+            Assert.AreEqual(reader.Skip(), 0);
         }
 
 

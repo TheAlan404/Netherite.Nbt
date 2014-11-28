@@ -159,7 +159,7 @@ namespace fNbt.Test {
             // assigning a null name to a tag inside a compound; should throw
             Assert.Throws<ArgumentNullException>(() => tagToRename.Name = null);
 
-            // assigning a null name to a tag inside a compound; should not throw
+            // assigning a null name to a tag that's been removed; should not throw
             compound.Remove(tagToRename);
             tagToRename.Name = null;
         }
@@ -183,6 +183,9 @@ namespace fNbt.Test {
 
             // adding null
             Assert.Throws<ArgumentNullException>(() => test.Add(null));
+
+            // adding tag to self
+            Assert.Throws<ArgumentException>(() => test.Add(test));
 
             // contains existing name/object
             Assert.IsTrue(test.Contains("Foo"));
@@ -212,6 +215,7 @@ namespace fNbt.Test {
             // removing existing object
             Assert.Throws<ArgumentNullException>(() => test.Remove((NbtTag)null));
             Assert.IsTrue(test.Remove(foo));
+            Assert.IsFalse(test.Remove(foo));
 
             // clearing an empty NbtCompound
             Assert.AreEqual(test.Count, 0);
@@ -273,9 +277,17 @@ namespace fNbt.Test {
             iCollection.CopyTo(tags, 0);
             CollectionAssert.AreEquivalent(tags, comp);
 
-            // test GetEnumerator()
+            // test non-generic GetEnumerator()
             var enumeratedTags = comp.ToList();
             CollectionAssert.AreEquivalent(enumeratedTags, tagList);
+
+            // test generic GetEnumerator()
+            List<NbtTag> enumeratedTags2 = new List<NbtTag>();
+            var enumerator = comp.GetEnumerator();
+            while (enumerator.MoveNext()) {
+                enumeratedTags2.Add(enumerator.Current);
+            }
+            CollectionAssert.AreEquivalent(enumeratedTags2, tagList);
         }
     }
 }

@@ -295,6 +295,7 @@ namespace fNbt.Test {
 
                     // invalid list type
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.BeginList(NbtTagType.End, 0));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.BeginList("list", NbtTagType.End, 0));
 
                     // call EndCompound when not in a compound
                     Assert.Throws<NbtFormatException>(writer.EndCompound);
