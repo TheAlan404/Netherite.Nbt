@@ -251,6 +251,8 @@ namespace fNbt.Test {
             Assert.IsTrue(reader.ReadToNextSibling());
             Assert.AreEqual(reader.TagName, "hugeArray");
             Assert.IsFalse(reader.ReadToNextSibling());
+            // Test twice, since we hit different paths through the code
+            Assert.IsFalse(reader.ReadToNextSibling());
         }
 
 
@@ -305,9 +307,19 @@ namespace fNbt.Test {
         public void ReadAsTagTest2() {
             // read the whole thing as one tag
             byte[] testData = new NbtFile(TestFiles.MakeValueTest()).SaveToBuffer(NbtCompression.None);
-            var reader = new NbtReader(new MemoryStream(testData));
-            var root = (NbtCompound)reader.ReadAsTag();
-            TestFiles.AssertValueTest(new NbtFile(root));
+            {
+                var reader = new NbtReader(new MemoryStream(testData));
+                var root = (NbtCompound)reader.ReadAsTag();
+                TestFiles.AssertValueTest(new NbtFile(root));
+            }
+            {
+                // Try the same thing but with end tag skipping disabled
+                var reader = new NbtReader(new MemoryStream(testData)) {
+                    SkipEndTags = false
+                };
+                var root = (NbtCompound)reader.ReadAsTag();
+                TestFiles.AssertValueTest(new NbtFile(root));
+            }
         }
 
 
@@ -334,10 +346,23 @@ namespace fNbt.Test {
         public void ReadAsTagTest4() {
             // read a bunch of lists as tags
             byte[] testData = new NbtFile(TestFiles.MakeListTest()).SaveToBuffer(NbtCompression.None);
-            var reader = new NbtReader(new MemoryStream(testData));
-            //reader.ReadToFollowing(); // skip root
-            while (!reader.IsAtStreamEnd) {
-                Console.WriteLine(reader.ReadAsTag());
+
+            // first, read everything all-at-once
+            {
+                var reader = new NbtReader(new MemoryStream(testData));
+                while (!reader.IsAtStreamEnd) {
+                    Console.WriteLine(reader.ReadAsTag());
+                }
+            }
+
+            // next, read each list individually
+            {
+                var reader = new NbtReader(new MemoryStream(testData));
+                reader.ReadToFollowing(); // read to root
+                reader.ReadToFollowing(); // read to first list tag
+                while (!reader.IsAtStreamEnd) {
+                    Console.WriteLine(reader.ReadAsTag());
+                }
             }
         }
 
@@ -456,6 +481,10 @@ namespace fNbt.Test {
                                       });
             Assert.IsTrue(reader.ReadToFollowing()); // string
             Assert.AreEqual(reader.ReadValue(), "123");
+
+            // Skip to the very end and make sure that we can't read any more values
+            reader.ReadToFollowing();
+            Assert.Throws<EndOfStreamException>(() => reader.ReadValue());
         }
 
 
@@ -582,7 +611,7 @@ namespace fNbt.Test {
                 NbtReader reader = new NbtReader(ms);
                 try {
                     while (reader.ReadToFollowing()) {}
-                } catch (Exception ex) {
+                } catch (Exception) {
                     Assert.IsTrue(reader.IsInErrorState);
                     throw;
                 }
