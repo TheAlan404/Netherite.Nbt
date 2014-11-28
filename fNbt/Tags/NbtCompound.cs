@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using JetBrains.Annotations;
 
@@ -203,21 +204,16 @@ namespace fNbt {
             if (!tags.TryGetValue(tagName, out tag)) {
                 return false;
             }
-            if (!tags.Remove(tagName)) {
-                return false;
-            }
+            tags.Remove(tagName);
             tag.Parent = null;
             return true;
         }
 
 
         internal void RenameTag([NotNull] string oldName, [NotNull] string newName) {
-            if (oldName == null)
-                throw new ArgumentNullException("oldName");
-            if (newName == null)
-                throw new ArgumentNullException("newName");
-            if (oldName == newName)
-                return;
+            Debug.Assert(oldName != null);
+            Debug.Assert(newName != null);
+            Debug.Assert(newName != oldName);
             NbtTag tag;
             if (tags.TryGetValue(newName, out tag)) {
                 throw new ArgumentException("Cannot rename: a tag with the name already exists in this compound.");

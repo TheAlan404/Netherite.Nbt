@@ -43,15 +43,13 @@ namespace fNbt {
             set {
                 if (name == value) {
                     return;
-                } else if (Parent == null) {
-                    name = value;
-                    return;
                 }
 
                 var parentAsCompound = Parent as NbtCompound;
                 if (parentAsCompound != null) {
                     if (value == null) {
-                        throw new ArgumentNullException("value", "Name of tags inside an NbtCompound may not be null.");
+                        throw new ArgumentNullException("value",
+                                                        "Name of tags inside an NbtCompound may not be null.");
                     } else if (name != null) {
                         parentAsCompound.RenameTag(name, value);
                     }

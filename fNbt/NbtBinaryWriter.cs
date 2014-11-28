@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using JetBrains.Annotations;
@@ -87,6 +88,7 @@ namespace fNbt {
         }
 
 
+        [DebuggerStepThrough]
         public static short Swap(short v) {
             unchecked {
                 return (short)((v >> 8) & 0x00FF |
@@ -94,7 +96,8 @@ namespace fNbt {
             }
         }
 
-
+        
+        [DebuggerStepThrough]
         public static int Swap(int v) {
             unchecked {
                 var v2 = (uint)v;
@@ -105,7 +108,8 @@ namespace fNbt {
             }
         }
 
-
+        
+        [DebuggerStepThrough]
         public static long Swap(long v) {
             unchecked {
                 return (Swap((int)v) & uint.MaxValue) << 32 |

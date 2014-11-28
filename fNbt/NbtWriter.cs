@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using JetBrains.Annotations;
 
@@ -704,6 +705,8 @@ namespace fNbt {
 
 
         void WriteByteArrayFromStreamImpl([NotNull] Stream dataSource, int count, [NotNull] byte[] buffer) {
+            Debug.Assert(dataSource != null);
+            Debug.Assert(buffer != null);
             writer.Write(count);
             int maxBytesToWrite = Math.Min(buffer.Length, MaxWriteChunk);
             int bytesWritten = 0;

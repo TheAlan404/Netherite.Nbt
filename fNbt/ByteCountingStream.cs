@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using JetBrains.Annotations;
 
@@ -15,7 +16,7 @@ namespace fNbt {
 
 
         public ByteCountingStream([NotNull] Stream stream) {
-            if (stream == null) throw new ArgumentNullException("stream");
+            Debug.Assert(stream != null);
             baseStream = stream;
         }
 

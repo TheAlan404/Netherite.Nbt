@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using JetBrains.Annotations;
@@ -276,7 +277,7 @@ namespace fNbt {
 
                 case NbtCompression.ZLib:
                     if (stream.ReadByte() != 0x78) {
-                        throw new InvalidDataException("Unrecognized ZLib header. Expected 0x78");
+                        throw new InvalidDataException(WrongZLibHeaderMessage);
                     }
                     stream.ReadByte();
                     using (var decStream = new DeflateStream(stream, CompressionMode.Decompress, true)) {
@@ -464,6 +465,7 @@ namespace fNbt {
             }
 
             if (rootTag.Name == null) {
+                // This may trigger if root tag has been renamed
                 throw new NbtFormatException(
                     "Cannot save NbtFile: Root tag is not named. Its name may be an empty string, but not null.");
             }
@@ -609,7 +611,7 @@ namespace fNbt {
 
                 case NbtCompression.ZLib:
                     if (stream.ReadByte() != 0x78) {
-                        throw new InvalidDataException("Incorrect ZLib header. Expected 0x78 0x9C");
+                        throw new InvalidDataException(WrongZLibHeaderMessage);
                     }
                     stream.ReadByte();
                     using (var decStream = new DeflateStream(stream, CompressionMode.Decompress, true)) {
@@ -628,8 +630,7 @@ namespace fNbt {
 
         [NotNull]
         static string GetRootNameInternal([NotNull] Stream stream, bool bigEndian) {
-            if (stream == null)
-                throw new ArgumentNullException("stream");
+            Debug.Assert(stream != null);
             if (stream.ReadByte() != (int)NbtTagType.Compound) {
                 throw new NbtFormatException("Given NBT stream does not start with a TAG_Compound");
             }
@@ -654,5 +655,8 @@ namespace fNbt {
         public string ToString([NotNull] string indentString) {
             return RootTag.ToString(indentString);
         }
+
+
+        const string WrongZLibHeaderMessage = "Unrecognized ZLib header. Expected 0x78";
     }
 }
