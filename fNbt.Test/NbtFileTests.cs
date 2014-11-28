@@ -255,11 +255,36 @@ namespace fNbt.Test {
 
         [Test]
         public void HugeNbtFileTest() {
+            byte[] val = new byte[1024*1024*1024];
             NbtCompound root = new NbtCompound("root") {
-                new NbtByteArray("payload1", new byte[1024*1024*1024])
+                new NbtByteArray("payload1") {
+                    Value = val
+                }
             };
             NbtFile file = new NbtFile(root);
             file.SaveToStream(Stream.Null, NbtCompression.None);
+        }
+
+
+
+        [Test]
+        public void RootTagTest() {
+            NbtCompound oldRoot = new NbtCompound("defaultRoot");
+            NbtFile newFile = new NbtFile(oldRoot);
+
+            // Ensure that 
+            Assert.Throws<ArgumentNullException>(() => new NbtFile((NbtCompound)null));
+
+            // Ensure that inappropriate tags are not accepted as RootTag
+            Assert.Throws<ArgumentNullException>( () => newFile.RootTag = null );
+            Assert.Throws<ArgumentException>(() => newFile.RootTag = new NbtCompound());
+
+            // Ensure that the root has not changed
+            Assert.AreEqual(newFile.RootTag, oldRoot);
+
+            // Invalidate the root tag, and ensure that expected exception is thrown
+            oldRoot.Name = null;
+            Assert.Throws<NbtFormatException>(()=>newFile.SaveToBuffer(NbtCompression.None));
         }
 
 
