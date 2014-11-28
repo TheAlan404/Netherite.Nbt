@@ -568,7 +568,7 @@ namespace fNbt {
                     AddToParent(thisTag, parent);
                     parent = thisTag;
                     parentDepth = Depth;
-                } else {
+                } else if (TagType != NbtTagType.End) {
                     thisTag = ReadValueAsTag();
                     AddToParent(thisTag, parent);
                 }
@@ -597,6 +597,7 @@ namespace fNbt {
         [NotNull]
         NbtTag ReadValueAsTag() {
             if (!atValue) {
+                // Should never happen
                 throw new InvalidOperationException(NoValueToReadError);
             }
             atValue = false;
