@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using JetBrains.Annotations;
@@ -7,113 +6,167 @@ using JetBrains.Annotations;
 namespace fNbt {
     /// <summary> BinaryWriter wrapper that writes NBT primitives to a stream,
     /// while taking care of endianness and string encoding, and counting bytes written. </summary>
-    internal sealed class NbtBinaryWriter : BinaryWriter {
-        readonly bool swapNeeded;
-        readonly byte[] stringConversionBuffer = new byte[64];
+    internal sealed unsafe class NbtBinaryWriter {
+
+        // Write at most 512 MiB at a time.
+        // This works around an overflow in BufferedStream.Write(byte[]) that happens on 1 GiB+ writes.
+        public const int MaxWriteChunk = 512*1024*1024;
         const int MaxBufferedStringLength = 16;
 
+        static readonly UTF8Encoding Encoding = new UTF8Encoding(false, true);
 
-        public NbtBinaryWriter([NotNull] Stream input, bool bigEndian)
-            : base(input) {
+        public Stream BaseStream {
+            get {
+                stream.Flush();
+                return stream;
+            }
+        }
+
+        readonly bool swapNeeded;
+        readonly byte[] buffer = new byte[64];
+        readonly Stream stream;
+
+
+        public NbtBinaryWriter([NotNull] Stream input, bool bigEndian) {
+            if (input == null) throw new ArgumentNullException("input");
+            if (!input.CanWrite) throw new ArgumentException("Given stream must be writable", "input");
+            stream = input;
             swapNeeded = (BitConverter.IsLittleEndian == bigEndian);
         }
 
 
+        public void Write(byte value) {
+            stream.WriteByte(value);
+        }
+
         public void Write(NbtTagType value) {
-            BaseStream.WriteByte((byte)value);
+            stream.WriteByte((byte)value);
         }
 
 
-        public override void Write(short value) {
+        public void Write(short value) {
             if (swapNeeded) {
-                base.Write(Swap(value));
+                buffer[0] = (byte)(value >> 8);
+                buffer[1] = (byte)value;
             } else {
-                base.Write(value);
+                buffer[0] = (byte)value;
+                buffer[1] = (byte)(value >> 8);
             }
+            stream.Write(buffer, 0, 2);
         }
 
 
-        public override void Write(int value) {
+        public void Write(int value) {
             if (swapNeeded) {
-                base.Write(Swap(value));
+                buffer[0] = (byte)(value >> 24);
+                buffer[1] = (byte)(value >> 16);
+                buffer[2] = (byte)(value >> 8);
+                buffer[3] = (byte)value;
             } else {
-                base.Write(value);
+                buffer[0] = (byte)value;
+                buffer[1] = (byte)(value >> 8);
+                buffer[2] = (byte)(value >> 16);
+                buffer[3] = (byte)(value >> 24);
             }
+            stream.Write(buffer, 0, 4);
         }
 
 
-        public override void Write(long value) {
+        public void Write(long value) {
             if (swapNeeded) {
-                base.Write(Swap(value));
+                buffer[0] = (byte)(value >> 56);
+                buffer[1] = (byte)(value >> 48);
+                buffer[2] = (byte)(value >> 40);
+                buffer[3] = (byte)(value >> 32);
+                buffer[4] = (byte)(value >> 24);
+                buffer[5] = (byte)(value >> 16);
+                buffer[6] = (byte)(value >> 8);
+                buffer[7] = (byte)value;
             } else {
-                base.Write(value);
+                buffer[0] = (byte)value;
+                buffer[1] = (byte)(value >> 8);
+                buffer[2] = (byte)(value >> 16);
+                buffer[3] = (byte)(value >> 24);
+                buffer[4] = (byte)(value >> 32);
+                buffer[5] = (byte)(value >> 40);
+                buffer[6] = (byte)(value >> 48);
+                buffer[7] = (byte)(value >> 56);
             }
+            stream.Write(buffer, 0, 8);
         }
 
 
-        public override void Write(float value) {
+        public void Write(float value) {
+            ulong tmpValue = *(uint*)&value;
             if (swapNeeded) {
-                byte[] floatBytes = BitConverter.GetBytes(value);
-                Array.Reverse(floatBytes);
-                Write(floatBytes);
+                buffer[0] = (byte)(tmpValue >> 24);
+                buffer[1] = (byte)(tmpValue >> 16);
+                buffer[2] = (byte)(tmpValue >> 8);
+                buffer[3] = (byte)tmpValue;
             } else {
-                base.Write(value);
+                buffer[0] = (byte)tmpValue;
+                buffer[1] = (byte)(tmpValue >> 8);
+                buffer[2] = (byte)(tmpValue >> 16);
+                buffer[3] = (byte)(tmpValue >> 24);
             }
+            stream.Write(buffer, 0, 4);
         }
 
 
-        public override void Write(double value) {
+        public void Write(double value) {
+            ulong tmpValue = *(ulong*)&value;
             if (swapNeeded) {
-                byte[] doubleBytes = BitConverter.GetBytes(value);
-                Array.Reverse(doubleBytes);
-                Write(doubleBytes);
+                buffer[0] = (byte)(tmpValue >> 56);
+                buffer[1] = (byte)(tmpValue >> 48);
+                buffer[2] = (byte)(tmpValue >> 40);
+                buffer[3] = (byte)(tmpValue >> 32);
+                buffer[4] = (byte)(tmpValue >> 24);
+                buffer[5] = (byte)(tmpValue >> 16);
+                buffer[6] = (byte)(tmpValue >> 8);
+                buffer[7] = (byte)tmpValue;
             } else {
-                base.Write(value);
+                buffer[0] = (byte)tmpValue;
+                buffer[1] = (byte)(tmpValue >> 8);
+                buffer[2] = (byte)(tmpValue >> 16);
+                buffer[3] = (byte)(tmpValue >> 24);
+                buffer[4] = (byte)(tmpValue >> 32);
+                buffer[5] = (byte)(tmpValue >> 40);
+                buffer[6] = (byte)(tmpValue >> 48);
+                buffer[7] = (byte)(tmpValue >> 56);
             }
+            stream.Write(buffer, 0, 8);
         }
 
 
-        public override void Write(string value) {
+        public void Write(string value) {
             if (value == null)
                 throw new ArgumentNullException("value");
             if (value.Length > MaxBufferedStringLength) {
-                byte[] bytes = Encoding.UTF8.GetBytes(value);
+                byte[] bytes = Encoding.GetBytes(value);
                 Write((short)bytes.Length);
-                BaseStream.Write(bytes, 0, bytes.Length);
+                stream.Write(bytes, 0, bytes.Length);
             } else {
-                int byteCount = Encoding.UTF8.GetBytes(value, 0, value.Length, stringConversionBuffer, 0);
-                Write((short)byteCount);
-                BaseStream.Write(stringConversionBuffer, 0, byteCount);
+                // We skip first 2 bytes to allow Write(short) to use the buffer without overwriting string data
+                int byteCount = Encoding.GetBytes(value, 0, value.Length, buffer, 2);
+                // Inlined Write(short) to avoid an extra Write call
+                if (swapNeeded) {
+                    buffer[0] = (byte)(byteCount >> 8);
+                    buffer[1] = (byte)byteCount;
+                } else {
+                    buffer[0] = (byte)byteCount;
+                    buffer[1] = (byte)(byteCount >> 8);
+                }
+                stream.Write(buffer, 0, byteCount + 2);
             }
         }
 
 
-        [DebuggerStepThrough]
-        public static short Swap(short v) {
-            unchecked {
-                return (short)((v >> 8) & 0x00FF |
-                               (v << 8) & 0xFF00);
-            }
-        }
-
-        
-        [DebuggerStepThrough]
-        public static int Swap(int v) {
-            unchecked {
-                var v2 = (uint)v;
-                return (int)((v2 >> 24) & 0x000000FF |
-                             (v2 >> 8) & 0x0000FF00 |
-                             (v2 << 8) & 0x00FF0000 |
-                             (v2 << 24) & 0xFF000000);
-            }
-        }
-
-        
-        [DebuggerStepThrough]
-        public static long Swap(long v) {
-            unchecked {
-                return (Swap((int)v) & uint.MaxValue) << 32 |
-                       Swap((int)(v >> 32)) & uint.MaxValue;
+        public void Write(byte[] data, int offset, int count) {
+            int written = 0;
+            while (written < count) {
+                int toWrite = Math.Min(MaxWriteChunk, count - written);
+                stream.Write(data, offset + written, toWrite);
+                written += toWrite;
             }
         }
     }

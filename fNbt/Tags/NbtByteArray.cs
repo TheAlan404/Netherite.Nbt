@@ -7,10 +7,6 @@ namespace fNbt {
     public sealed class NbtByteArray : NbtTag {
         static readonly byte[] ZeroArray = new byte[0];
 
-        // Write at most 512 MiB at a time.
-        // This works around an overflow in BufferedStream.Write(byte[]) that happens on 1 GiB+ writes.
-        const int MaxWriteChunk = 512*1024*1024;
-
         /// <summary> Type of this tag (ByteArray). </summary>
         public override NbtTagType TagType {
             get { return NbtTagType.ByteArray; }
@@ -124,12 +120,7 @@ namespace fNbt {
 
         internal override void WriteData(NbtBinaryWriter writeStream) {
             writeStream.Write(Value.Length);
-            int written = 0;
-            while (written < Value.Length) {
-                int toWrite = Math.Min(MaxWriteChunk, Value.Length - written);
-                writeStream.Write(Value, written, toWrite);
-                written += toWrite;
-            }
+            writeStream.Write(Value, 0, Value.Length);
         }
 
 

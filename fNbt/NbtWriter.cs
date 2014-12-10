@@ -12,10 +12,6 @@ namespace fNbt {
     public sealed class NbtWriter {
         const int MaxStreamCopyBufferSize = 8*1024;
 
-        // Write at most 512 MiB at a time.
-        // This works around an overflow in BufferedStream.Write(byte[],int,int) that happens on 1 GiB+ writes.
-        const int MaxWriteChunk = 512*1024*1024;
-
         readonly NbtBinaryWriter writer;
         NbtTagType listType;
         NbtTagType parentType;
@@ -94,7 +90,7 @@ namespace fNbt {
                 throw new NbtFormatException("Not currently in a compound.");
             }
             GoUp();
-            writer.Write((byte)NbtTagType.End);
+            writer.Write(NbtTagType.End);
         }
 
 
@@ -373,12 +369,7 @@ namespace fNbt {
             CheckArray(data, offset, count);
             EnforceConstraints(null, NbtTagType.ByteArray);
             writer.Write(count);
-            int written = 0;
-            while (written < count) {
-                int toWrite = Math.Min(MaxWriteChunk, count - written);
-                writer.Write(data, offset + written, toWrite);
-                written += toWrite;
-            }
+            writer.Write(data, offset, count);
         }
 
 
@@ -415,13 +406,7 @@ namespace fNbt {
             writer.Write((byte)NbtTagType.ByteArray);
             writer.Write(tagName);
             writer.Write(count);
-
-            int written = 0;
-            while (written < count) {
-                int toWrite = Math.Min(MaxWriteChunk, count - written);
-                writer.Write(data, offset + written, toWrite);
-                written += toWrite;
-            }
+            writer.Write(data,offset,count);
         }
 
 
@@ -524,8 +509,8 @@ namespace fNbt {
                 throw new ArgumentOutOfRangeException("count", "count may not be negative");
             } else if (buffer.Length == 0 && count > 0) {
                 throw new ArgumentException("buffer size must be greater than 0 when count is greater than 0", "buffer");
-            } else if (buffer.Length > MaxWriteChunk) {
-                throw new ArgumentException("buffer size must not be greater than " + MaxWriteChunk, "buffer");
+            } else if (buffer.Length > NbtBinaryWriter.MaxWriteChunk) {
+                throw new ArgumentException("buffer size must not be greater than " + NbtBinaryWriter.MaxWriteChunk, "buffer");
             }
             EnforceConstraints(tagName, NbtTagType.ByteArray);
             writer.Write((byte)NbtTagType.ByteArray);
@@ -708,12 +693,12 @@ namespace fNbt {
             Debug.Assert(dataSource != null);
             Debug.Assert(buffer != null);
             writer.Write(count);
-            int maxBytesToWrite = Math.Min(buffer.Length, MaxWriteChunk);
+            int maxBytesToWrite = Math.Min(buffer.Length, NbtBinaryWriter.MaxWriteChunk);
             int bytesWritten = 0;
             while (bytesWritten < count) {
                 int bytesToRead = Math.Min(count - bytesWritten, maxBytesToWrite);
                 int bytesRead = dataSource.Read(buffer, 0, bytesToRead);
-                writer.BaseStream.Write(buffer, 0, bytesRead);
+                writer.Write(buffer, 0, bytesRead);
                 bytesWritten += bytesRead;
             }
         }

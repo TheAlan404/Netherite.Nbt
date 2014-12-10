@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using JetBrains.Annotations;
@@ -33,7 +34,7 @@ namespace fNbt {
 
         public override short ReadInt16() {
             if (swapNeeded) {
-                return NbtBinaryWriter.Swap(base.ReadInt16());
+                return Swap(base.ReadInt16());
             } else {
                 return base.ReadInt16();
             }
@@ -42,7 +43,7 @@ namespace fNbt {
 
         public override int ReadInt32() {
             if (swapNeeded) {
-                return NbtBinaryWriter.Swap(base.ReadInt32());
+                return Swap(base.ReadInt32());
             } else {
                 return base.ReadInt32();
             }
@@ -51,7 +52,7 @@ namespace fNbt {
 
         public override long ReadInt64() {
             if (swapNeeded) {
-                return NbtBinaryWriter.Swap(base.ReadInt64());
+                return Swap(base.ReadInt64());
             } else {
                 return base.ReadInt64();
             }
@@ -130,6 +131,35 @@ namespace fNbt {
             Skip(length);
         }
 
+
+        [DebuggerStepThrough]
+        public static short Swap(short v) {
+            unchecked {
+                return (short)((v >> 8) & 0x00FF |
+                               (v << 8) & 0xFF00);
+            }
+        }
+
+
+        [DebuggerStepThrough]
+        public static int Swap(int v) {
+            unchecked {
+                var v2 = (uint)v;
+                return (int)((v2 >> 24) & 0x000000FF |
+                             (v2 >> 8) & 0x0000FF00 |
+                             (v2 << 8) & 0x00FF0000 |
+                             (v2 << 24) & 0xFF000000);
+            }
+        }
+
+
+        [DebuggerStepThrough]
+        public static long Swap(long v) {
+            unchecked {
+                return (Swap((int)v) & uint.MaxValue) << 32 |
+                       Swap((int)(v >> 32)) & uint.MaxValue;
+            }
+        }
 
         [CanBeNull]
         public TagSelector Selector { get; set; }
