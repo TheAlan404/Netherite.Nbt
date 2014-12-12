@@ -7,12 +7,10 @@ namespace fNbt {
     public sealed class NbtIntArray : NbtTag {
         static readonly int[] ZeroArray = new int[0];
 
-
         /// <summary> Type of this tag (ByteArray). </summary>
         public override NbtTagType TagType {
             get { return NbtTagType.IntArray; }
         }
-
 
         /// <summary> Value/payload of this tag (an array of signed 32-bit integers). Value is stored as-is and is NOT cloned. May not be <c>null</c>. </summary>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
@@ -27,7 +25,8 @@ namespace fNbt {
             }
         }
 
-        [NotNull] int[] ints;
+        [NotNull]
+        int[] ints;
 
 
         /// <summary> Creates an unnamed NbtIntArray tag, containing an empty array of ints. </summary>
@@ -59,12 +58,11 @@ namespace fNbt {
         /// <remarks> Given int array will be cloned. To avoid unnecessary copying, call one of the other constructor
         /// overloads (that do not take a int[]) and then set the Value property yourself. </remarks>
         public NbtIntArray([CanBeNull] string tagName, [NotNull] int[] value) {
-            if (value == null)
-                throw new ArgumentNullException("value");
+            if (value == null) throw new ArgumentNullException("value");
             name = tagName;
             ints = (int[])value.Clone();
         }
-        
+
 
         /// <summary> Creates a deep copy of given NbtIntArray. </summary>
         /// <param name="other"> Tag to copy. May not be <c>null</c>. </param>
@@ -117,8 +115,7 @@ namespace fNbt {
 
         internal override void WriteTag(NbtBinaryWriter writeStream) {
             writeStream.Write(NbtTagType.IntArray);
-            if (Name == null)
-                throw new NbtFormatException("Name is null");
+            if (Name == null) throw new NbtFormatException("Name is null");
             writeStream.Write(Name);
             WriteData(writeStream);
         }

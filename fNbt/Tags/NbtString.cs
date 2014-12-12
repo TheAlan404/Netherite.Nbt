@@ -22,7 +22,8 @@ namespace fNbt {
             }
         }
 
-        [NotNull] string stringVal = "";
+        [NotNull]
+        string stringVal = "";
 
 
         /// <summary> Creates an unnamed NbtString tag with the default value (empty string). </summary>
@@ -41,8 +42,7 @@ namespace fNbt {
         /// <param name="value"> String value to assign to this tag. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         public NbtString([CanBeNull] string tagName, [NotNull] string value) {
-            if (value == null)
-                throw new ArgumentNullException("value");
+            if (value == null) throw new ArgumentNullException("value");
             name = tagName;
             Value = value;
         }
@@ -77,8 +77,7 @@ namespace fNbt {
 
         internal override void WriteTag(NbtBinaryWriter writeStream) {
             writeStream.Write(NbtTagType.String);
-            if (Name == null)
-                throw new NbtFormatException("Name is null");
+            if (Name == null) throw new NbtFormatException("Name is null");
             writeStream.Write(Name);
             writeStream.Write(Value);
         }

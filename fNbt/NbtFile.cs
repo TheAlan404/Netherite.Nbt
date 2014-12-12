@@ -18,11 +18,9 @@ namespace fNbt {
         [CanBeNull]
         public string FileName { get; private set; }
 
-
         /// <summary> Gets the compression method used for most recent loading/saving of this file.
         /// Defaults to AutoDetect. </summary>
         public NbtCompression FileCompression { get; private set; }
-
 
         /// <summary> Root tag of this file. Must be a named CompoundTag. Defaults to an empty-named tag. </summary>
         /// <exception cref="ArgumentException"> If given tag is unnamed. </exception>
@@ -30,16 +28,14 @@ namespace fNbt {
         public NbtCompound RootTag {
             get { return rootTag; }
             set {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                if (value.Name == null)
-                    throw new ArgumentException("Root tag must be named.");
+                if (value == null) throw new ArgumentNullException("value");
+                if (value.Name == null) throw new ArgumentException("Root tag must be named.");
                 rootTag = value;
             }
         }
 
-        [NotNull] NbtCompound rootTag;
-
+        [NotNull]
+        NbtCompound rootTag;
 
         /// <summary> Whether new NbtFiles should default to big-endian encoding (default: true). </summary>
         public static bool BigEndianByDefault { get; set; }
@@ -47,21 +43,20 @@ namespace fNbt {
         /// <summary> Whether this file should read/write tags in big-endian encoding format. </summary>
         public bool BigEndian { get; set; }
 
-
         /// <summary> Gets or sets the default value of <c>BufferSize</c> property. Default is 8192. 
         /// Set to 0 to disable buffering by default. </summary>
         /// <exception cref="ArgumentOutOfRangeException"> value is negative. </exception>
         public static int DefaultBufferSize {
             get { return defaultBufferSize; }
             set {
-                if (value < 0)
+                if (value < 0) {
                     throw new ArgumentOutOfRangeException("value", value, "DefaultBufferSize cannot be negative.");
+                }
                 defaultBufferSize = value;
             }
         }
 
         static int defaultBufferSize = 8*1024;
-
 
         /// <summary> Gets or sets the size of internal buffer used for reading files and streams.
         /// Initialized to value of <c>DefaultBufferSize</c> property. </summary>
@@ -69,8 +64,9 @@ namespace fNbt {
         public int BufferSize {
             get { return bufferSize; }
             set {
-                if (value < 0)
+                if (value < 0) {
                     throw new ArgumentOutOfRangeException("value", value, "BufferSize cannot be negative.");
+                }
                 bufferSize = value;
             }
         }
@@ -100,8 +96,7 @@ namespace fNbt {
         /// <exception cref="ArgumentException"> If given <paramref name="rootTag"/> is unnamed. </exception>
         public NbtFile([NotNull] NbtCompound rootTag)
             : this() {
-            if (rootTag == null)
-                throw new ArgumentNullException("rootTag");
+            if (rootTag == null) throw new ArgumentNullException("rootTag");
             RootTag = rootTag;
         }
 
@@ -117,8 +112,7 @@ namespace fNbt {
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         public NbtFile([NotNull] string fileName)
             : this() {
-            if (fileName == null)
-                throw new ArgumentNullException("fileName");
+            if (fileName == null) throw new ArgumentNullException("fileName");
             LoadFromFile(fileName, NbtCompression.AutoDetect, null);
         }
 
@@ -155,8 +149,7 @@ namespace fNbt {
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         /// <exception cref="IOException"> If an I/O error occurred while reading the file. </exception>
         public long LoadFromFile([NotNull] string fileName, NbtCompression compression, [CanBeNull] TagSelector selector) {
-            if (fileName == null)
-                throw new ArgumentNullException("fileName");
+            if (fileName == null) throw new ArgumentNullException("fileName");
 
             using (
                 var readFileStream = new FileStream(fileName,
@@ -189,9 +182,8 @@ namespace fNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         public long LoadFromBuffer([NotNull] byte[] buffer, int index, int length, NbtCompression compression,
-                                  [CanBeNull] TagSelector selector) {
-            if (buffer == null)
-                throw new ArgumentNullException("buffer");
+                                   [CanBeNull] TagSelector selector) {
+            if (buffer == null) throw new ArgumentNullException("buffer");
 
             using (var ms = new MemoryStream(buffer, index, length)) {
                 LoadFromStream(ms, compression, selector);
@@ -216,8 +208,7 @@ namespace fNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected or decompressing failed. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         public long LoadFromBuffer([NotNull] byte[] buffer, int index, int length, NbtCompression compression) {
-            if (buffer == null)
-                throw new ArgumentNullException("buffer");
+            if (buffer == null) throw new ArgumentNullException("buffer");
 
             using (var ms = new MemoryStream(buffer, index, length)) {
                 LoadFromStream(ms, compression, null);
@@ -240,8 +231,7 @@ namespace fNbt {
         /// <exception cref="InvalidDataException"> If file compression could not be detected, decompressing failed, or given stream does not support reading. </exception>
         /// <exception cref="NbtFormatException"> If an error occurred while parsing data in NBT format. </exception>
         public long LoadFromStream([NotNull] Stream stream, NbtCompression compression, [CanBeNull] TagSelector selector) {
-            if (stream == null)
-                throw new ArgumentNullException("stream");
+            if (stream == null) throw new ArgumentNullException("stream");
 
             FileName = null;
 
@@ -381,8 +371,7 @@ namespace fNbt {
         /// <exception cref="NbtFormatException"> If one of the NbtCompound tags contained unnamed tags;
         /// or if an NbtList tag had Unknown list type and no elements. </exception>
         public long SaveToFile([NotNull] string fileName, NbtCompression compression) {
-            if (fileName == null)
-                throw new ArgumentNullException("fileName");
+            if (fileName == null) throw new ArgumentNullException("fileName");
 
             using (
                 var saveFile = new FileStream(fileName,
@@ -410,8 +399,7 @@ namespace fNbt {
         /// <exception cref="NbtFormatException"> If one of the NbtCompound tags contained unnamed tags;
         /// or if an NbtList tag had Unknown list type and no elements. </exception>
         public long SaveToBuffer([NotNull] byte[] buffer, int index, NbtCompression compression) {
-            if (buffer == null)
-                throw new ArgumentNullException("buffer");
+            if (buffer == null) throw new ArgumentNullException("buffer");
 
             using (var ms = new MemoryStream(buffer, index, buffer.Length - index)) {
                 return SaveToStream(ms, compression);
@@ -450,8 +438,7 @@ namespace fNbt {
         /// or if one of the NbtCompound tags contained unnamed tags;
         /// or if an NbtList tag had Unknown list type and no elements. </exception>
         public long SaveToStream([NotNull] Stream stream, NbtCompression compression) {
-            if (stream == null)
-                throw new ArgumentNullException("stream");
+            if (stream == null) throw new ArgumentNullException("stream");
 
             switch (compression) {
                 case NbtCompression.AutoDetect:
@@ -586,8 +573,7 @@ namespace fNbt {
         [NotNull]
         public static string ReadRootTagName([NotNull] Stream stream, NbtCompression compression, bool bigEndian,
                                              int bufferSize) {
-            if (stream == null)
-                throw new ArgumentNullException("stream");
+            if (stream == null) throw new ArgumentNullException("stream");
             if (bufferSize < 0) {
                 throw new ArgumentOutOfRangeException("bufferSize", bufferSize, "DefaultBufferSize cannot be negative.");
             }

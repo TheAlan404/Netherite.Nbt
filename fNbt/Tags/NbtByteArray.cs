@@ -12,7 +12,6 @@ namespace fNbt {
             get { return NbtTagType.ByteArray; }
         }
 
-
         /// <summary> Value/payload of this tag (an array of bytes). Value is stored as-is and is NOT cloned. May not be <c>null</c>. </summary>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         [NotNull]
@@ -26,7 +25,8 @@ namespace fNbt {
             }
         }
 
-        [NotNull] byte[] bytes;
+        [NotNull]
+        byte[] bytes;
 
 
         /// <summary> Creates an unnamed NbtByte tag, containing an empty array of bytes. </summary>
@@ -111,8 +111,7 @@ namespace fNbt {
 
         internal override void WriteTag(NbtBinaryWriter writeStream) {
             writeStream.Write(NbtTagType.ByteArray);
-            if (Name == null)
-                throw new NbtFormatException("Name is null");
+            if (Name == null) throw new NbtFormatException("Name is null");
             writeStream.Write(Name);
             WriteData(writeStream);
         }

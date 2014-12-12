@@ -160,7 +160,7 @@ namespace fNbt {
             stream.Write(buffer, 0, 8);
         }
 
-        
+
         // Based on BinaryWriter.Write(String)
         public void Write([NotNull] string value) {
             if (value == null) {
@@ -175,7 +175,6 @@ namespace fNbt {
                 // If the string fits entirely in the buffer, encode and write it as one
                 Encoding.GetBytes(value, 0, value.Length, buffer, 0);
                 stream.Write(buffer, 0, numBytes);
-
             } else {
                 // Aggressively try to not allocate memory in this loop for runtime performance reasons.
                 // Use an Encoder to write out the string correctly (handling surrogates crossing buffer

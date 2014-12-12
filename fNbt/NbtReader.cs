@@ -32,8 +32,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> <paramref name="stream"/> is not readable. </exception>
         public NbtReader([NotNull] Stream stream, bool bigEndian) {
-            if (stream == null)
-                throw new ArgumentNullException("stream");
+            if (stream == null) throw new ArgumentNullException("stream");
             SkipEndTags = true;
             CacheTagValues = false;
             ParentTagType = NbtTagType.Unknown;
@@ -43,7 +42,7 @@ namespace fNbt {
             if (canSeekStream) {
                 streamStartOffset = stream.Position;
             }
-            
+
             reader = new NbtBinaryReader(stream, bigEndian);
         }
 
@@ -60,13 +59,11 @@ namespace fNbt {
         [CanBeNull]
         public string TagName { get; private set; }
 
-
         /// <summary> Gets the type of the parent tag. Returns TagType.Unknown if there is no parent tag. </summary>
         public NbtTagType ParentTagType { get; private set; }
 
         /// <summary> Gets the type of the current tag. </summary>
         public NbtTagType TagType { get; private set; }
-
 
         /// <summary> Whether tag that we are currently on is a list element. </summary>
         public bool IsListElement {
@@ -98,7 +95,6 @@ namespace fNbt {
             get { return state == NbtParseState.AtStreamEnd; }
         }
 
-
         /// <summary> Whether the current tag is a Compound. </summary>
         public bool IsCompound {
             get { return (TagType == NbtTagType.Compound); }
@@ -124,7 +120,6 @@ namespace fNbt {
             }
         }
 
-
         /// <summary> Gets the Stream from which data is being read. </summary>
         [NotNull]
         public Stream BaseStream {
@@ -144,7 +139,6 @@ namespace fNbt {
         /// <c>RootTag</c> is at depth 1, its descendant tags are 2, etc. </summary>
         public int Depth { get; private set; }
 
-
         /// <summary> If the current tag is TAG_List, returns type of the list elements. </summary>
         public NbtTagType ListType { get; private set; }
 
@@ -156,7 +150,6 @@ namespace fNbt {
 
         /// <summary> If the parent tag is TAG_List, returns index of the current tag. </summary>
         public int ListIndex { get; private set; }
-
 
         /// <summary> Gets whether this NbtReader instance is in state of error.
         /// No further reading can be done from this instance if a parse error occurred. </summary>
@@ -334,8 +327,7 @@ namespace fNbt {
 
         // Goes one step down the NBT file's hierarchy, preserving current state
         void GoDown() {
-            if (nodes == null)
-                nodes = new Stack<NbtReaderNode>();
+            if (nodes == null) nodes = new Stack<NbtReaderNode>();
             var newNode = new NbtReaderNode {
                 ListIndex = ListIndex,
                 ParentTagLength = ParentTagLength,
@@ -559,8 +551,7 @@ namespace fNbt {
                     parent = parent.Parent;
                     parentDepth--;
                 }
-                if (Depth <= startingDepth)
-                    break;
+                if (Depth <= startingDepth) break;
 
                 NbtTag thisTag;
                 if (TagType == NbtTagType.Compound) {
@@ -830,7 +821,6 @@ namespace fNbt {
         /// Default is <c>true</c>. </summary>
         public bool SkipEndTags { get; set; }
 
-
         /// <summary> Parsing option: Whether NbtReader should save a copy of the most recently read tag's value.
         /// Unless CacheTagValues is <c>true</c>, tag values can only be read once. Default is <c>false</c>. </summary>
         public bool CacheTagValues {
@@ -871,8 +861,7 @@ namespace fNbt {
         /// <param name="includeValue"> If set to <c>true</c>, also reads and prints the current tag's value. </param>
         [NotNull]
         public string ToString(bool includeValue, [NotNull] string indentString) {
-            if (indentString == null)
-                throw new ArgumentNullException("indentString");
+            if (indentString == null) throw new ArgumentNullException("indentString");
             var sb = new StringBuilder();
             for (int i = 0; i < Depth; i++) {
                 sb.Append(indentString);

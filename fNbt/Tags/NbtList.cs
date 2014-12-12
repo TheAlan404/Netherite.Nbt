@@ -15,7 +15,6 @@ namespace fNbt {
         [NotNull]
         readonly List<NbtTag> tags = new List<NbtTag>();
 
-
         /// <summary> Gets or sets the tag type of this list. All tags in this NbtTag must be of the same type. </summary>
         /// <exception cref="ArgumentException"> If the given NbtTagType does not match the type of existing list items (for non-empty lists). </exception>
         /// <exception cref="ArgumentOutOfRangeException"> If the given NbtTagType is not among recognized tag types. </exception>
@@ -61,8 +60,7 @@ namespace fNbt {
         public NbtList([NotNull] IEnumerable<NbtTag> tags)
             : this(null, tags, NbtTagType.Unknown) {
             // the base constructor will allow null "tags," but we don't want that in this constructor
-            if (tags == null)
-                throw new ArgumentNullException("tags");
+            if (tags == null) throw new ArgumentNullException("tags");
         }
 
 
@@ -85,8 +83,7 @@ namespace fNbt {
         public NbtList([CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags)
             : this(tagName, tags, NbtTagType.Unknown) {
             // the base constructor will allow null "tags," but we don't want that in this constructor
-            if (tags == null)
-                throw new ArgumentNullException("tags");
+            if (tags == null) throw new ArgumentNullException("tags");
         }
 
 
@@ -101,8 +98,7 @@ namespace fNbt {
         public NbtList([NotNull] IEnumerable<NbtTag> tags, NbtTagType givenListType)
             : this(null, tags, givenListType) {
             // the base constructor will allow null "tags," but we don't want that in this constructor
-            if (tags == null)
-                throw new ArgumentNullException("tags");
+            if (tags == null) throw new ArgumentNullException("tags");
         }
 
 
@@ -197,8 +193,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="newTags"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If given tags do not match ListType, or are of mixed types. </exception>
         public void AddRange([NotNull] IEnumerable<NbtTag> newTags) {
-            if (newTags == null)
-                throw new ArgumentNullException("newTags");
+            if (newTags == null) throw new ArgumentNullException("newTags");
             foreach (NbtTag tag in newTags) {
                 Add(tag);
             }
@@ -350,8 +345,7 @@ namespace fNbt {
 
         internal override void WriteTag(NbtBinaryWriter writeStream) {
             writeStream.Write(NbtTagType.List);
-            if (Name == null)
-                throw new NbtFormatException("Name is null");
+            if (Name == null) throw new NbtFormatException("Name is null");
             writeStream.Write(Name);
             WriteData(writeStream);
         }
@@ -393,8 +387,7 @@ namespace fNbt {
         /// <returns> The index of tag if found in the list; otherwise, -1. </returns>
         /// <param name="tag"> The tag to locate in this NbtList. </param>
         public int IndexOf([NotNull] NbtTag tag) {
-            if (tag == null)
-                throw new ArgumentNullException("tag");
+            if (tag == null) throw new ArgumentNullException("tag");
             return tags.IndexOf(tag);
         }
 
@@ -470,8 +463,7 @@ namespace fNbt {
         /// <returns> true if given tag is found in this NbtList; otherwise, false. </returns>
         /// <param name="item"> The tag to locate in this NbtList. </param>
         public bool Contains([NotNull] NbtTag item) {
-            if (item == null)
-                throw new ArgumentNullException("item");
+            if (item == null) throw new ArgumentNullException("item");
             return tags.Contains(item);
         }
 
@@ -497,8 +489,7 @@ namespace fNbt {
         /// <param name="tag"> The tag to remove from this NbtList. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is <c>null</c>. </exception>
         public bool Remove([NotNull] NbtTag tag) {
-            if (tag == null)
-                throw new ArgumentNullException("tag");
+            if (tag == null) throw new ArgumentNullException("tag");
             if (!tags.Remove(tag)) {
                 return false;
             }
@@ -512,7 +503,6 @@ namespace fNbt {
         public int Count {
             get { return tags.Count; }
         }
-
 
         bool ICollection<NbtTag>.IsReadOnly {
             get { return false; }
@@ -570,11 +560,9 @@ namespace fNbt {
             get { return (tags as ICollection).SyncRoot; }
         }
 
-
         bool ICollection.IsSynchronized {
             get { return false; }
         }
-
 
         bool IList.IsReadOnly {
             get { return false; }

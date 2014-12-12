@@ -9,7 +9,7 @@ namespace fNbt {
     /// while taking care of endianness, string encoding, and skipping. </summary>
     internal sealed class NbtBinaryReader : BinaryReader {
         readonly byte[] floatBuffer = new byte[sizeof(float)],
-                        doubleBuffer = new byte[sizeof(double)];
+            doubleBuffer = new byte[sizeof(double)];
 
         byte[] seekBuffer;
         const int SeekBufferSize = 8*1024;
@@ -108,8 +108,7 @@ namespace fNbt {
             } else if (BaseStream.CanSeek) {
                 BaseStream.Position += bytesToSkip;
             } else if (bytesToSkip != 0) {
-                if (seekBuffer == null)
-                    seekBuffer = new byte[SeekBufferSize];
+                if (seekBuffer == null) seekBuffer = new byte[SeekBufferSize];
                 int bytesSkipped = 0;
                 while (bytesSkipped < bytesToSkip) {
                     int bytesToRead = Math.Min(SeekBufferSize, bytesToSkip - bytesSkipped);
@@ -133,7 +132,7 @@ namespace fNbt {
 
 
         [DebuggerStepThrough]
-        public static short Swap(short v) {
+        static short Swap(short v) {
             unchecked {
                 return (short)((v >> 8) & 0x00FF |
                                (v << 8) & 0xFF00);
@@ -142,7 +141,7 @@ namespace fNbt {
 
 
         [DebuggerStepThrough]
-        public static int Swap(int v) {
+        static int Swap(int v) {
             unchecked {
                 var v2 = (uint)v;
                 return (int)((v2 >> 24) & 0x000000FF |
@@ -154,12 +153,13 @@ namespace fNbt {
 
 
         [DebuggerStepThrough]
-        public static long Swap(long v) {
+        static long Swap(long v) {
             unchecked {
                 return (Swap((int)v) & uint.MaxValue) << 32 |
                        Swap((int)(v >> 32)) & uint.MaxValue;
             }
         }
+
 
         [CanBeNull]
         public TagSelector Selector { get; set; }

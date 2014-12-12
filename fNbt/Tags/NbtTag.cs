@@ -11,10 +11,8 @@ namespace fNbt {
         [CanBeNull]
         public NbtTag Parent { get; internal set; }
 
-
         /// <summary> Type of this tag. </summary>
         public abstract NbtTagType TagType { get; }
-
 
         /// <summary> Returns true if tags of this type have a value attached.
         /// All tags except Compound, List, and End have values. </summary>
@@ -31,7 +29,6 @@ namespace fNbt {
                 }
             }
         }
-
 
         /// <summary> Name of this tag. Immutable, and set by the constructor. May be <c>null</c>. </summary>
         /// <exception cref="ArgumentNullException"> If <paramref name="value"/> is <c>null</c>, and <c>Parent</c> tag is an NbtCompound.
@@ -61,7 +58,6 @@ namespace fNbt {
 
         protected string name;
 
-
         /// <summary> Gets the full name of this tag, including all parent tag names, separated by dots. 
         /// Unnamed tags show up as empty strings. </summary>
         [NotNull]
@@ -79,15 +75,11 @@ namespace fNbt {
             }
         }
 
-
         internal abstract bool ReadTag([NotNull] NbtBinaryReader readStream);
-
 
         internal abstract void SkipTag([NotNull] NbtBinaryReader readStream);
 
-
         internal abstract void WriteTag([NotNull] NbtBinaryWriter writeReader);
-
 
         // WriteData does not write the tag's ID byte or the name
         internal abstract void WriteData([NotNull] NbtBinaryWriter writeReader);
@@ -106,7 +98,6 @@ namespace fNbt {
             set { throw new InvalidOperationException("String indexers only work on NbtCompound tags."); }
         }
 
-
         /// <summary> Gets or sets the tag at the specified index. </summary>
         /// <returns> The tag at the specified index. </returns>
         /// <param name="tagIndex"> The zero-based index of the tag to get or set. </param>
@@ -121,7 +112,6 @@ namespace fNbt {
             set { throw new InvalidOperationException("Integer indexers only work on NbtList tags."); }
         }
 
-
         /// <summary> Returns the value of this tag, cast as a byte.
         /// Only supported by NbtByte tags. </summary>
         /// <exception cref="InvalidCastException"> When used on a tag other than NbtByte. </exception>
@@ -134,7 +124,6 @@ namespace fNbt {
                 }
             }
         }
-
 
         /// <summary> Returns the value of this tag, cast as a short (16-bit signed integer).
         /// Only supported by NbtByte and NbtShort. </summary>
@@ -151,7 +140,6 @@ namespace fNbt {
                 }
             }
         }
-
 
         /// <summary> Returns the value of this tag, cast as an int (32-bit signed integer).
         /// Only supported by NbtByte, NbtShort, and NbtInt. </summary>
@@ -170,7 +158,6 @@ namespace fNbt {
                 }
             }
         }
-
 
         /// <summary> Returns the value of this tag, cast as a long (64-bit signed integer).
         /// Only supported by NbtByte, NbtShort, NbtInt, and NbtLong. </summary>
@@ -191,7 +178,6 @@ namespace fNbt {
                 }
             }
         }
-
 
         /// <summary> Returns the value of this tag, cast as a long (64-bit signed integer).
         /// Only supported by NbtFloat and, with loss of precision, by NbtDouble, NbtByte, NbtShort, NbtInt, and NbtLong. </summary>
@@ -217,7 +203,6 @@ namespace fNbt {
             }
         }
 
-
         /// <summary> Returns the value of this tag, cast as a long (64-bit signed integer).
         /// Only supported by NbtFloat, NbtDouble, and, with loss of precision, by NbtByte, NbtShort, NbtInt, and NbtLong. </summary>
         /// <exception cref="InvalidCastException"> When used on an unsupported tag. </exception>
@@ -242,7 +227,6 @@ namespace fNbt {
             }
         }
 
-
         /// <summary> Returns the value of this tag, cast as a byte array.
         /// Only supported by NbtByteArray tags. </summary>
         /// <exception cref="InvalidCastException"> When used on a tag other than NbtByteArray. </exception>
@@ -256,7 +240,6 @@ namespace fNbt {
             }
         }
 
-
         /// <summary> Returns the value of this tag, cast as an int array.
         /// Only supported by NbtIntArray tags. </summary>
         /// <exception cref="InvalidCastException"> When used on a tag other than NbtIntArray. </exception>
@@ -269,7 +252,6 @@ namespace fNbt {
                 }
             }
         }
-
 
         /// <summary> Returns the value of this tag, cast as a string.
         /// Returns exact value for NbtString, and stringified (using InvariantCulture) value for NbtByte, NbtDouble, NbtFloat, NbtInt, NbtLong, and NbtShort.
@@ -359,8 +341,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="indentString"/> is <c>null</c>. </exception>
         [NotNull]
         public string ToString([NotNull] string indentString) {
-            if (indentString == null)
-                throw new ArgumentNullException("indentString");
+            if (indentString == null) throw new ArgumentNullException("indentString");
             var sb = new StringBuilder();
             PrettyPrint(sb, indentString, 0);
             return sb.ToString();
@@ -369,15 +350,13 @@ namespace fNbt {
 
         internal abstract void PrettyPrint([NotNull] StringBuilder sb, [NotNull] string indentString, int indentLevel);
 
-
         /// <summary> String to use for indentation in NbtTag's and NbtFile's ToString() methods by default. </summary>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         [NotNull]
         public static string DefaultIndentString {
             get { return defaultIndentString; }
             set {
-                if (value == null)
-                    throw new ArgumentNullException("value");
+                if (value == null) throw new ArgumentNullException("value");
                 defaultIndentString = value;
             }
         }
