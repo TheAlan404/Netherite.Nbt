@@ -29,6 +29,7 @@ namespace fNbt.Test {
 
             // check IList.IndexOf
             Assert.AreEqual(referenceList.IndexOf(testTag), iList.IndexOf(testTag));
+            Assert.IsTrue(referenceList.IndexOf(null) < 0);
 
             // check IList.Contains
             Assert.IsTrue(iList.Contains(testTag));
@@ -75,6 +76,7 @@ namespace fNbt.Test {
 
         [Test]
         public void IndexerTest() {
+            NbtByte ourTag = new NbtByte(1);
             var secondList = new NbtList {
                 new NbtByte()
             };
@@ -86,7 +88,7 @@ namespace fNbt.Test {
             // Make sure that setting did not affect ListType
             Assert.AreEqual(testList.ListType, NbtTagType.Unknown);
             Assert.AreEqual(testList.Count, 0);
-            testList.Add(new NbtByte(1));
+            testList.Add(ourTag);
 
             // set a tag to null
             Assert.Throws<ArgumentNullException>(() => testList[0] = null);
@@ -97,8 +99,14 @@ namespace fNbt.Test {
             // give a named tag where an unnamed tag was expected
             Assert.Throws<ArgumentException>(() => testList[0] = new NbtByte("NamedTag"));
 
+            // give a tag of wrong type
+            Assert.Throws<ArgumentException>(() => testList[0] = new NbtInt(0));
+
             // give an unnamed tag that already has a parent
             Assert.Throws<ArgumentException>(() => testList[0] = secondList[0]);
+
+            // Make sure that none of the failed insertions went through
+            Assert.AreEqual(ourTag, testList[0]);
         }
 
 
@@ -111,6 +119,12 @@ namespace fNbt.Test {
                 new NbtInt(3)
             });
             Assert.AreEqual(test1.ListType, NbtTagType.Int);
+
+            // check pre-conditions
+            Assert.Throws<ArgumentNullException>(() => new NbtList((NbtTag[])null));
+            Assert.Throws<ArgumentNullException>(() => new NbtList(null, null));
+            Assert.DoesNotThrow(() => new NbtList((string)null, NbtTagType.Unknown));
+            Assert.Throws<ArgumentNullException>(() => new NbtList((NbtTag[])null, NbtTagType.Unknown));
 
             // correct explicitly-given list type
             Assert.DoesNotThrow(() => new NbtList("Test2", new NbtTag[] {
@@ -139,6 +153,7 @@ namespace fNbt.Test {
                 new NbtInt(2),
                 new NbtInt(3)
             }));
+            Assert.Throws<ArgumentNullException>(() => new NbtList().AddRange(null));
         }
 
 
@@ -168,6 +183,7 @@ namespace fNbt.Test {
             // adding an item of wrong type
             Assert.Throws<ArgumentException>(() => list.Add(new NbtString()));
             Assert.Throws<ArgumentException>(() => list.Insert(3, new NbtString()));
+            Assert.Throws<ArgumentNullException>(() => list.Insert(3, null));
 
             // testing array contents
             for (int i = 0; i < sameTags.Length; i++) {
@@ -208,6 +224,11 @@ namespace fNbt.Test {
 
             // changing list type to an out-of-range type
             Assert.Throws<ArgumentOutOfRangeException>(() => list.ListType = (NbtTagType)200);
+
+            // failing to add or insert a tag should not change ListType
+            Assert.Throws<ArgumentOutOfRangeException>(() => list.Insert(-1, new NbtInt()));
+            Assert.Throws<ArgumentException>(() => list.Add(new NbtInt("namedTagWhereUnnamedIsExpected")));
+            Assert.AreEqual(NbtTagType.Unknown, list.ListType);
 
             // changing type of an empty list
             Assert.DoesNotThrow(() => list.ListType = NbtTagType.Unknown);

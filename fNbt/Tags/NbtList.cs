@@ -405,16 +405,18 @@ namespace fNbt {
         /// <exception cref="ArgumentOutOfRangeException"> <paramref name="tagIndex"/> is not a valid index in this NbtList. </exception>
         /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is <c>null</c>. </exception>
         public void Insert(int tagIndex, [NotNull] NbtTag newTag) {
-            if (newTag == null)
+            if (newTag == null) {
                 throw new ArgumentNullException("newTag");
-            if (listType == NbtTagType.Unknown) {
-                listType = newTag.TagType;
-            } else if (newTag.TagType != listType) {
+            }
+            if (listType != NbtTagType.Unknown && newTag.TagType != listType) {
                 throw new ArgumentException("Items must be of type " + listType);
             } else if (newTag.Parent != null) {
                 throw new ArgumentException("A tag may only be added to one compound/list at a time.");
             }
             tags.Insert(tagIndex, newTag);
+            if (listType == NbtTagType.Unknown) {
+                listType = newTag.TagType;
+            }
             newTag.Parent = this;
         }
 
