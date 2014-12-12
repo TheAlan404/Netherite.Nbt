@@ -78,10 +78,12 @@ namespace fNbt.Test {
             Assert.AreEqual(parent["Child"]["NestedChildList"][0], nestedInt);
 
             // Accessing nested compound tags using Get and Get<T>
+            Assert.Throws<ArgumentNullException>(() => parent.Get<NbtCompound>(null));
             Assert.IsNull(parent.Get<NbtCompound>("NonExistingChild"));
             Assert.AreEqual(parent.Get<NbtCompound>("Child").Get<NbtCompound>("NestedChild"), nestedChild);
             Assert.AreEqual(parent.Get<NbtCompound>("Child").Get<NbtList>("NestedChildList"), nestedChildList);
             Assert.AreEqual(parent.Get<NbtCompound>("Child").Get<NbtList>("NestedChildList")[0], nestedInt);
+            Assert.Throws<ArgumentNullException>(() => parent.Get(null));
             Assert.IsNull(parent.Get("NonExistingChild"));
             Assert.AreEqual((parent.Get("Child") as NbtCompound).Get("NestedChild"), nestedChild);
             Assert.AreEqual((parent.Get("Child") as NbtCompound).Get("NestedChildList"), nestedChildList);
@@ -92,9 +94,11 @@ namespace fNbt.Test {
 
             // Using TryGet and TryGet<T>
             NbtTag dummyTag;
+            Assert.Throws<ArgumentNullException>(() => parent.TryGet(null, out dummyTag));
             Assert.IsFalse(parent.TryGet("NonExistingChild", out dummyTag));
             Assert.IsTrue(parent.TryGet("Child", out dummyTag));
             NbtCompound dummyCompoundTag;
+            Assert.Throws<ArgumentNullException>(() => parent.TryGet(null, out dummyCompoundTag));
             Assert.IsFalse(parent.TryGet("NonExistingChild", out dummyCompoundTag));
             Assert.IsTrue(parent.TryGet("Child", out dummyCompoundTag));
 

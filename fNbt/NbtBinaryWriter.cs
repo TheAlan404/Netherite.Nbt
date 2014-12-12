@@ -160,21 +160,20 @@ namespace fNbt {
             stream.Write(buffer, 0, 8);
         }
 
-
-        public void Write(string value) {
+        
+        // Based on BinaryWriter.Write(String)
+        public void Write([NotNull] string value) {
             if (value == null) {
                 throw new ArgumentNullException("value");
             }
-            // Based on BinaryWriter.Write(String)
 
             // Write out string length (as number of bytes)
             int numBytes = Encoding.GetByteCount(value);
             Write((short)numBytes);
 
             if (numBytes <= BufferSize) {
-                // We skip first 2 bytes to allow Write(short) to use the buffer without overwriting string data
+                // If the string fits entirely in the buffer, encode and write it as one
                 Encoding.GetBytes(value, 0, value.Length, buffer, 0);
-                // Inlined Write(short) to avoid an extra Write call
                 stream.Write(buffer, 0, numBytes);
 
             } else {

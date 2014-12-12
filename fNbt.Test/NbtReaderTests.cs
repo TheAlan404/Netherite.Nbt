@@ -585,25 +585,63 @@ namespace fNbt.Test {
         public void CorruptFileRead() {
             byte[] badHeader = {
                 0x02, // TAG_Short ID (instead of TAG_Compound ID)
-                0x00, 0x01,  0x66, // Root name: 'f'
+                0x00, 0x01, 0x66, // Root name: 'f'
                 0x00 // end tag
             };
             Assert.Throws<NbtFormatException>(() => TryReadBadFile(badHeader));
+            Assert.Throws<NbtFormatException>(
+                () => new NbtFile().LoadFromBuffer(badHeader, 0, badHeader.Length, NbtCompression.None));
 
             byte[] badStringLength = {
                 0x0A, // Compound tag
-                0xFF, 0xFF,  0x66, // Root name 'f' (with string length given as "-1")
+                0xFF, 0xFF, 0x66, // Root name 'f' (with string length given as "-1")
                 0x00 // end tag
             };
             Assert.Throws<NbtFormatException>(() => TryReadBadFile(badStringLength));
+            Assert.Throws<NbtFormatException>(
+                () => new NbtFile().LoadFromBuffer(badStringLength, 0, badStringLength.Length, NbtCompression.None));
+
+            byte[] abruptStringEnd = {
+                0x0A, // Compound tag
+                0x00, 0xFF, 0x66, // Root name 'f' (string length given as 5)
+                0x00 // premature end tag
+            };
+            Assert.Throws<EndOfStreamException>(() => TryReadBadFile(abruptStringEnd));
+            Assert.Throws<EndOfStreamException>(
+                () => new NbtFile().LoadFromBuffer(abruptStringEnd, 0, abruptStringEnd.Length, NbtCompression.None));
 
             byte[] badSecondTag = {
                 0x0A, // Compound tag
-                0x00, 0x01,  0x66, // Root name: 'f'
+                0x00, 0x01, 0x66, // Root name: 'f'
                 0xFF, 0x01, 0x4E, 0x7F, 0xFF, // Short tag named 'N' with invalid tag ID (0xFF instead of 0x02)
                 0x00 // end tag
             };
             Assert.Throws<NbtFormatException>(() => TryReadBadFile(badSecondTag));
+            Assert.Throws<NbtFormatException>(
+                () => new NbtFile().LoadFromBuffer(badSecondTag, 0, badSecondTag.Length, NbtCompression.None));
+            
+            byte[] badListType = {
+                0x0A, // Compound tag
+                0x00, 0x01, 0x66, // Root name: 'f'
+                0x09, // List tag
+                0x00, 0x01, 0x66, // List tag name: 'g'
+                0xFF // invalid list tag type (-1)
+            };
+            Assert.Throws<NbtFormatException>(() => TryReadBadFile(badListType));
+            Assert.Throws<NbtFormatException>(
+                () => new NbtFile().LoadFromBuffer(badListType, 0, badListType.Length, NbtCompression.None));
+
+            byte[] badListSize = {
+                0x0A, // Compound tag
+                0x00, 0x01, 0x66, // Root name: 'f'
+                0x09, // List tag
+                0x00, 0x01, 0x66, // List tag name: 'g'
+                0x01, // List type: Byte
+                0xFF, 0xFF, 0xFF, 0xFF, // List size: -1
+            };
+            Assert.Throws<NbtFormatException>(() => TryReadBadFile(badListSize));
+            Assert.Throws<NbtFormatException>(
+                () => new NbtFile().LoadFromBuffer(badListSize, 0, badListSize.Length, NbtCompression.None));
         }
 
 

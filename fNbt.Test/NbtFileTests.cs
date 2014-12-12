@@ -168,8 +168,6 @@ namespace fNbt.Test {
 
         [Test]
         public void LoadFromStream() {
-            Assert.Throws<ArgumentNullException>(() => new NbtFile().LoadFromStream(null, NbtCompression.AutoDetect));
-
             LoadFromStreamInternal(TestFiles.Big, NbtCompression.None);
             LoadFromStreamInternal(TestFiles.BigGZip, NbtCompression.GZip);
             LoadFromStreamInternal(TestFiles.BigZLib, NbtCompression.ZLib);
@@ -209,10 +207,7 @@ namespace fNbt.Test {
 
         [Test]
         public void ReadRootTag() {
-            Assert.Throws<ArgumentNullException>(() => NbtFile.ReadRootTagName(null));
             Assert.Throws<FileNotFoundException>(() => NbtFile.ReadRootTagName("NonExistentFile"));
-            Assert.Throws<ArgumentNullException>(
-                () => NbtFile.ReadRootTagName((Stream)null, NbtCompression.None, true, 0));
 
             ReadRootTagInternal(TestFiles.Big, NbtCompression.None);
             ReadRootTagInternal(TestFiles.BigGZip, NbtCompression.GZip);
@@ -270,14 +265,10 @@ namespace fNbt.Test {
         }
 
 
-
         [Test]
         public void RootTagTest() {
             NbtCompound oldRoot = new NbtCompound("defaultRoot");
             NbtFile newFile = new NbtFile(oldRoot);
-
-            // Ensure that 
-            Assert.Throws<ArgumentNullException>(() => new NbtFile((NbtCompound)null));
 
             // Ensure that inappropriate tags are not accepted as RootTag
             Assert.Throws<ArgumentNullException>( () => newFile.RootTag = null );
@@ -289,6 +280,29 @@ namespace fNbt.Test {
             // Invalidate the root tag, and ensure that expected exception is thrown
             oldRoot.Name = null;
             Assert.Throws<NbtFormatException>(()=>newFile.SaveToBuffer(NbtCompression.None));
+        }
+
+
+        [Test]
+        public void NullParameterTest() {
+            Assert.Throws<ArgumentNullException>(() => new NbtFile((NbtCompound)null));
+            Assert.Throws<ArgumentNullException>(() => new NbtFile((string)null));
+
+            NbtFile file = new NbtFile();
+            Assert.Throws<ArgumentNullException>(() => file.LoadFromBuffer(null, 0, 1, NbtCompression.None));
+            Assert.Throws<ArgumentNullException>(() => file.LoadFromBuffer(null, 0, 1, NbtCompression.None, tag => true));
+            Assert.Throws<ArgumentNullException>(() => file.LoadFromFile(null));
+            Assert.Throws<ArgumentNullException>(() => file.LoadFromFile(null, NbtCompression.None, tag => true));
+            Assert.Throws<ArgumentNullException>(() => file.LoadFromStream(null, NbtCompression.AutoDetect));
+            Assert.Throws<ArgumentNullException>(() => file.LoadFromStream(null, NbtCompression.AutoDetect, tag => true));
+            
+            Assert.Throws<ArgumentNullException>(() => file.SaveToBuffer(null, 0, NbtCompression.None));
+            Assert.Throws<ArgumentNullException>(() => file.SaveToFile(null, NbtCompression.None));
+            Assert.Throws<ArgumentNullException>(() => file.SaveToStream(null, NbtCompression.None));
+
+            Assert.Throws<ArgumentNullException>(() => NbtFile.ReadRootTagName(null));
+            Assert.Throws<ArgumentNullException>(() => NbtFile.ReadRootTagName((Stream)null, NbtCompression.None, true, 0));
+
         }
 
 

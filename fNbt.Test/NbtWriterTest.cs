@@ -333,11 +333,19 @@ namespace fNbt.Test {
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 5));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 5, null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(dummyStream, 5, null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 0, 5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullByteArray", null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullByteArray", null, 0, 5));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null, 0, 5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray("NullIntArray", null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray("NullIntArray", null, 0, 5));
+
+                    // non-readable streams are unacceptable
+                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray(new NonReadableStream(), 0));
+                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray(new NonReadableStream(), 0, new byte[10]));
+                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray("NonReadableStream", new NonReadableStream(), 0));
 
                     // trying to write array with out-of-range offset/count
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyByteArray, -1, 5));

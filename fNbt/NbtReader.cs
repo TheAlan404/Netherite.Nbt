@@ -311,8 +311,13 @@ namespace fNbt {
                     break;
 
                 case NbtTagType.List:
+                    // Setting state to error in case reader throws
+                    state = NbtParseState.Error;
                     ListType = reader.ReadTagType();
                     TagLength = reader.ReadInt32();
+                    if (TagLength < 0) {
+                        throw new NbtFormatException("Negative tag length given: " + TagLength);
+                    }
                     state = NbtParseState.AtListBeginning;
                     break;
 
