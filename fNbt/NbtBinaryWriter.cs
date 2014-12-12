@@ -7,12 +7,15 @@ namespace fNbt {
     /// <summary> BinaryWriter wrapper that writes NBT primitives to a stream,
     /// while taking care of endianness and string encoding, and counting bytes written. </summary>
     internal sealed unsafe class NbtBinaryWriter {
-
         // Write at most 512 MiB at a time.
         // This works around an overflow in BufferedStream.Write(byte[]) that happens on 1 GiB+ writes.
         public const int MaxWriteChunk = 512*1024*1024;
 
+        // Encoding can be shared among all instances of NbtBinaryWriter, because it is stateless.
         static readonly UTF8Encoding Encoding = new UTF8Encoding(false, true);
+
+        // Each instance has to have its own encoder, because it does maintain state.
+        readonly Encoder encoder = Encoding.GetEncoder();
 
         public Stream BaseStream {
             get {
@@ -23,9 +26,14 @@ namespace fNbt {
 
         readonly Stream stream;
 
-        // UTF8 characters use at most 4 bytes each. We add 2 bytes to be able to write string length (short) to the same buffer, to save a write.
-        const int MaxBufferedStringLength = 16;
-        readonly byte[] buffer = new byte[MaxBufferedStringLength*4+2];
+        // Buffer used for temporary conversion
+        const int BufferSize = 256;
+
+        // UTF8 characters use at most 4 bytes each.
+        const int MaxBufferedStringLength = BufferSize/4;
+
+        // Each NbtBinaryWriter needs to have its own instance of the buffer.
+        readonly byte[] buffer = new byte[BufferSize];
 
         // Swap is only needed is endianness of the runtime differs from desired NBT stream
         readonly bool swapNeeded;
@@ -154,26 +162,41 @@ namespace fNbt {
 
 
         public void Write(string value) {
-            if (value == null)
+            if (value == null) {
                 throw new ArgumentNullException("value");
-            if (value.Length > MaxBufferedStringLength) {
-                byte[] bytes = Encoding.GetBytes(value);
-                Write((short)bytes.Length);
-                stream.Write(bytes, 0, bytes.Length);
-            } else {
+            }
+            // Based on BinaryWriter.Write(String)
+
+            // Write out string length (as number of bytes)
+            int numBytes = Encoding.GetByteCount(value);
+            Write((short)numBytes);
+
+            if (numBytes <= BufferSize) {
                 // We skip first 2 bytes to allow Write(short) to use the buffer without overwriting string data
-                int byteCount = Encoding.GetBytes(value, 0, value.Length, buffer, 2);
+                Encoding.GetBytes(value, 0, value.Length, buffer, 0);
                 // Inlined Write(short) to avoid an extra Write call
-                unchecked {
-                    if (swapNeeded) {
-                        buffer[0] = (byte)(byteCount >> 8);
-                        buffer[1] = (byte)byteCount;
-                    } else {
-                        buffer[0] = (byte)byteCount;
-                        buffer[1] = (byte)(byteCount >> 8);
+                stream.Write(buffer, 0, numBytes);
+
+            } else {
+                // Aggressively try to not allocate memory in this loop for runtime performance reasons.
+                // Use an Encoder to write out the string correctly (handling surrogates crossing buffer
+                // boundaries properly).  
+                int charStart = 0;
+                int numLeft = value.Length;
+                while (numLeft > 0) {
+                    // Figure out how many chars to process this round.
+                    int charCount = (numLeft > MaxBufferedStringLength) ? MaxBufferedStringLength : numLeft;
+                    int byteLen;
+                    fixed (char* pChars = value) {
+                        fixed (byte* pBytes = buffer) {
+                            byteLen = encoder.GetBytes(pChars + charStart, charCount, pBytes, BufferSize,
+                                                       charCount == numLeft);
+                        }
                     }
+                    stream.Write(buffer, 0, byteLen);
+                    charStart += charCount;
+                    numLeft -= charCount;
                 }
-                stream.Write(buffer, 0, byteCount + 2);
             }
         }
 
