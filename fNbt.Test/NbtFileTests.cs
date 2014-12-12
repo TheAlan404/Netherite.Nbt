@@ -76,6 +76,10 @@ namespace fNbt.Test {
         public void LoadingBigFileBuffer() {
             byte[] fileBytes = File.ReadAllBytes(TestFiles.Big);
             var file = new NbtFile();
+
+            Assert.Throws<ArgumentNullException>(
+                () => file.LoadFromBuffer(null, 0, fileBytes.Length, NbtCompression.AutoDetect, null));
+
             long length = file.LoadFromBuffer(fileBytes, 0, fileBytes.Length, NbtCompression.AutoDetect, null);
             TestFiles.AssertNbtBigFile(file);
             Assert.AreEqual(length, new FileInfo(TestFiles.Big).Length);

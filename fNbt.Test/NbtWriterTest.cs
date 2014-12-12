@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using NUnit.Framework;
 
 namespace fNbt.Test {
@@ -383,6 +386,66 @@ namespace fNbt.Test {
                     Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtInt()));
                 }
             }
+        }
+
+
+        // Ensure that Unicode strings of arbitrary size and content are written/read properly
+        [Test]
+        public void ComplexStringsTest() {
+            // Use a fixed seed for repeatability of this test
+            Random rand = new Random(0);
+
+            // Generate random Unicode strings
+            const int numStrings = 1024;
+            List<string> writtenStrings = new List<string>();
+            for (int i = 0; i < numStrings; i++) {
+                writtenStrings.Add(GenRandomUnicodeString(rand));
+            }
+
+            using (var ms = new MemoryStream()) {
+                // Write a list of strings
+                NbtWriter writer = new NbtWriter(ms, "test");
+                writer.BeginList("stringList", NbtTagType.String, numStrings);
+                foreach (string s in writtenStrings) {
+                    writer.WriteString(s);
+                }
+                writer.EndList();
+                writer.EndCompound();
+                writer.Finish();
+
+                // Rewind!
+                ms.Position = 0;
+
+                // Let's read what we have written, and check contents
+                NbtFile file = new NbtFile();
+                file.LoadFromStream(ms, NbtCompression.None);
+                var readStrings =
+                    file.RootTag.Get<NbtList>("stringList")
+                        .ToArray<NbtString>()
+                        .Select(tag => tag.StringValue);
+
+                // Make sure that all read/written strings match exactly
+                CollectionAssert.AreEqual(writtenStrings, readStrings);
+            }
+        }
+
+
+        static string GenRandomUnicodeString(Random rand) {
+            // String length is limited by number of bytes, not characters.
+            // Most bytes per char in UTF8 is 4, so max string length is therefore short.MaxValue/4
+            int len = rand.Next(8, short.MaxValue/4);
+            StringBuilder sb = new StringBuilder();
+
+            // Generate one char at a time until we filled up the StringBuilder
+            while (sb.Length < len) {
+                char ch = (char)rand.Next(0, 0xFFFF);
+                if (Char.IsControl(ch) || Char.IsSurrogate(ch) || ch >= 0xE000 && ch <= 0xF8FF) {
+                    // exclude control characters, surrogates, and private range
+                    continue;
+                }
+                sb.Append(ch);
+            }
+            return sb.ToString();
         }
 
 
