@@ -386,8 +386,8 @@ namespace fNbt {
         /// <summary> Determines the index of a specific tag in this NbtList </summary>
         /// <returns> The index of tag if found in the list; otherwise, -1. </returns>
         /// <param name="tag"> The tag to locate in this NbtList. </param>
-        public int IndexOf([NotNull] NbtTag tag) {
-            if (tag == null) throw new ArgumentNullException("tag");
+        public int IndexOf([CanBeNull] NbtTag tag) {
+            if (tag == null) return -1;
             return tags.IndexOf(tag);
         }
 
