@@ -768,7 +768,11 @@ namespace fNbt {
             if (ListType == NbtTagType.Byte && typeof(T) == typeof(byte)) {
                 TagsRead += elementsToRead;
                 ListIndex = ParentTagLength - 1;
-                return (T[])(object)reader.ReadBytes(elementsToRead);
+                T[] val = (T[])(object)reader.ReadBytes(elementsToRead);
+                if (val.Length < elementsToRead) {
+                    throw new EndOfStreamException();
+                }
+                return val;
             }
 
             // for everything else, gotta read elements one-by-one
