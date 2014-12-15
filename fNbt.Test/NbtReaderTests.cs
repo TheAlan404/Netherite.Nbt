@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.IO;
 using NUnit.Framework;
 
@@ -583,6 +584,15 @@ namespace fNbt.Test {
 
         [Test]
         public void CorruptFileRead() {
+            byte[] emptyFile = new byte[0];
+            Assert.Throws<EndOfStreamException>(() => TryReadBadFile(emptyFile));
+            Assert.Throws<EndOfStreamException>(
+                () => new NbtFile().LoadFromBuffer(emptyFile, 0, emptyFile.Length, NbtCompression.None));
+            Assert.Throws<EndOfStreamException>(
+                () => NbtFile.ReadRootTagName(new MemoryStream(emptyFile), NbtCompression.AutoDetect, true, 0));
+            Assert.Throws<EndOfStreamException>(
+                () => NbtFile.ReadRootTagName(new MemoryStream(emptyFile), NbtCompression.None, true, 0));
+
             byte[] badHeader = {
                 0x02, // TAG_Short ID (instead of TAG_Compound ID)
                 0x00, 0x01, 0x66, // Root name: 'f'
@@ -591,6 +601,8 @@ namespace fNbt.Test {
             Assert.Throws<NbtFormatException>(() => TryReadBadFile(badHeader));
             Assert.Throws<NbtFormatException>(
                 () => new NbtFile().LoadFromBuffer(badHeader, 0, badHeader.Length, NbtCompression.None));
+            Assert.Throws<NbtFormatException>(
+                () => NbtFile.ReadRootTagName(new MemoryStream(badHeader), NbtCompression.None, true, 0));
 
             byte[] badStringLength = {
                 0x0A, // Compound tag
@@ -600,6 +612,8 @@ namespace fNbt.Test {
             Assert.Throws<NbtFormatException>(() => TryReadBadFile(badStringLength));
             Assert.Throws<NbtFormatException>(
                 () => new NbtFile().LoadFromBuffer(badStringLength, 0, badStringLength.Length, NbtCompression.None));
+            Assert.Throws<NbtFormatException>(
+                () => NbtFile.ReadRootTagName(new MemoryStream(badStringLength), NbtCompression.None, true, 0));
 
             byte[] abruptStringEnd = {
                 0x0A, // Compound tag
@@ -609,6 +623,8 @@ namespace fNbt.Test {
             Assert.Throws<EndOfStreamException>(() => TryReadBadFile(abruptStringEnd));
             Assert.Throws<EndOfStreamException>(
                 () => new NbtFile().LoadFromBuffer(abruptStringEnd, 0, abruptStringEnd.Length, NbtCompression.None));
+            Assert.Throws<EndOfStreamException>(
+                () => NbtFile.ReadRootTagName(new MemoryStream(abruptStringEnd), NbtCompression.None, true, 0));
 
             byte[] badSecondTag = {
                 0x0A, // Compound tag
@@ -642,6 +658,23 @@ namespace fNbt.Test {
             Assert.Throws<NbtFormatException>(() => TryReadBadFile(badListSize));
             Assert.Throws<NbtFormatException>(
                 () => new NbtFile().LoadFromBuffer(badListSize, 0, badListSize.Length, NbtCompression.None));
+        }
+
+
+        [Test]
+        public void PartialReadTest() {
+            // read the whole thing as one tag
+            TestFiles.AssertValueTest(PartialReadTestInternal(new NbtFile(TestFiles.MakeValueTest())));
+            TestFiles.AssertNbtSmallFile(PartialReadTestInternal(TestFiles.MakeSmallFile()));
+            TestFiles.AssertNbtBigFile(PartialReadTestInternal(new NbtFile(TestFiles.Big)));
+        }
+
+
+        static NbtFile PartialReadTestInternal(NbtFile comp) {
+            byte[] testData = comp.SaveToBuffer(NbtCompression.None);
+            var reader = new NbtReader(new PartialReadStream(new MemoryStream(testData)));
+            var root = (NbtCompound)reader.ReadAsTag();
+            return new NbtFile(root);
         }
 
 
