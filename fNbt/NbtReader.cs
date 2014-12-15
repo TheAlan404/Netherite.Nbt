@@ -620,7 +620,11 @@ namespace fNbt {
                     return new NbtString(TagName, reader.ReadString());
 
                 case NbtTagType.ByteArray:
-                    return new NbtByteArray(TagName, reader.ReadBytes(TagLength));
+                    byte[] value = reader.ReadBytes(TagLength);
+                    if (value.Length < TagLength) {
+                        throw new EndOfStreamException();
+                    }
+                    return new NbtByteArray(TagName, value);
 
                 case NbtTagType.IntArray:
                     var ints = new int[TagLength];
@@ -701,7 +705,11 @@ namespace fNbt {
                     break;
 
                 case NbtTagType.ByteArray:
-                    value = reader.ReadBytes(TagLength);
+                    byte[] valueArr = reader.ReadBytes(TagLength);
+                    if (valueArr.Length < TagLength) {
+                        throw new EndOfStreamException();
+                    }
+                    value = valueArr;
                     break;
 
                 case NbtTagType.IntArray:

@@ -341,7 +341,11 @@ namespace fNbt {
 
         void LoadFromStreamInternal([NotNull] Stream stream, [CanBeNull] TagSelector tagSelector) {
             // Make sure the first byte in this file is the tag for a TAG_Compound
-            if (stream.ReadByte() != (int)NbtTagType.Compound) {
+            int firstByte = stream.ReadByte();
+            if (firstByte < 0) {
+                throw new EndOfStreamException();
+            }
+            if (firstByte != (int)NbtTagType.Compound) {
                 throw new NbtFormatException("Given NBT stream does not start with a TAG_Compound");
             }
             var reader = new NbtBinaryReader(stream, BigEndian) {
@@ -492,10 +496,9 @@ namespace fNbt {
                     }
                     break;
 
-                case NbtCompression.None: {
+                case NbtCompression.None:
                     var writer = new NbtBinaryWriter(stream, BigEndian);
                     RootTag.WriteTag(writer);
-                }
                     break;
 
                 default:
@@ -617,7 +620,10 @@ namespace fNbt {
         [NotNull]
         static string GetRootNameInternal([NotNull] Stream stream, bool bigEndian) {
             Debug.Assert(stream != null);
-            if (stream.ReadByte() != (int)NbtTagType.Compound) {
+            int firstByte = stream.ReadByte();
+            if (firstByte < 0) {
+                throw new EndOfStreamException();
+            } else if (firstByte != (int)NbtTagType.Compound) {
                 throw new NbtFormatException("Given NBT stream does not start with a TAG_Compound");
             }
             var reader = new NbtBinaryReader(stream, bigEndian);

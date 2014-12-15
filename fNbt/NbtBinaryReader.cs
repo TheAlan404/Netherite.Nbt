@@ -8,8 +8,7 @@ namespace fNbt {
     /// <summary> BinaryReader wrapper that takes care of reading primitives from an NBT stream,
     /// while taking care of endianness, string encoding, and skipping. </summary>
     internal sealed class NbtBinaryReader : BinaryReader {
-        readonly byte[] floatBuffer = new byte[sizeof(float)],
-            doubleBuffer = new byte[sizeof(double)];
+        readonly byte[] buffer = new byte[sizeof(double)];
 
         byte[] seekBuffer;
         const int SeekBufferSize = 8*1024;
@@ -24,11 +23,13 @@ namespace fNbt {
 
 
         public NbtTagType ReadTagType() {
-            var type = (NbtTagType)ReadByte();
-            if (type < NbtTagType.End || type > NbtTagType.IntArray) {
+            int type = ReadByte();
+            if (type < 0) {
+                throw new EndOfStreamException();
+            } else if (type > (int)NbtTagType.IntArray) {
                 throw new NbtFormatException("NBT tag type out of range: " + (int)type);
             }
-            return type;
+            return (NbtTagType)type;
         }
 
 
@@ -61,9 +62,9 @@ namespace fNbt {
 
         public override float ReadSingle() {
             if (swapNeeded) {
-                BaseStream.Read(floatBuffer, 0, sizeof(float));
-                Array.Reverse(floatBuffer);
-                return BitConverter.ToSingle(floatBuffer, 0);
+                FillBuffer(sizeof(float));
+                Array.Reverse(buffer, 0, sizeof(float));
+                return BitConverter.ToSingle(buffer, 0);
             } else {
                 return base.ReadSingle();
             }
@@ -72,9 +73,9 @@ namespace fNbt {
 
         public override double ReadDouble() {
             if (swapNeeded) {
-                BaseStream.Read(doubleBuffer, 0, sizeof(double));
-                Array.Reverse(doubleBuffer);
-                return BitConverter.ToDouble(doubleBuffer, 0);
+                FillBuffer(sizeof(double));
+                Array.Reverse(buffer);
+                return BitConverter.ToDouble(buffer, 0);
             }
             return base.ReadDouble();
         }
@@ -88,7 +89,7 @@ namespace fNbt {
             if (length < stringConversionBuffer.Length) {
                 int stringBytesRead = 0;
                 while (stringBytesRead < length) {
-                    int bytesReadThisTime = BaseStream.Read(stringConversionBuffer, 0, length);
+                    int bytesReadThisTime = BaseStream.Read(stringConversionBuffer, stringBytesRead, length);
                     if (bytesReadThisTime == 0) {
                         throw new EndOfStreamException();
                     }
@@ -97,6 +98,9 @@ namespace fNbt {
                 return Encoding.UTF8.GetString(stringConversionBuffer, 0, length);
             } else {
                 byte[] stringData = ReadBytes(length);
+                if (stringData.Length < length) {
+                    throw new EndOfStreamException();
+                }
                 return Encoding.UTF8.GetString(stringData);
             }
         }
@@ -119,6 +123,16 @@ namespace fNbt {
                     bytesSkipped += bytesReadThisTime;
                 }
             }
+        }
+
+
+        void FillBuffer(int numBytes) {
+            int offset = 0;
+            do {
+                int num = BaseStream.Read(buffer, offset, numBytes - offset);
+                if (num == 0) throw new EndOfStreamException();
+                offset += num;
+            } while (offset < numBytes);
         }
 
 
