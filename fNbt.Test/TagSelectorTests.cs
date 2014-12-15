@@ -16,7 +16,7 @@ namespace fNbt.Test {
                                     NbtCompression.None,
                                     tag => tag.TagType != NbtTagType.Float || tag.Parent.Name != "Level");
             Assert.IsFalse(loadedFile.RootTag.Contains("floatTest"));
-            Assert.AreEqual(loadedFile.RootTag["nested compound test"]["ham"]["value"].FloatValue, 0.75);
+            Assert.AreEqual(0.75f, loadedFile.RootTag["nested compound test"]["ham"]["value"].FloatValue);
 
             loadedFile.LoadFromFile("TestFiles/bigtest.nbt",
                                     NbtCompression.None,
@@ -27,7 +27,7 @@ namespace fNbt.Test {
             loadedFile.LoadFromFile("TestFiles/bigtest.nbt",
                                     NbtCompression.None,
                                     tag => false);
-            Assert.AreEqual(loadedFile.RootTag.Count, 0);
+            Assert.AreEqual(0, loadedFile.RootTag.Count);
         }
 
 
@@ -38,7 +38,7 @@ namespace fNbt.Test {
                 byte[] savedFile = file.SaveToBuffer(NbtCompression.None);
                 file.LoadFromBuffer(savedFile, 0, savedFile.Length, NbtCompression.None,
                                     tag => tag.TagType != NbtTagType.List);
-                Assert.AreEqual(file.RootTag.Count, 0);
+                Assert.AreEqual(0, file.RootTag.Count);
             }
             {
                 // Check list-compound interaction
@@ -55,7 +55,7 @@ namespace fNbt.Test {
                 byte[] savedFile = file.SaveToBuffer(NbtCompression.None);
                 file.LoadFromBuffer(savedFile, 0, savedFile.Length, NbtCompression.None,
                                     tag => tag.TagType != NbtTagType.List);
-                Assert.AreEqual(file.RootTag.Count, 1);
+                Assert.AreEqual(1, file.RootTag.Count);
             }
         }
 
@@ -70,7 +70,7 @@ namespace fNbt.Test {
             var file = new NbtFile(root);
             byte[] savedFile = file.SaveToBuffer(NbtCompression.None);
             file.LoadFromBuffer(savedFile, 0, savedFile.Length, NbtCompression.None, tag => false);
-            Assert.AreEqual(file.RootTag.Count, 0);
+            Assert.AreEqual(0, file.RootTag.Count);
         }
     }
 }

@@ -288,7 +288,7 @@ namespace fNbt.Test {
             Assert.IsNotNull(intArrayTag);
             var rand = new Random(0);
             for (int i = 0; i < 10; i++) {
-                Assert.AreEqual(intArrayTag.Value[i], rand.Next());
+                Assert.AreEqual(rand.Next(), intArrayTag.Value[i]);
             }
         }
 

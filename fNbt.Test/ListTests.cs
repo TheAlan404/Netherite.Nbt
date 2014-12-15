@@ -21,7 +21,7 @@ namespace fNbt.Test {
             // check IList implementation
             IList iList = originalList;
             CollectionAssert.AreEqual(referenceList, iList);
-            
+
             // check IList<NbtTag> implementation
             IList<NbtTag> iGenericList = originalList;
             CollectionAssert.AreEqual(referenceList, iGenericList);
@@ -35,7 +35,7 @@ namespace fNbt.Test {
             // check IList.IndexOf
             Assert.AreEqual(referenceList.IndexOf(testTag), iList.IndexOf(testTag));
             Assert.IsTrue(iList.IndexOf(null) < 0);
-            
+
             // check IList<NbtTag>.IndexOf
             Assert.AreEqual(referenceList.IndexOf(testTag), iGenericList.IndexOf(testTag));
             Assert.IsTrue(iGenericList.IndexOf(null) < 0);
@@ -49,7 +49,7 @@ namespace fNbt.Test {
 
             // check IList.Insert
             iList.Insert(0, testTag);
-            Assert.AreEqual(iList.IndexOf(testTag), 0);
+            Assert.AreEqual(0, iList.IndexOf(testTag));
 
             // check IList.RemoveAt
             iList.RemoveAt(0);
@@ -68,14 +68,14 @@ namespace fNbt.Test {
 
             // check IList.this[int]
             for (int i = 0; i < iList.Count; i++) {
-                Assert.AreEqual(iList[i], originalList[i]);
+                Assert.AreEqual(originalList[i], iList[i]);
                 iList[i] = new NbtInt(i);
             }
 
             // check IList.Clear
             iList.Clear();
-            Assert.AreEqual(iList.Count, 0);
-            Assert.AreEqual(iList.IndexOf(testTag), -1);
+            Assert.AreEqual(0, iList.Count);
+            Assert.Less(iList.IndexOf(testTag), 0);
         }
 
 
@@ -91,8 +91,8 @@ namespace fNbt.Test {
             Assert.Throws<ArgumentOutOfRangeException>(() => testList[0] = new NbtByte(1));
 
             // Make sure that setting did not affect ListType
-            Assert.AreEqual(testList.ListType, NbtTagType.Unknown);
-            Assert.AreEqual(testList.Count, 0);
+            Assert.AreEqual(NbtTagType.Unknown, testList.ListType);
+            Assert.AreEqual(0, testList.Count);
             testList.Add(ourTag);
 
             // set a tag to null
@@ -123,7 +123,7 @@ namespace fNbt.Test {
                 new NbtInt(2),
                 new NbtInt(3)
             });
-            Assert.AreEqual(test1.ListType, NbtTagType.Int);
+            Assert.AreEqual(NbtTagType.Int, test1.ListType);
 
             // check pre-conditions
             Assert.Throws<ArgumentNullException>(() => new NbtList((NbtTag[])null));
@@ -176,8 +176,8 @@ namespace fNbt.Test {
             int j = 0;
             foreach (NbtTag tag in list) {
                 Assert.IsTrue(list.Contains(sameTags[j]));
-                Assert.AreEqual(tag, sameTags[j]);
-                Assert.AreEqual(list.IndexOf(tag), j);
+                Assert.AreEqual(sameTags[j], tag);
+                Assert.AreEqual(j, list.IndexOf(tag));
                 j++;
             }
 
@@ -193,7 +193,7 @@ namespace fNbt.Test {
             // testing array contents
             for (int i = 0; i < sameTags.Length; i++) {
                 Assert.AreSame(sameTags[i], list[i]);
-                Assert.AreEqual(((NbtInt)list[i]).Value, i);
+                Assert.AreEqual(i, ((NbtInt)list[i]).Value);
             }
 
             // test removal
@@ -206,7 +206,7 @@ namespace fNbt.Test {
             // Test some failure scenarios for Add:
             // adding a list to itself
             var loopList = new NbtList();
-            Assert.AreEqual(loopList.ListType, NbtTagType.Unknown);
+            Assert.AreEqual(NbtTagType.Unknown, loopList.ListType);
             Assert.Throws<ArgumentException>(() => loopList.Add(loopList));
 
             // adding same tag to multiple lists
@@ -217,8 +217,8 @@ namespace fNbt.Test {
             Assert.Throws<ArgumentNullException>(() => loopList.Add(null));
 
             // make sure that all those failed adds didn't affect the tag
-            Assert.AreEqual(loopList.Count, 0);
-            Assert.AreEqual(loopList.ListType, NbtTagType.Unknown);
+            Assert.AreEqual(0, loopList.Count);
+            Assert.AreEqual(NbtTagType.Unknown, loopList.ListType);
 
             // try creating a list with invalid tag type
             Assert.Throws<ArgumentOutOfRangeException>(() => new NbtList(NbtTagType.End));
@@ -290,7 +290,7 @@ namespace fNbt.Test {
             Assert.NotNull(readFile.RootTag);
             Assert.IsInstanceOf<NbtList>(readFile.RootTag["Entities"]);
             var readList = (NbtList)readFile.RootTag["Entities"];
-            Assert.AreEqual(readList.ListType, writtenList.ListType);
+            Assert.AreEqual(writtenList.ListType, readList.ListType);
             Assert.AreEqual(readList.Count, writtenList.Count);
 
             // check .ToArray
@@ -336,18 +336,19 @@ namespace fNbt.Test {
                 var file = new NbtFile();
                 long bytesRead = file.LoadFromBuffer(data, 0, data.Length, NbtCompression.None);
                 Assert.AreEqual(bytesRead, data.Length);
-                Assert.AreEqual(file.RootTag.Get<NbtList>("OuterList").Count, 1);
-                Assert.AreEqual(file.RootTag.Get<NbtList>("OuterList").Get<NbtCompound>(0).Name, null);
-                Assert.AreEqual(
-                    file.RootTag.Get<NbtList>("OuterList").Get<NbtCompound>(0).Get<NbtList>("InnerList").Count,
-                    1);
-                Assert.AreEqual(
-                    file.RootTag.Get<NbtList>("OuterList")
-                        .Get<NbtCompound>(0)
-                        .Get<NbtList>("InnerList")
-                        .Get<NbtCompound>(0)
-                        .Name,
-                    null);
+                Assert.AreEqual(1, file.RootTag.Get<NbtList>("OuterList").Count);
+                Assert.AreEqual(null, file.RootTag.Get<NbtList>("OuterList").Get<NbtCompound>(0).Name);
+                Assert.AreEqual(1,
+                                file.RootTag.Get<NbtList>("OuterList")
+                                    .Get<NbtCompound>(0)
+                                    .Get<NbtList>("InnerList")
+                                    .Count);
+                Assert.AreEqual(null,
+                                file.RootTag.Get<NbtList>("OuterList")
+                                    .Get<NbtCompound>(0)
+                                    .Get<NbtList>("InnerList")
+                                    .Get<NbtCompound>(0)
+                                    .Name);
             }
         }
     }

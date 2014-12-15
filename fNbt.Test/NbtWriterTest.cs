@@ -13,7 +13,7 @@ namespace fNbt.Test {
             // write one named tag for every value type, and read it back
             using (var ms = new MemoryStream()) {
                 var writer = new NbtWriter(ms, "root");
-                Assert.AreEqual(writer.BaseStream, ms);
+                Assert.AreEqual(ms, writer.BaseStream);
                 {
                     writer.WriteByte("byte", 1);
                     writer.WriteShort("short", 2);
@@ -98,19 +98,19 @@ namespace fNbt.Test {
                 ms.Position = 0;
                 var file = new NbtFile();
                 file.LoadFromStream(ms, NbtCompression.None);
-                CollectionAssert.AreEqual(file.RootTag["byteArray1"].ByteArrayValue, data);
-                CollectionAssert.AreEqual(file.RootTag["byteArray2"].ByteArrayValue, data);
-                Assert.AreEqual(file.RootTag["byteArray3"].ByteArrayValue.Length, 1);
-                Assert.AreEqual(file.RootTag["byteArray3"].ByteArrayValue[0], data[0]);
-                Assert.AreEqual(file.RootTag["byteArray4"].ByteArrayValue.Length, 1);
-                Assert.AreEqual(file.RootTag["byteArray4"].ByteArrayValue[0], data[0]);
+                CollectionAssert.AreEqual(data, file.RootTag["byteArray1"].ByteArrayValue);
+                CollectionAssert.AreEqual(data, file.RootTag["byteArray2"].ByteArrayValue);
+                Assert.AreEqual(1, file.RootTag["byteArray3"].ByteArrayValue.Length);
+                Assert.AreEqual(data[0], file.RootTag["byteArray3"].ByteArrayValue[0]);
+                Assert.AreEqual(1, file.RootTag["byteArray4"].ByteArrayValue.Length);
+                Assert.AreEqual(data[0], file.RootTag["byteArray4"].ByteArrayValue[0]);
 
-                CollectionAssert.AreEqual(file.RootTag["innerLists"][0].ByteArrayValue, data);
-                CollectionAssert.AreEqual(file.RootTag["innerLists"][1].ByteArrayValue, data);
-                Assert.AreEqual(file.RootTag["innerLists"][2].ByteArrayValue.Length, 1);
-                Assert.AreEqual(file.RootTag["innerLists"][2].ByteArrayValue[0], data[0]);
-                Assert.AreEqual(file.RootTag["innerLists"][3].ByteArrayValue.Length, 1);
-                Assert.AreEqual(file.RootTag["innerLists"][3].ByteArrayValue[0], data[0]);
+                CollectionAssert.AreEqual(data, file.RootTag["innerLists"][0].ByteArrayValue);
+                CollectionAssert.AreEqual(data, file.RootTag["innerLists"][1].ByteArrayValue);
+                Assert.AreEqual(1, file.RootTag["innerLists"][2].ByteArrayValue.Length);
+                Assert.AreEqual(data[0], file.RootTag["innerLists"][2].ByteArrayValue[0]);
+                Assert.AreEqual(1, file.RootTag["innerLists"][3].ByteArrayValue.Length);
+                Assert.AreEqual(data[0], file.RootTag["innerLists"][3].ByteArrayValue[0]);
             }
         }
 
@@ -327,11 +327,11 @@ namespace fNbt.Test {
 
                     // end a list when not in a list
                     Assert.Throws<NbtFormatException>(writer.EndList);
-                    
+
                     // unacceptable nulls: WriteString
                     Assert.Throws<ArgumentNullException>(() => writer.WriteString(null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteString("NullString", null));
-                    
+
                     // unacceptable nulls: WriteByteArray from array
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 0, 5));
@@ -344,7 +344,8 @@ namespace fNbt.Test {
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(dummyStream, 5, null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullBuffer", dummyStream, 5, null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullStream", null, 5));
-                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullStream", null, 5, dummyByteArray));
+                    Assert.Throws<ArgumentNullException>(
+                        () => writer.WriteByteArray("NullStream", null, 5, dummyByteArray));
 
                     // unacceptable nulls: WriteIntArray
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null));
@@ -354,8 +355,10 @@ namespace fNbt.Test {
 
                     // non-readable streams are unacceptable
                     Assert.Throws<ArgumentException>(() => writer.WriteByteArray(new NonReadableStream(), 0));
-                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray(new NonReadableStream(), 0, new byte[10]));
-                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray("NonReadableStream", new NonReadableStream(), 0));
+                    Assert.Throws<ArgumentException>(
+                        () => writer.WriteByteArray(new NonReadableStream(), 0, new byte[10]));
+                    Assert.Throws<ArgumentException>(
+                        () => writer.WriteByteArray("NonReadableStream", new NonReadableStream(), 0));
 
                     // trying to write array with out-of-range offset/count
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyByteArray, -1, 5));
@@ -392,7 +395,8 @@ namespace fNbt.Test {
                     Assert.Throws<ArgumentOutOfRangeException>(
                         () => writer.WriteByteArray("BadLength", dummyStream, -1, dummyByteArray));
                     Assert.Throws<ArgumentException>(() => writer.WriteByteArray(dummyStream, 5, new byte[0]));
-                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray("BadLength", dummyStream, 5, new byte[0]));
+                    Assert.Throws<ArgumentException>(
+                        () => writer.WriteByteArray("BadLength", dummyStream, 5, new byte[0]));
 
                     // trying to read from non-readable stream
                     Assert.Throws<ArgumentException>(

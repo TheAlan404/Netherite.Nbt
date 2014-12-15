@@ -73,21 +73,21 @@ namespace fNbt.Test {
             };
 
             // Accessing nested compound tags using indexers
-            Assert.AreEqual(parent["Child"]["NestedChild"], nestedChild);
-            Assert.AreEqual(parent["Child"]["NestedChildList"], nestedChildList);
-            Assert.AreEqual(parent["Child"]["NestedChildList"][0], nestedInt);
+            Assert.AreEqual(nestedChild, parent["Child"]["NestedChild"]);
+            Assert.AreEqual(nestedChildList, parent["Child"]["NestedChildList"]);
+            Assert.AreEqual(nestedInt, parent["Child"]["NestedChildList"][0]);
 
             // Accessing nested compound tags using Get and Get<T>
             Assert.Throws<ArgumentNullException>(() => parent.Get<NbtCompound>(null));
             Assert.IsNull(parent.Get<NbtCompound>("NonExistingChild"));
-            Assert.AreEqual(parent.Get<NbtCompound>("Child").Get<NbtCompound>("NestedChild"), nestedChild);
-            Assert.AreEqual(parent.Get<NbtCompound>("Child").Get<NbtList>("NestedChildList"), nestedChildList);
-            Assert.AreEqual(parent.Get<NbtCompound>("Child").Get<NbtList>("NestedChildList")[0], nestedInt);
+            Assert.AreEqual(nestedChild, parent.Get<NbtCompound>("Child").Get<NbtCompound>("NestedChild"));
+            Assert.AreEqual(nestedChildList, parent.Get<NbtCompound>("Child").Get<NbtList>("NestedChildList"));
+            Assert.AreEqual(nestedInt, parent.Get<NbtCompound>("Child").Get<NbtList>("NestedChildList")[0]);
             Assert.Throws<ArgumentNullException>(() => parent.Get(null));
             Assert.IsNull(parent.Get("NonExistingChild"));
-            Assert.AreEqual((parent.Get("Child") as NbtCompound).Get("NestedChild"), nestedChild);
-            Assert.AreEqual((parent.Get("Child") as NbtCompound).Get("NestedChildList"), nestedChildList);
-            Assert.AreEqual((parent.Get("Child") as NbtCompound).Get("NestedChildList")[0], nestedInt);
+            Assert.AreEqual(nestedChild, (parent.Get("Child") as NbtCompound).Get("NestedChild"));
+            Assert.AreEqual(nestedChildList, (parent.Get("Child") as NbtCompound).Get("NestedChildList"));
+            Assert.AreEqual(nestedInt, (parent.Get("Child") as NbtCompound).Get("NestedChildList")[0]);
 
             // Accessing with Get<T> and an invalid given type
             Assert.Throws<InvalidCastException>(() => parent.Get<NbtInt>("Child"));
@@ -222,16 +222,16 @@ namespace fNbt.Test {
             Assert.IsFalse(test.Remove(foo));
 
             // clearing an empty NbtCompound
-            Assert.AreEqual(test.Count, 0);
+            Assert.AreEqual(0, test.Count);
             test.Clear();
 
             // re-adding after clearing
             test.Add(foo);
-            Assert.AreEqual(test.Count, 1);
+            Assert.AreEqual(1, test.Count);
 
             // clearing a non-empty NbtCompound
             test.Clear();
-            Assert.AreEqual(test.Count, 0);
+            Assert.AreEqual(0, test.Count);
         }
 
 
@@ -263,11 +263,10 @@ namespace fNbt.Test {
             var comp = new NbtCompound(tagList);
 
             // test .Names and .Tags collections
-            CollectionAssert.AreEquivalent(comp.Names,
-                                           new[] {
-                                               "First", "Second", "Third", "Fourth"
-                                           });
-            CollectionAssert.AreEquivalent(comp.Tags, tagList);
+            CollectionAssert.AreEquivalent(new[] {
+                "First", "Second", "Third", "Fourth"
+            }, comp.Names);
+            CollectionAssert.AreEquivalent(tagList, comp.Tags);
 
             // test ICollection and ICollection<NbtTag> boilerplate properties
             ICollection<NbtTag> iGenCollection = comp;
@@ -279,11 +278,11 @@ namespace fNbt.Test {
             // test CopyTo()
             var tags = new NbtTag[iCollection.Count];
             iCollection.CopyTo(tags, 0);
-            CollectionAssert.AreEquivalent(tags, comp);
+            CollectionAssert.AreEquivalent(comp, tags);
 
             // test non-generic GetEnumerator()
             var enumeratedTags = comp.ToList();
-            CollectionAssert.AreEquivalent(enumeratedTags, tagList);
+            CollectionAssert.AreEquivalent(tagList, enumeratedTags);
 
             // test generic GetEnumerator()
             List<NbtTag> enumeratedTags2 = new List<NbtTag>();
@@ -291,7 +290,7 @@ namespace fNbt.Test {
             while (enumerator.MoveNext()) {
                 enumeratedTags2.Add(enumerator.Current);
             }
-            CollectionAssert.AreEquivalent(enumeratedTags2, tagList);
+            CollectionAssert.AreEquivalent(tagList, enumeratedTags2);
         }
     }
 }

@@ -19,8 +19,8 @@ namespace fNbt.Test {
         [Test]
         public void TestNbtSmallFileLoadingUncompressed() {
             var file = new NbtFile(TestFiles.Small);
-            Assert.AreEqual(file.FileName, TestFiles.Small);
-            Assert.AreEqual(file.FileCompression, NbtCompression.None);
+            Assert.AreEqual(TestFiles.Small, file.FileName);
+            Assert.AreEqual(NbtCompression.None, file.FileCompression);
             TestFiles.AssertNbtSmallFile(file);
         }
 
@@ -28,7 +28,8 @@ namespace fNbt.Test {
         [Test]
         public void LoadingSmallFileGZip() {
             var file = new NbtFile(TestFiles.SmallGZip);
-            Assert.AreEqual(file.FileCompression, NbtCompression.GZip);
+            Assert.AreEqual(TestFiles.SmallGZip, file.FileName);
+            Assert.AreEqual(NbtCompression.GZip, file.FileCompression);
             TestFiles.AssertNbtSmallFile(file);
         }
 
@@ -36,7 +37,8 @@ namespace fNbt.Test {
         [Test]
         public void LoadingSmallFileZLib() {
             var file = new NbtFile(TestFiles.SmallZLib);
-            Assert.AreEqual(file.FileCompression, NbtCompression.ZLib);
+            Assert.AreEqual(TestFiles.SmallZLib, file.FileName);
+            Assert.AreEqual(NbtCompression.ZLib, file.FileCompression);
             TestFiles.AssertNbtSmallFile(file);
         }
 
@@ -133,7 +135,7 @@ namespace fNbt.Test {
             ReloadFileInternal("bigtest.nbt.gz", NbtCompression.GZip, false, true);
             ReloadFileInternal("bigtest.nbt.z", NbtCompression.ZLib, false, true);
         }
-        
+
 
         [Test]
         public void ReloadFileUnbuffered() {
@@ -212,8 +214,8 @@ namespace fNbt.Test {
         [Test]
         public void PrettyPrint() {
             var loadedFile = new NbtFile(TestFiles.Big);
-            Assert.AreEqual(loadedFile.ToString(), loadedFile.RootTag.ToString());
-            Assert.AreEqual(loadedFile.ToString("   "), loadedFile.RootTag.ToString("   "));
+            Assert.AreEqual(loadedFile.RootTag.ToString(), loadedFile.ToString());
+            Assert.AreEqual(loadedFile.RootTag.ToString("   "), loadedFile.ToString("   "));
             Assert.Throws<ArgumentNullException>(() => loadedFile.ToString(null));
             Assert.Throws<ArgumentNullException>(() => NbtTag.DefaultIndentString = null);
         }
@@ -232,8 +234,8 @@ namespace fNbt.Test {
         void ReadRootTagInternal(String fileName, NbtCompression compression) {
             Assert.Throws<ArgumentOutOfRangeException>(() => NbtFile.ReadRootTagName(fileName, compression, true, -1));
 
-            Assert.AreEqual(NbtFile.ReadRootTagName(fileName), "Level");
-            Assert.AreEqual(NbtFile.ReadRootTagName(fileName, compression, true, 0), "Level");
+            Assert.AreEqual("Level", NbtFile.ReadRootTagName(fileName));
+            Assert.AreEqual("Level", NbtFile.ReadRootTagName(fileName, compression, true, 0));
 
             byte[] fileBytes = File.ReadAllBytes(fileName);
             using (var ms = new MemoryStream(fileBytes)) {
@@ -248,21 +250,21 @@ namespace fNbt.Test {
 
         [Test]
         public void GlobalsTest() {
-            Assert.AreEqual(new NbtFile(new NbtCompound("Foo")).BufferSize, NbtFile.DefaultBufferSize);
+            Assert.AreEqual(NbtFile.DefaultBufferSize, new NbtFile(new NbtCompound("Foo")).BufferSize);
             Assert.Throws<ArgumentOutOfRangeException>(() => NbtFile.DefaultBufferSize = -1);
             NbtFile.DefaultBufferSize = 12345;
-            Assert.AreEqual(NbtFile.DefaultBufferSize, 12345);
+            Assert.AreEqual(12345, NbtFile.DefaultBufferSize);
 
             // Newly-created NbtFiles should use default buffer size
             NbtFile tempFile = new NbtFile(new NbtCompound("Foo"));
-            Assert.AreEqual(tempFile.BufferSize, NbtFile.DefaultBufferSize);
+            Assert.AreEqual(NbtFile.DefaultBufferSize, tempFile.BufferSize);
             Assert.Throws<ArgumentOutOfRangeException>(() => tempFile.BufferSize = -1);
             tempFile.BufferSize = 54321;
-            Assert.AreEqual(tempFile.BufferSize, 54321);
+            Assert.AreEqual(54321, tempFile.BufferSize);
 
             // Changing default buffer size should not retroactively change already-existing NbtFiles' buffer size.
             NbtFile.DefaultBufferSize = 8192;
-            Assert.AreEqual(tempFile.BufferSize, 54321);
+            Assert.AreEqual(54321, tempFile.BufferSize);
         }
 
 
@@ -285,15 +287,15 @@ namespace fNbt.Test {
             NbtFile newFile = new NbtFile(oldRoot);
 
             // Ensure that inappropriate tags are not accepted as RootTag
-            Assert.Throws<ArgumentNullException>( () => newFile.RootTag = null );
+            Assert.Throws<ArgumentNullException>(() => newFile.RootTag = null);
             Assert.Throws<ArgumentException>(() => newFile.RootTag = new NbtCompound());
 
             // Ensure that the root has not changed
-            Assert.AreEqual(newFile.RootTag, oldRoot);
+            Assert.AreSame(oldRoot, newFile.RootTag);
 
             // Invalidate the root tag, and ensure that expected exception is thrown
             oldRoot.Name = null;
-            Assert.Throws<NbtFormatException>(()=>newFile.SaveToBuffer(NbtCompression.None));
+            Assert.Throws<NbtFormatException>(() => newFile.SaveToBuffer(NbtCompression.None));
         }
 
 
@@ -309,13 +311,14 @@ namespace fNbt.Test {
             Assert.Throws<ArgumentNullException>(() => file.LoadFromFile(null, NbtCompression.None, tag => true));
             Assert.Throws<ArgumentNullException>(() => file.LoadFromStream(null, NbtCompression.AutoDetect));
             Assert.Throws<ArgumentNullException>(() => file.LoadFromStream(null, NbtCompression.AutoDetect, tag => true));
-            
+
             Assert.Throws<ArgumentNullException>(() => file.SaveToBuffer(null, 0, NbtCompression.None));
             Assert.Throws<ArgumentNullException>(() => file.SaveToFile(null, NbtCompression.None));
             Assert.Throws<ArgumentNullException>(() => file.SaveToStream(null, NbtCompression.None));
 
             Assert.Throws<ArgumentNullException>(() => NbtFile.ReadRootTagName(null));
-            Assert.Throws<ArgumentNullException>(() => NbtFile.ReadRootTagName((Stream)null, NbtCompression.None, true, 0));
+            Assert.Throws<ArgumentNullException>(
+                () => NbtFile.ReadRootTagName((Stream)null, NbtCompression.None, true, 0));
 
         }
 

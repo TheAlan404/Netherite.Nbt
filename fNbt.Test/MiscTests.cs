@@ -94,46 +94,46 @@ namespace fNbt.Test {
         public void ByteArrayIndexerTest() {
             // test getting/settings values of byte array tag via indexer
             var byteArray = new NbtByteArray("Test");
-            CollectionAssert.AreEqual(byteArray.Value, new byte[0]);
+            CollectionAssert.AreEqual(new byte[0], byteArray.Value);
             byteArray.Value = new byte[] {
                 1, 2, 3
             };
-            Assert.AreEqual(byteArray[0], 1);
-            Assert.AreEqual(byteArray[1], 2);
-            Assert.AreEqual(byteArray[2], 3);
+            Assert.AreEqual(1, byteArray[0]);
+            Assert.AreEqual(2, byteArray[1]);
+            Assert.AreEqual(3, byteArray[2]);
             byteArray[0] = 4;
-            Assert.AreEqual(byteArray[0], 4);
+            Assert.AreEqual(4, byteArray[0]);
         }
 
 
         [Test]
         public void IntArrayIndexerTest() {
             // test getting/settings values of int array tag via indexer
-            var byteArray = new NbtIntArray("Test");
-            CollectionAssert.AreEqual(byteArray.Value, new int[0]);
-            byteArray.Value = new[] {
+            var intArray = new NbtIntArray("Test");
+            CollectionAssert.AreEqual(new int[0], intArray.Value);
+            intArray.Value = new[] {
                 1, 2000, -3000000
             };
-            Assert.AreEqual(byteArray[0], 1);
-            Assert.AreEqual(byteArray[1], 2000);
-            Assert.AreEqual(byteArray[2], -3000000);
-            byteArray[0] = 4;
-            Assert.AreEqual(byteArray[0], 4);
+            Assert.AreEqual(1, intArray[0]);
+            Assert.AreEqual(2000, intArray[1]);
+            Assert.AreEqual(-3000000, intArray[2]);
+            intArray[0] = 4;
+            Assert.AreEqual(4, intArray[0]);
         }
 
 
         [Test]
         public void DefaultValueTest() {
             // test default values of all value tags
-            Assert.AreEqual(new NbtByte("test").Value, 0);
-            CollectionAssert.AreEqual(new NbtByteArray("test").Value, new byte[0]);
-            Assert.AreEqual(new NbtDouble("test").Value, 0d);
-            Assert.AreEqual(new NbtFloat("test").Value, 0f);
-            Assert.AreEqual(new NbtInt("test").Value, 0);
-            CollectionAssert.AreEqual(new NbtIntArray("test").Value, new int[0]);
-            Assert.AreEqual(new NbtLong("test").Value, 0L);
-            Assert.AreEqual(new NbtShort("test").Value, 0);
-            Assert.AreEqual(new NbtString().Value, "");
+            Assert.AreEqual(0, new NbtByte("test").Value);
+            CollectionAssert.AreEqual(new byte[0], new NbtByteArray("test").Value);
+            Assert.AreEqual(0d, new NbtDouble("test").Value);
+            Assert.AreEqual(0f, new NbtFloat("test").Value);
+            Assert.AreEqual(0, new NbtInt("test").Value);
+            CollectionAssert.AreEqual(new int[0], new NbtIntArray("test").Value);
+            Assert.AreEqual(0L, new NbtLong("test").Value);
+            Assert.AreEqual(0, new NbtShort("test").Value);
+            Assert.AreEqual("", new NbtString().Value);
         }
 
 
@@ -160,14 +160,14 @@ namespace fNbt.Test {
             };
 
             // parent-less tag with no name has empty string for a path
-            Assert.AreEqual(testComp.Path, "");
-            Assert.AreEqual(testComp["Compound"].Path, ".Compound");
-            Assert.AreEqual(testComp["Compound"]["InsideCompound"].Path, ".Compound.InsideCompound");
-            Assert.AreEqual(testComp["List"].Path, ".List");
+            Assert.AreEqual("", testComp.Path);
+            Assert.AreEqual(".Compound", testComp["Compound"].Path);
+            Assert.AreEqual(".Compound.InsideCompound", testComp["Compound"]["InsideCompound"].Path);
+            Assert.AreEqual(".List", testComp["List"].Path);
 
             // tags inside lists have no name, but they do have an index
-            Assert.AreEqual(testComp["List"][0].Path, ".List[0]");
-            Assert.AreEqual(testComp["List"][0]["InsideCompoundAndList"].Path, ".List[0].InsideCompoundAndList");
+            Assert.AreEqual(".List[0]", testComp["List"][0].Path);
+            Assert.AreEqual(".List[0].InsideCompoundAndList", testComp["List"][0]["InsideCompoundAndList"].Path);
         }
     }
 }
