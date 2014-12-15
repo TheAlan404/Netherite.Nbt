@@ -497,9 +497,6 @@ namespace fNbt {
                 throw new ArgumentOutOfRangeException("count", "count may not be negative");
             } else if (buffer.Length == 0 && count > 0) {
                 throw new ArgumentException("buffer size must be greater than 0 when count is greater than 0", "buffer");
-            } else if (buffer.Length > NbtBinaryWriter.MaxWriteChunk) {
-                throw new ArgumentException("buffer size must not be greater than " + NbtBinaryWriter.MaxWriteChunk,
-                                            "buffer");
             }
             EnforceConstraints(tagName, NbtTagType.ByteArray);
             writer.Write((byte)NbtTagType.ByteArray);
