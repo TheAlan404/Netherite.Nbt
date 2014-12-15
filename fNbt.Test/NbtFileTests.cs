@@ -126,19 +126,33 @@ namespace fNbt.Test {
 
         [Test]
         public void ReloadFile() {
-            ReloadFileInternal("bigtest.nbt", NbtCompression.None, true);
-            ReloadFileInternal("bigtest.nbt.gz", NbtCompression.GZip, true);
-            ReloadFileInternal("bigtest.nbt.z", NbtCompression.ZLib, true);
-            ReloadFileInternal("bigtest.nbt", NbtCompression.None, false);
-            ReloadFileInternal("bigtest.nbt.gz", NbtCompression.GZip, false);
-            ReloadFileInternal("bigtest.nbt.z", NbtCompression.ZLib, false);
+            ReloadFileInternal("bigtest.nbt", NbtCompression.None, true, true);
+            ReloadFileInternal("bigtest.nbt.gz", NbtCompression.GZip, true, true);
+            ReloadFileInternal("bigtest.nbt.z", NbtCompression.ZLib, true, true);
+            ReloadFileInternal("bigtest.nbt", NbtCompression.None, false, true);
+            ReloadFileInternal("bigtest.nbt.gz", NbtCompression.GZip, false, true);
+            ReloadFileInternal("bigtest.nbt.z", NbtCompression.ZLib, false, true);
+        }
+        
+
+        [Test]
+        public void ReloadFileUnbuffered() {
+            ReloadFileInternal("bigtest.nbt", NbtCompression.None, true, false);
+            ReloadFileInternal("bigtest.nbt.gz", NbtCompression.GZip, true, false);
+            ReloadFileInternal("bigtest.nbt.z", NbtCompression.ZLib, true, false);
+            ReloadFileInternal("bigtest.nbt", NbtCompression.None, false, false);
+            ReloadFileInternal("bigtest.nbt.gz", NbtCompression.GZip, false, false);
+            ReloadFileInternal("bigtest.nbt.z", NbtCompression.ZLib, false, false);
         }
 
 
-        void ReloadFileInternal(String fileName, NbtCompression compression, bool bigEndian) {
+        void ReloadFileInternal(String fileName, NbtCompression compression, bool bigEndian, bool buffered) {
             var loadedFile = new NbtFile(Path.Combine(TestFiles.DirName, fileName)) {
                 BigEndian = bigEndian
             };
+            if (!buffered) {
+                loadedFile.BufferSize = 0;
+            }
             long bytesWritten = loadedFile.SaveToFile(Path.Combine(TestDirName, fileName), compression);
             long bytesRead = loadedFile.LoadFromFile(Path.Combine(TestDirName, fileName), NbtCompression.AutoDetect,
                                                      null);

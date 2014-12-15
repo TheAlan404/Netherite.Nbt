@@ -18,9 +18,14 @@ namespace fNbt.Test {
             var testTag = new NbtInt(4);
             var originalList = new NbtList(referenceList);
 
-            // check IList implementations
+            // check IList implementation
             IList iList = originalList;
             CollectionAssert.AreEqual(referenceList, iList);
+            
+            // check IList<NbtTag> implementation
+            IList<NbtTag> iGenericList = originalList;
+            CollectionAssert.AreEqual(referenceList, iGenericList);
+            Assert.IsFalse(iGenericList.IsReadOnly);
 
             // check IList.Add
             referenceList.Add(testTag);
@@ -29,7 +34,11 @@ namespace fNbt.Test {
 
             // check IList.IndexOf
             Assert.AreEqual(referenceList.IndexOf(testTag), iList.IndexOf(testTag));
-            Assert.IsTrue(referenceList.IndexOf(null) < 0);
+            Assert.IsTrue(iList.IndexOf(null) < 0);
+            
+            // check IList<NbtTag>.IndexOf
+            Assert.AreEqual(referenceList.IndexOf(testTag), iGenericList.IndexOf(testTag));
+            Assert.IsTrue(iGenericList.IndexOf(null) < 0);
 
             // check IList.Contains
             Assert.IsTrue(iList.Contains(testTag));
@@ -62,10 +71,6 @@ namespace fNbt.Test {
                 Assert.AreEqual(iList[i], originalList[i]);
                 iList[i] = new NbtInt(i);
             }
-
-            // check IList<NbtTag>.IsReadOnly
-            IList<NbtTag> iGenericList = originalList;
-            Assert.IsFalse(iGenericList.IsReadOnly);
 
             // check IList.Clear
             iList.Clear();
@@ -194,6 +199,7 @@ namespace fNbt.Test {
             // test removal
             Assert.IsFalse(list.Remove(new NbtInt(5)));
             Assert.IsTrue(list.Remove(sameTags[0]));
+            Assert.Throws<ArgumentNullException>(() => list.Remove(null));
             list.RemoveAt(0);
             Assert.Throws<ArgumentOutOfRangeException>(() => list.RemoveAt(10));
 
@@ -205,6 +211,7 @@ namespace fNbt.Test {
 
             // adding same tag to multiple lists
             Assert.Throws<ArgumentException>(() => loopList.Add(list[0]));
+            Assert.Throws<ArgumentException>(() => loopList.Insert(0, list[0]));
 
             // adding null tag
             Assert.Throws<ArgumentNullException>(() => loopList.Add(null));

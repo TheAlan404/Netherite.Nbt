@@ -276,6 +276,7 @@ namespace fNbt.Test {
         public void ErrorTest() {
             byte[] dummyByteArray = { 1, 2, 3, 4, 5 };
             int[] dummyIntArray = { 1, 2, 3, 4, 5 };
+            byte[] dummyBuffer = new byte[1024];
             MemoryStream dummyStream = new MemoryStream(dummyByteArray);
 
             using (var ms = new MemoryStream()) {
@@ -326,17 +327,26 @@ namespace fNbt.Test {
 
                     // end a list when not in a list
                     Assert.Throws<NbtFormatException>(writer.EndList);
-
-                    // write null values where unacceptable
+                    
+                    // unacceptable nulls: WriteString
                     Assert.Throws<ArgumentNullException>(() => writer.WriteString(null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteString("NullString", null));
+                    
+                    // unacceptable nulls: WriteByteArray from array
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null));
-                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 5));
-                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 5, null));
-                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(dummyStream, 5, null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 0, 5));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullByteArray", null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullByteArray", null, 0, 5));
+
+                    // unacceptable nulls: WriteByteArray from stream
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(null, 5, null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray(dummyStream, 5, null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullBuffer", dummyStream, 5, null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullStream", null, 5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteByteArray("NullStream", null, 5, dummyByteArray));
+
+                    // unacceptable nulls: WriteIntArray
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray(null, 0, 5));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray("NullIntArray", null));
@@ -376,9 +386,13 @@ namespace fNbt.Test {
 
                     // out-of-range values for stream-reading overloads of WriteByteArray
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyStream, -1));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray("BadLength", dummyStream, -1));
                     Assert.Throws<ArgumentOutOfRangeException>(
                         () => writer.WriteByteArray(dummyStream, -1, dummyByteArray));
+                    Assert.Throws<ArgumentOutOfRangeException>(
+                        () => writer.WriteByteArray("BadLength", dummyStream, -1, dummyByteArray));
                     Assert.Throws<ArgumentException>(() => writer.WriteByteArray(dummyStream, 5, new byte[0]));
+                    Assert.Throws<ArgumentException>(() => writer.WriteByteArray("BadLength", dummyStream, 5, new byte[0]));
 
                     // trying to read from non-readable stream
                     Assert.Throws<ArgumentException>(

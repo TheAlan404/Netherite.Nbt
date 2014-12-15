@@ -33,10 +33,30 @@ namespace fNbt.Test {
 
         [Test]
         public void SkippingLists() {
-            var file = new NbtFile(TestFiles.MakeListTest());
-            byte[] savedFile = file.SaveToBuffer(NbtCompression.None);
-            file.LoadFromBuffer(savedFile, 0, savedFile.Length, NbtCompression.None, tag => false);
-            Assert.AreEqual(file.RootTag.Count, 0);
+            {
+                var file = new NbtFile(TestFiles.MakeListTest());
+                byte[] savedFile = file.SaveToBuffer(NbtCompression.None);
+                file.LoadFromBuffer(savedFile, 0, savedFile.Length, NbtCompression.None,
+                                    tag => tag.TagType != NbtTagType.List);
+                Assert.AreEqual(file.RootTag.Count, 0);
+            }
+            {
+                // Check list-compound interaction
+                NbtCompound comp = new NbtCompound("root") {
+                    new NbtCompound("compOfLists") {
+                        new NbtList("listOfComps") {
+                            new NbtCompound {
+                                new NbtList("emptyList", NbtTagType.Compound)
+                            }
+                        }
+                    }
+                };
+                var file = new NbtFile(comp);
+                byte[] savedFile = file.SaveToBuffer(NbtCompression.None);
+                file.LoadFromBuffer(savedFile, 0, savedFile.Length, NbtCompression.None,
+                                    tag => tag.TagType != NbtTagType.List);
+                Assert.AreEqual(file.RootTag.Count, 1);
+            }
         }
 
 
