@@ -2,7 +2,7 @@ Named Binary Tag (NBT) is a structured binary file format used by Minecraft.
 fNbt is a small library, written in C# for .NET 3.5+. It provides functionality
 to create, load, traverse, modify, and save NBT files and streams.
 
-Current released version is 0.6.2 (17 November 2014).
+Current released version is 0.6.3 (12 April 2015).
 
 fNbt is based in part on Erik Davidson's (aphistic's) original LibNbt library,
 now completely rewritten by Matvei Stefarov (fragmer).
@@ -30,14 +30,14 @@ Latest version of fNbt requires .NET Framework 3.5+ (client or full profile).
 
  Package @ NuGet:  https://www.nuget.org/packages/fNbt/
 
- Compiled binary:  https://fcraft.net/fnbt/fNbt_v0.6.2.zip
-                   SHA1: 82b1cfcf114a3d5411f105e68e328fd5d75e34dd
+ Compiled binary:  https://fcraft.net/fnbt/fNbt_v0.6.3.zip
+                   SHA1: c743b4e8af649af75d7ab097dfec2bc897a70689
 
  Amalgamation (single source file):
-    Non-annotated: https://fcraft.net/fnbt/fNbt_v0.6.2.cs
-                   SHA1: 2aa56a68f0b8343dfebd54b2bfe1f1b6319a3e98
-        Annotated: https://fcraft.net/fnbt/fNbt_v0.6.2_Annotated.cs
-                   SHA1: 77f291e0738e0bae6718a71cc2e8f8ca2b2e0f54
+    Non-annotated: https://fcraft.net/fnbt/fNbt_v0.6.3.cs
+                   SHA1: 2a2cd74bee0bab765d9647e0cc048927248d0142
+        Annotated: https://fcraft.net/fnbt/fNbt_v0.6.3_Annotated.cs
+                   SHA1: 66ab908708678272a58d9e71f1615f68caba79d7
                    (using JetBrains.Annotations, for ReSharper)
 
 

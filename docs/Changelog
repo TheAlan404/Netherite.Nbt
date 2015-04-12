@@ -1,3 +1,6 @@
+0.6.3 (fNbt)
+- Empty NbtLists now allow "TAG_End" as its ListType.
+
 0.6.2 (fNbt)
 - NbtTags now implement ICloneable and provide copy constructors.
 - fNbt is now compatible with /checked compiler option.
