@@ -27,7 +27,7 @@ namespace fNbt {
             if (type < 0) {
                 throw new EndOfStreamException();
             } else if (type > (int)NbtTagType.IntArray) {
-                throw new NbtFormatException("NBT tag type out of range: " + (int)type);
+                throw new NbtFormatException("NBT tag type out of range: " + type);
             }
             return (NbtTagType)type;
         }
@@ -126,7 +126,7 @@ namespace fNbt {
         }
 
 
-        void FillBuffer(int numBytes) {
+        new void FillBuffer(int numBytes) {
             int offset = 0;
             do {
                 int num = BaseStream.Read(buffer, offset, numBytes - offset);

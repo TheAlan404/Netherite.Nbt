@@ -495,6 +495,7 @@ namespace fNbt {
             }
             int startDepth = Depth;
             int skipped = 0;
+            // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
             while (ReadToFollowing() && Depth >= startDepth) {
                 skipped++;
             }
