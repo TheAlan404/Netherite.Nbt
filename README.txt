@@ -102,7 +102,7 @@ Latest version of fNbt requires .NET Framework 3.5+ (client or full profile).
 
 
 ==== API REFERENCE ============================================================
-Online reference can be found at http://www.fcraft.net/fnbt/v0.6.2/
+Online reference can be found at http://www.fcraft.net/fnbt/v0.6.3/
 
 
 ==== LICENSING ================================================================
