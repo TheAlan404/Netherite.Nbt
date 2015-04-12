@@ -17,19 +17,24 @@ namespace fNbt {
 
         /// <summary> Gets or sets the tag type of this list. All tags in this NbtTag must be of the same type. </summary>
         /// <exception cref="ArgumentException"> If the given NbtTagType does not match the type of existing list items (for non-empty lists). </exception>
-        /// <exception cref="ArgumentOutOfRangeException"> If the given NbtTagType is not among recognized tag types. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> If the given NbtTagType is a recognized tag type. </exception>
         public NbtTagType ListType {
             get { return listType; }
             set {
-                if (value < NbtTagType.Byte || (value > NbtTagType.IntArray && value != NbtTagType.Unknown)) {
+                if (value == NbtTagType.End) {
+                    // Empty lists may have type "End", see: https://github.com/fragmer/fNbt/issues/12
+                    if (tags.Count > 0) {
+                        throw new ArgumentException("Only empty list tags may have TagType of End.");
+                    }
+                }else if (value < NbtTagType.Byte || (value > NbtTagType.IntArray && value != NbtTagType.Unknown)) {
                     throw new ArgumentOutOfRangeException("value");
                 }
                 if (tags.Count > 0) {
                     NbtTagType actualType = tags[0].TagType;
+                    // We can safely assume that ALL tags have the same TagType as the first tag.
                     if (actualType != value) {
                         string msg = String.Format("Given NbtTagType ({0}) does not match actual element type ({1})",
-                                                   value,
-                                                   actualType);
+                                                   value, actualType);
                         throw new ArgumentException(msg);
                     }
                 }
@@ -38,7 +43,7 @@ namespace fNbt {
         }
 
         NbtTagType listType;
-
+        
 
         /// <summary> Creates an unnamed NbtList with empty contents and undefined ListType. </summary>
         public NbtList()
@@ -93,7 +98,7 @@ namespace fNbt {
         /// List may be empty, but may not be <c>null</c>. </param>
         /// <param name="givenListType"> Name to assign to this tag. May be Unknown (to infer type from the first element of tags). </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tags"/> is <c>null</c>. </exception>
-        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a valid tag type. </exception>
         /// <exception cref="ArgumentException"> If given tags do not match <paramref name="givenListType"/>, or are of mixed types. </exception>
         public NbtList([NotNull] IEnumerable<NbtTag> tags, NbtTagType givenListType)
             : this(null, tags, givenListType) {
@@ -106,7 +111,7 @@ namespace fNbt {
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         /// <param name="givenListType"> Name to assign to this tag.
         /// If givenListType is Unknown, ListType will be inferred from the first tag added to this NbtList. </param>
-        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a valid tag type. </exception>
         public NbtList([CanBeNull] string tagName, NbtTagType givenListType)
             : this(tagName, null, givenListType) {}
 
@@ -116,16 +121,11 @@ namespace fNbt {
         /// <param name="tags"> Collection of tags to insert into the list.
         /// All tags are expected to be of the same type (matching givenListType). May be empty or <c>null</c>. </param>
         /// <param name="givenListType"> Name to assign to this tag. May be Unknown (to infer type from the first element of tags). </param>
-        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
+        /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a valid tag type. </exception>
         /// <exception cref="ArgumentException"> If given tags do not match <paramref name="givenListType"/>, or are of mixed types. </exception>
         public NbtList([CanBeNull] string tagName, [CanBeNull] IEnumerable<NbtTag> tags, NbtTagType givenListType) {
             name = tagName;
-            listType = givenListType;
-
-            if (givenListType < NbtTagType.Byte ||
-                (givenListType > NbtTagType.IntArray && givenListType != NbtTagType.Unknown)) {
-                throw new ArgumentOutOfRangeException("givenListType");
-            }
+            ListType = givenListType;
 
             if (tags == null) return;
             foreach (NbtTag tag in tags) {

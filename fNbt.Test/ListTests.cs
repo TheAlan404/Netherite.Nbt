@@ -221,7 +221,7 @@ namespace fNbt.Test {
             Assert.AreEqual(NbtTagType.Unknown, loopList.ListType);
 
             // try creating a list with invalid tag type
-            Assert.Throws<ArgumentOutOfRangeException>(() => new NbtList(NbtTagType.End));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new NbtList((NbtTagType)200));
         }
 
 
@@ -237,16 +237,27 @@ namespace fNbt.Test {
             Assert.Throws<ArgumentException>(() => list.Add(new NbtInt("namedTagWhereUnnamedIsExpected")));
             Assert.AreEqual(NbtTagType.Unknown, list.ListType);
 
-            // changing type of an empty list
-            Assert.DoesNotThrow(() => list.ListType = NbtTagType.Unknown);
+            // changing the type of an empty list to "End" is allowed, see https://github.com/fragmer/fNbt/issues/12
+            Assert.DoesNotThrow(() => list.ListType = NbtTagType.End);
+            Assert.AreEqual(list.ListType, NbtTagType.End);
 
+            // changing the type of an empty list back to "Unknown" is allowed too!
+            Assert.DoesNotThrow(() => list.ListType = NbtTagType.Unknown);
+            Assert.AreEqual(list.ListType, NbtTagType.Unknown);
+
+            // adding the first element should set the tag type
             list.Add(new NbtInt());
+            Assert.AreEqual(list.ListType, NbtTagType.Int);
 
             // setting correct type for a non-empty list
             Assert.DoesNotThrow(() => list.ListType = NbtTagType.Int);
 
             // changing list type to an incorrect type
             Assert.Throws<ArgumentException>(() => list.ListType = NbtTagType.Short);
+
+            // after the list is cleared, we should once again be allowed to change its TagType
+            list.Clear();
+            Assert.DoesNotThrow(() => list.ListType = NbtTagType.Short);
         }
 
 
@@ -311,6 +322,31 @@ namespace fNbt.Test {
             byte[] buffer = testFile.SaveToBuffer(NbtCompression.None);
             long bytesRead = testFile.LoadFromBuffer(buffer, 0, buffer.Length, NbtCompression.None);
             Assert.AreEqual(bytesRead, buffer.Length);
+        }
+
+
+        [Test]
+        public void SerializingEmpty() {
+            // check saving/loading lists of all possible value types
+            var testFile = new NbtFile(new NbtCompound("root") {
+                new NbtList("emptyList", NbtTagType.End),
+                new NbtList("listyList", NbtTagType.List) {
+                    new NbtList(NbtTagType.End)
+                }
+            });
+            byte[] buffer = testFile.SaveToBuffer(NbtCompression.None);
+            
+            testFile.LoadFromBuffer(buffer, 0, buffer.Length, NbtCompression.None);
+
+            NbtList list1 = testFile.RootTag.Get<NbtList>("emptyList");
+            Assert.AreEqual(list1.Count,0);
+            Assert.AreEqual(list1.ListType, NbtTagType.End);
+
+            NbtList list2 = testFile.RootTag.Get<NbtList>("listyList");
+            Assert.AreEqual(list2.Count,1);
+            Assert.AreEqual(list2.ListType, NbtTagType.List);
+            Assert.AreEqual(list2.Get<NbtList>(0).Count, 0);
+            Assert.AreEqual(list2.Get<NbtList>(0).ListType, NbtTagType.End);
         }
 
 
