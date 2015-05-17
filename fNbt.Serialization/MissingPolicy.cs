@@ -1,6 +1,7 @@
 namespace fNbt.Serialization {
     public enum MissingPolicy {
-        Ignore,
-        Error
+        Default = 0,
+        Error = 0,
+        Ignore = 1
     }
 }

@@ -8,20 +8,11 @@ namespace fNbt.Serialization {
             Defaults = new ConversionOptions();
         }
 
-
         public NullPolicy DefaultNullPolicy { get; set; }
         public NullPolicy DefaultElementNullPolicy { get; set; }
         public MissingPolicy DefaultMissingPolicy { get; set; }
         public bool IgnoreISerializable { get; set; }
         public string[] IgnoredProperties { get; set; }
-
-        public ConversionOptions() {
-            DefaultNullPolicy = NullPolicy.Error;
-            DefaultElementNullPolicy = NullPolicy.Error;
-            DefaultMissingPolicy = MissingPolicy.Error;
-            IgnoreISerializable = false;
-            IgnoredProperties = null;
-        }
 
 
         public override int GetHashCode() {
