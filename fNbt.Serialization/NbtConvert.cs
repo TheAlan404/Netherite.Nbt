@@ -20,7 +20,7 @@ namespace fNbt.Serialization {
 
 
         public static NbtTag MakeTag(string tagName, object obj, Type type, ConversionOptions options) {
-            new DynamicConverter(type, options).MakeTag(tagName, obj);
+            return new DynamicConverter(type, options).MakeTag(tagName, obj);
         }
 
         /*
@@ -88,7 +88,8 @@ namespace fNbt.Serialization {
 
 
         public static object FillObject(this NbtTag tag, object obj, Type type, ConversionOptions options) {
-            return new DynamicConverter(type, options).FillObject(obj, tag);
+            new DynamicConverter(type, options).FillObject(tag, obj);
+            return obj;
         }
 
 

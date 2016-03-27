@@ -30,6 +30,8 @@ namespace fNbt.Serialization {
             if (TypeCategory.MappedToPrimitive.HasFlag(typeMetadata.Category)) {
                 // primitives, convertible-to-primitives, and enums
                 return HandlePrimitiveOrEnum(tagName, value, type);
+            } else {
+            throw new NotImplementedException();
             }
         }
 
@@ -89,7 +91,7 @@ namespace fNbt.Serialization {
         // Fetches NullPolicy and throws SerializationException in case of prohibited null value.
         // Returns null if this property should be skipped/ignored.
         [CanBeNull]
-        NbtTag HandleDirectlyMappedType([CanBeNull] string tagName, [CanBeNull] object value,
+        NbtTag HandleDirectlyMappedType([CanBeNull] string tagName, [CanBeNull] object value, [NotNull] PropertyInfo pinfo,
                                         NullPolicy nullPolicy, [NotNull] Type propType) {
             if (propType == null) throw new ArgumentNullException("propType");
             if (value == null) {
