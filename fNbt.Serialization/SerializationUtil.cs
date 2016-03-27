@@ -23,6 +23,45 @@ namespace fNbt.Serialization {
         }
 
 
+        public static TypeCategory CategorizeType(Type type) {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)) {
+                // Nullable<T> is not supported
+                return TypeCategory.NotSupported;
+            }else if (type.IsEnum) {
+                return TypeCategory.Enum;
+            } else if (PrimitiveConversionMap.ContainsKey(type)) {
+                return TypeCategory.ConvertiblePrimitive;
+            } else if (type.IsPrimitive) {
+                return TypeCategory.Primitive;
+            } else if (type == typeof(string)) {
+                return TypeCategory.String;
+            } else if (type.IsArray) {
+                if (type.GetArrayRank() > 1) {
+                    // Serialization of multi-dimensional arrays is not supported at this time.
+                    return TypeCategory.NotSupported;
+                }
+                Type elementType = type.GetElementType();
+                if (IsSafelyConvertibleToByte(elementType)) {
+                    return TypeCategory.ByteArray;
+                } else if (IsSafelyConvertibleToInt(elementType)) {
+                    return TypeCategory.IntArray;
+                } else {
+                    return TypeCategory.Array;
+                }
+            } else if (GetStringIDictionaryImpl(type) != null) {
+                return TypeCategory.IDictionary;
+            } else if (GetGenericInterfaceImpl(type, typeof(IList<>)) != null) {
+                return TypeCategory.IList;
+            } else if (typeof(NbtTag).IsAssignableFrom(type)) {
+                return TypeCategory.NbtTag;
+            } else if (typeof(INbtSerializable).IsAssignableFrom(type)) {
+                return TypeCategory.INbtSerializable;
+            } else {
+                return TypeCategory.ConvertibleByProperties;
+            }
+        }
+
+
         public static bool IsDirectlyMappedType(Type type) {
             return !type.IsGenericType && // to catch Nullable<T>
                    (type.IsPrimitive || type.IsEnum ||
@@ -226,7 +265,7 @@ namespace fNbt.Serialization {
                 // Lists and arrays
                 return typeof(NbtList);
             }
-            // INbtSerializable, NbtTag, IDictionary, and everything else
+            // INbtSerializable, IDictionary, and everything else
             return typeof(NbtCompound);
         }
 

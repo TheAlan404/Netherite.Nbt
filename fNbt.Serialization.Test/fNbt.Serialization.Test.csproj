@@ -4,20 +4,19 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{95238D45-EC60-419F-90E1-7064EA738079}</ProjectGuid>
+    <ProjectGuid>{1A9A2746-62D1-49E6-80EF-FC3305A1CFE0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>fNbt.Serialization</RootNamespace>
-    <AssemblyName>fNbt.Serialization</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <RootNamespace>fNbt.Serialization.Test</RootNamespace>
+    <AssemblyName>fNbt.Serialization.Test</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\bin\Debug\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,12 +24,15 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\bin\Release\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="nunit.framework">
+      <HintPath>..\Dependencies\nunit.framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -40,27 +42,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compiled\CodeEmitter.cs" />
-    <Compile Include="Compiled\DeserializeCodeEmitter.cs" />
-    <Compile Include="DynamicConverter.cs" />
-    <Compile Include="INbtSerializable.cs" />
-    <Compile Include="MissingPolicy.cs" />
-    <Compile Include="MissingPolicyAttribute.cs" />
-    <Compile Include="Compiled\NbtCompiler.cs" />
-    <Compile Include="NbtConvert.cs" />
-    <Compile Include="NbtIgnoreAttribute.cs" />
-    <Compile Include="NbtConverter.cs" />
-    <Compile Include="NullPolicy.cs" />
-    <Compile Include="NullPolicyAttribute.cs" />
+    <Compile Include="DynamicConverterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SerializationUtil.cs" />
-    <Compile Include="Compiled\SerializeCodeEmitter.cs" />
-    <Compile Include="ConversionOptions.cs" />
-    <Compile Include="TagNameAttribute.cs" />
-    <Compile Include="TypeCategory.cs" />
-    <Compile Include="TypeMetadata.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\fNbt.Serialization\fNbt.Serialization.csproj">
+      <Project>{95238d45-ec60-419f-90e1-7064ea738079}</Project>
+      <Name>fNbt.Serialization</Name>
+    </ProjectReference>
     <ProjectReference Include="..\fNbt\fNbt.csproj">
       <Project>{4488498d-976d-4da3-bf72-109531af0488}</Project>
       <Name>fNbt</Name>

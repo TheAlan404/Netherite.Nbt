@@ -20,61 +20,66 @@ namespace fNbt.Serialization {
             this.type = type;
             this.options = options;
             typeMetadata = TypeMetadata.ReadTypeMetadata(type);
+            if (typeMetadata.Category == TypeCategory.NotSupported) {
+                throw new NotSupportedException("Conversion of objects of type " + type + " is not supported.");
+            }
         }
 
 
-        public NbtTag FillTag([CanBeNull] object obj, [NotNull] NbtTag tag) {
+        public NbtTag MakeTag([CanBeNull] string tagName, [CanBeNull] object value) {
+            if (TypeCategory.MappedToPrimitive.HasFlag(typeMetadata.Category)) {
+                // primitives, convertible-to-primitives, and enums
+                return HandlePrimitiveOrEnum(tagName, value, type);
+            }
+        }
+
+
+        public void FillObject([NotNull] NbtTag tag, [NotNull] object obj) {
             if (tag == null) throw new ArgumentNullException("tag");
-            throw new NotImplementedException();
-        }
-
-
-        public object FillObject([NotNull] object obj, [NotNull] NbtTag tag) {
             if (obj == null) throw new ArgumentNullException("obj");
-            if (tag == null) throw new ArgumentNullException("tag");
             throw new NotImplementedException();
         }
 
 
-        static NbtTag HandlePrimitiveOrEnum(string tagName, object value, Type type) {
-            if (type.IsEnum) {
+        static NbtTag HandlePrimitiveOrEnum(string tagName, object value, Type valueType) {
+            if (valueType.IsEnum) {
                 // TODO: see if secondary conversion is necessary
-                type = Enum.GetUnderlyingType(type);
+                valueType = Enum.GetUnderlyingType(valueType);
             }
 
             // Native NBT types
-            if (type == typeof(int)) {
+            if (valueType == typeof(int)) {
                 return new NbtInt(tagName, (int)value);
-            } else if (type == typeof(byte)) {
+            } else if (valueType == typeof(byte)) {
                 return new NbtByte(tagName, (byte)value);
-            } else if (type == typeof(short)) {
+            } else if (valueType == typeof(short)) {
                 return new NbtShort(tagName, (short)value);
-            } else if (type == typeof(long)) {
+            } else if (valueType == typeof(long)) {
                 return new NbtLong(tagName, (long)value);
-            } else if (type == typeof(float)) {
+            } else if (valueType == typeof(float)) {
                 return new NbtFloat(tagName, (float)value);
-            } else if (type == typeof(double)) {
+            } else if (valueType == typeof(double)) {
                 return new NbtDouble(tagName, (double)value);
 
             } else {
                 // Other types convertible to native NBT types
-                if (type == typeof(bool)) {
+                if (valueType == typeof(bool)) {
                     byte byteVal = (byte)((bool)value ? 1 : 0);
                     return new NbtByte(tagName, byteVal);
-                } else if (type == typeof(sbyte)) {
+                } else if (valueType == typeof(sbyte)) {
                     return new NbtByte(tagName, (byte)(sbyte)value);
-                } else if (type == typeof(char)) {
+                } else if (valueType == typeof(char)) {
                     return new NbtShort(tagName, (short)(char)value);
-                } else if (type == typeof(ushort)) {
+                } else if (valueType == typeof(ushort)) {
                     return new NbtShort(tagName, (short)(ushort)value);
-                } else if (type == typeof(uint)) {
+                } else if (valueType == typeof(uint)) {
                     return new NbtInt(tagName, (int)(uint)value);
-                } else if (type == typeof(ulong)) {
+                } else if (valueType == typeof(ulong)) {
                     return new NbtLong(tagName, (long)(ulong)value);
-                } else if (type == typeof(decimal)) {
+                } else if (valueType == typeof(decimal)) {
                     return new NbtDouble(tagName, (double)(decimal)value);
                 } else {
-                    throw new ArgumentException("Given type cannot be mapped to native NBT types.");
+                    throw new ArgumentException("Given valueType cannot be mapped to native NBT types.");
                 }
             }
         }
@@ -85,12 +90,12 @@ namespace fNbt.Serialization {
         // Returns null if this property should be skipped/ignored.
         [CanBeNull]
         NbtTag HandleDirectlyMappedType([CanBeNull] string tagName, [CanBeNull] object value,
-                                        [NotNull] PropertyInfo pinfo) {
-            if (pinfo == null) throw new ArgumentNullException("pinfo");
+                                        NullPolicy nullPolicy, [NotNull] Type propType) {
+            if (propType == null) throw new ArgumentNullException("propType");
             if (value == null) {
-                switch (GetNullPolicy(pinfo)) {
+                switch (nullPolicy) {
                     case NullPolicy.InsertDefault:
-                        value = SerializationUtil.GetDefaultValue(pinfo.PropertyType);
+                        value = SerializationUtil.GetDefaultValue(propType);
                         break;
                     case NullPolicy.Ignore:
                         return null;
@@ -98,7 +103,6 @@ namespace fNbt.Serialization {
                         throw MakeNullException(pinfo);
                 }
             }
-            Type propType = pinfo.PropertyType;
             if (propType == typeof(string)) {
                 return new NbtString(tagName,(string)value);
             }else if (propType == typeof(byte[])) {
@@ -106,7 +110,7 @@ namespace fNbt.Serialization {
             }else if (propType == typeof(int[])) {
                 return new NbtIntArray(tagName, (int[])value);
             } else {
-                throw new ArgumentException("Invalid property type given to DynamicConverter.HandleDirectlyMappedType: expected string, byte[], or int[]");
+                throw new ArgumentException("Invalid property valueType given to DynamicConverter.HandleDirectlyMappedType: expected string, byte[], or int[]");
             }
         }
 
@@ -208,8 +212,7 @@ namespace fNbt.Serialization {
         static SerializationException MakeNullException(PropertyInfo pinfo) {
             string errorMsg = String.Format(
                     "Cannot serialize property {0} of given {1} object: Value is null, and NullPolicy is set to Error.",
-                    pinfo.Name,
-                    pinfo.DeclaringType);
+                    pinfo.Name, pinfo.DeclaringType);
             return new SerializationException(errorMsg);
         }
 
@@ -220,7 +223,7 @@ namespace fNbt.Serialization {
                 // ignored by options
                 return true;
             } else {
-                // ignored by type attributes
+                // ignored by valueType attributes
                 return (typeMetadata.IgnoredProperties != null) &&
                        typeMetadata.IgnoredProperties.Contains(prop);
             }
