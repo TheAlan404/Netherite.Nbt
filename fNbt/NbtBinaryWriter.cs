@@ -35,7 +35,7 @@ namespace fNbt {
         // Each NbtBinaryWriter needs to have its own instance of the buffer.
         readonly byte[] buffer = new byte[BufferSize];
 
-        // Swap is only needed is endianness of the runtime differs from desired NBT stream
+        // Swap is only needed if endianness of the runtime differs from desired NBT stream
         readonly bool swapNeeded;
 
 
