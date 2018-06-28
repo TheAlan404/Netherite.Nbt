@@ -634,16 +634,26 @@ namespace fNbt.Test {
 
         [Test]
         public void PartialReadTest() {
-            // read the whole thing as one tag
+            // read the whole thing as one tag, one byte at a time
             TestFiles.AssertValueTest(PartialReadTestInternal(new NbtFile(TestFiles.MakeValueTest())));
             TestFiles.AssertNbtSmallFile(PartialReadTestInternal(TestFiles.MakeSmallFile()));
             TestFiles.AssertNbtBigFile(PartialReadTestInternal(new NbtFile(TestFiles.Big)));
         }
+        
+
+        [Test]
+        public void PartialBatchReadTest() {
+            // read the whole thing as one tag, in batches of 4 bytes
+            // Verifies fix for https://github.com/fragmer/fNbt/issues/26
+            TestFiles.AssertValueTest(PartialReadTestInternal(new NbtFile(TestFiles.MakeValueTest()), 4));
+            TestFiles.AssertNbtSmallFile(PartialReadTestInternal(TestFiles.MakeSmallFile(), 4));
+            TestFiles.AssertNbtBigFile(PartialReadTestInternal(new NbtFile(TestFiles.Big), 4));
+        }
 
 
-        static NbtFile PartialReadTestInternal(NbtFile comp) {
+        static NbtFile PartialReadTestInternal(NbtFile comp, int increment = 1) {
             byte[] testData = comp.SaveToBuffer(NbtCompression.None);
-            var reader = new NbtReader(new PartialReadStream(new MemoryStream(testData)));
+            var reader = new NbtReader(new PartialReadStream(new MemoryStream(testData), increment));
             var root = (NbtCompound)reader.ReadAsTag();
             return new NbtFile(root);
         }
