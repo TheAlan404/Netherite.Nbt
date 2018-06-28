@@ -89,7 +89,8 @@ namespace fNbt {
             if (length < stringConversionBuffer.Length) {
                 int stringBytesRead = 0;
                 while (stringBytesRead < length) {
-                    int bytesReadThisTime = BaseStream.Read(stringConversionBuffer, stringBytesRead, length);
+                    int bytesToRead = length - stringBytesRead;
+                    int bytesReadThisTime = BaseStream.Read(stringConversionBuffer, stringBytesRead, bytesToRead);
                     if (bytesReadThisTime == 0) {
                         throw new EndOfStreamException();
                     }
