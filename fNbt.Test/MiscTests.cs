@@ -169,5 +169,13 @@ namespace fNbt.Test {
             Assert.AreEqual(".List[0]", testComp["List"][0].Path);
             Assert.AreEqual(".List[0].InsideCompoundAndList", testComp["List"][0]["InsideCompoundAndList"].Path);
         }
+
+
+        [Test]
+        public void BadParamsTest() {
+            Assert.Throws<ArgumentNullException>(() => new NbtByteArray((byte[])null));
+            Assert.Throws<ArgumentNullException>(() => new NbtIntArray((int[])null));
+            Assert.Throws<ArgumentNullException>(() => new NbtString((string)null));
+        }
     }
 }

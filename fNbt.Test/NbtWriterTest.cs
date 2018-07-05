@@ -454,6 +454,26 @@ namespace fNbt.Test {
         }
 
 
+        [Test]
+        public void MissingNameTest() {
+            using (var ms = new MemoryStream()) {
+                NbtWriter writer = new NbtWriter(ms, "test");
+                // All tags (aside from list elements) must be named
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtByte(123)));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtShort(123)));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtInt(123)));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtLong(123)));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtFloat(123)));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtDouble(123)));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtString("value")));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtByteArray(new byte[0])));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtIntArray(new int[0])));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtList(NbtTagType.Byte)));
+                Assert.Throws<NbtFormatException>(() => writer.WriteTag(new NbtCompound()));
+            }
+        }
+
+
         static string GenRandomUnicodeString(Random rand) {
             // String length is limited by number of bytes, not characters.
             // Most bytes per char in UTF8 is 4, so max string length is therefore short.MaxValue/4

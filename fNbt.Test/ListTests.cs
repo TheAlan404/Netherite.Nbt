@@ -388,5 +388,15 @@ namespace fNbt.Test {
                                     .Name);
             }
         }
+
+
+        [Test]
+        public void FirstInsertTest() {
+            NbtList list = new NbtList();
+            Assert.AreEqual(NbtTagType.Unknown, list.ListType);
+            list.Insert(0, new NbtInt(123));
+            // Inserting a tag should set ListType
+            Assert.AreEqual(NbtTagType.Int, list.ListType);
+        }
     }
 }

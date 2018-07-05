@@ -248,6 +248,27 @@ namespace fNbt.Test {
 
 
         [Test]
+        public void ReadToSiblingTest2() {
+            var reader = new NbtReader(TestFiles.MakeReaderTest());
+            Assert.IsTrue(reader.ReadToFollowing("inComp1"));
+            // Expect all siblings to be read while we search for a non-existent one
+            Assert.IsFalse(reader.ReadToNextSibling("no such tag"));
+            // Expect to pop out of "third-comp" by now
+            Assert.AreEqual("fourth-list", reader.TagName);
+        }
+
+
+        [Test]
+        public void ReadToFollowingNotFound() {
+            var reader = new NbtReader(TestFiles.MakeReaderTest());
+            Assert.IsTrue(reader.ReadToFollowing()); // at "root"
+            Assert.IsFalse(reader.ReadToFollowing("no such tag"));
+            Assert.IsFalse(reader.ReadToFollowing("not this one either"));
+            Assert.IsTrue(reader.IsAtStreamEnd);
+        }
+
+
+        [Test]
         public void ReadToDescendantTest() {
             var reader = new NbtReader(TestFiles.MakeReaderTest());
             Assert.IsTrue(reader.ReadToDescendant("third-comp"));
@@ -648,6 +669,39 @@ namespace fNbt.Test {
             TestFiles.AssertValueTest(PartialReadTestInternal(new NbtFile(TestFiles.MakeValueTest()), 4));
             TestFiles.AssertNbtSmallFile(PartialReadTestInternal(TestFiles.MakeSmallFile(), 4));
             TestFiles.AssertNbtBigFile(PartialReadTestInternal(new NbtFile(TestFiles.Big), 4));
+        }
+
+
+        [Test]
+        public void EndTagTest() {
+            using (MemoryStream ms = new MemoryStream()) {
+                var root = new NbtCompound("root") {
+                    new NbtInt("test", 0)
+                };
+                new NbtFile(root).SaveToStream(ms, NbtCompression.None);
+                ms.Position = 0;
+
+                NbtReader reader = new NbtReader(ms) { SkipEndTags = false };
+                reader.ReadToDescendant("test");
+                Assert.AreEqual(NbtTagType.Int, reader.TagType);
+                Assert.IsTrue(reader.ReadToNextSibling());
+
+                // should be at root's End tag now
+                Assert.AreEqual(NbtTagType.End, reader.TagType);
+                Assert.IsFalse(reader.IsInErrorState);
+                Assert.IsFalse(reader.IsAtStreamEnd);
+                Assert.IsFalse(reader.IsCompound);
+                Assert.IsFalse(reader.IsList);
+                Assert.IsFalse(reader.IsListElement);
+                Assert.IsFalse(reader.HasValue);
+                Assert.IsFalse(reader.HasName);
+                Assert.IsFalse(reader.HasLength);
+                Assert.Throws<InvalidOperationException>(() => reader.ReadAsTag()); // Cannot create NbtTag from TAG_END
+
+                // We done now
+                Assert.IsFalse(reader.ReadToFollowing());
+                Assert.IsTrue(reader.IsAtStreamEnd);
+            }
         }
 
 
