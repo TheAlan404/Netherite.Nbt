@@ -570,6 +570,7 @@ namespace fNbt {
         #endregion
 
 
+        /// <inheritdoc />
         public override object Clone() {
             return new NbtList(this);
         }

@@ -127,6 +127,7 @@ namespace fNbt {
         }
 
 
+        /// <inheritdoc />
         public override object Clone() {
             return new NbtByteArray(this);
         }
