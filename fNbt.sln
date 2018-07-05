@@ -7,17 +7,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{83C41F58-F
 	ProjectSection(SolutionItems) = preProject
 		docs\Changelog = docs\Changelog
 		docs\LICENSE = docs\LICENSE
-		README.txt = README.txt
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fNbt", "fNbt\fNbt.csproj", "{4488498D-976D-4DA3-BF72-109531AF0488}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fNbt.Test", "fNbt.Test\fNbt.Test.csproj", "{8DD93C35-682E-4C62-9012-EF15C80FFFEA}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{DF431E24-9487-434E-B11F-431950FCA573}"
-	ProjectSection(SolutionItems) = preProject
-		Dependencies\nunit.framework.dll = Dependencies\nunit.framework.dll
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
