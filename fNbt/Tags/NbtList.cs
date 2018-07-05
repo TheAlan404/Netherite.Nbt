@@ -462,8 +462,7 @@ namespace fNbt {
         /// <summary> Determines whether this NbtList contains a specific tag. </summary>
         /// <returns> true if given tag is found in this NbtList; otherwise, false. </returns>
         /// <param name="item"> The tag to locate in this NbtList. </param>
-        public bool Contains([NotNull] NbtTag item) {
-            if (item == null) throw new ArgumentNullException("item");
+        public bool Contains([CanBeNull] NbtTag item) {
             return tags.Contains(item);
         }
 

@@ -42,6 +42,7 @@ namespace fNbt.Test {
 
             // check IList.Contains
             Assert.IsTrue(iList.Contains(testTag));
+            Assert.IsFalse(iList.Contains(null));
 
             // check IList.Remove
             iList.Remove(testTag);
