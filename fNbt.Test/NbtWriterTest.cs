@@ -41,12 +41,10 @@ namespace fNbt.Test {
 
         [Test]
         public void HugeNbtWriterTest() {
-            // There is a bug in .NET Framework 4.0+ that causes BufferedStream.Write(Byte[],Int32,Int32)
-            // to throw an OverflowException when writing in chunks of 1 GiB or more.
-            // We work around that by splitting up writes into at-most 512 MiB segments.
+            // Tests writing byte arrays that exceed the max NbtBinaryWriter chunk size
             using (BufferedStream bs = new BufferedStream(Stream.Null)) {
                 NbtWriter writer = new NbtWriter(bs, "root");
-                writer.WriteByteArray("payload4", new byte[1024*1024*1024]);
+                writer.WriteByteArray("payload4", new byte[5*1024*1024]);
                 writer.EndCompound();
                 writer.Finish();
             }

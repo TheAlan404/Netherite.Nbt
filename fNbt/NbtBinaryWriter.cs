@@ -7,9 +7,8 @@ namespace fNbt {
     /// <summary> BinaryWriter wrapper that writes NBT primitives to a stream,
     /// while taking care of endianness and string encoding, and counting bytes written. </summary>
     internal sealed unsafe class NbtBinaryWriter {
-        // Write at most 512 MiB at a time.
-        // This works around an overflow in BufferedStream.Write(byte[]) that happens on 1 GiB+ writes.
-        public const int MaxWriteChunk = 512*1024*1024;
+        // Write at most 4 MiB at a time.
+        public const int MaxWriteChunk = 4*1024*1024;
 
         // Encoding can be shared among all instances of NbtBinaryWriter, because it is stateless.
         static readonly UTF8Encoding Encoding = new UTF8Encoding(false, true);
