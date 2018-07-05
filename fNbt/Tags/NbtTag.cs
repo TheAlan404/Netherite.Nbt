@@ -56,7 +56,8 @@ namespace fNbt {
             }
         }
 
-        protected string name;
+        // Used by impls to bypass setter checks (and avoid side effects) when initializing state
+        internal string name;
 
         /// <summary> Gets the full name of this tag, including all parent tag names, separated by dots. 
         /// Unnamed tags show up as empty strings. </summary>
