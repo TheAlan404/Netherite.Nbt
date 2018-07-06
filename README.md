@@ -4,7 +4,7 @@
 fNbt is a small library, written in C# for .NET 3.5+. It provides functionality
 to create, load, traverse, modify, and save NBT files and streams.
 
-Current released version is 0.6.3 (12 April 2015).
+Current released version is 0.6.4 (6 July 2018).
 
 fNbt is based in part on Erik Davidson's (aphistic's) original LibNbt library,
 now completely rewritten by Matvei Stefarov (fragmer).
@@ -31,11 +31,15 @@ Latest version of fNbt requires .NET Framework 3.5+ (client or full profile).
 
 - **Package @ NuGet:**  https://www.nuget.org/packages/fNbt/
 
-- **Compiled binary:**  https://fcraft.net/fnbt/fNbt_v0.6.3.zip<br><sup>SHA1: c743b4e8af649af75d7ab097dfec2bc897a70689</sup>
+- **Compiled binary:**  https://fcraft.net/fnbt/fNbt_v0.6.4.zip
+    <br><sup>SHA1: 600853530fd538e614b6cb4722ced81917e9615d</sup>
 
 - **Amalgamation** (single source file):
-    * Non-annotated: https://fcraft.net/fnbt/fNbt_v0.6.3.cs<br><sup>SHA1: 2a2cd74bee0bab765d9647e0cc048927248d0142</sup>
-    * Annotated (using [JetBrains.Annotations](https://blog.jetbrains.com/dotnet/2018/05/03/what-are-jetbrains-annotations/)): https://fcraft.net/fnbt/fNbt_v0.6.3_Annotated.cs<br><sup>SHA1: 66ab908708678272a58d9e71f1615f68caba79d7</sup>
+    * Non-annotated: https://fcraft.net/fnbt/fNbt_v0.6.4.cs
+	    <br><sup>SHA1: 9298dbe00d080bcf5d32299415aaf856590ba3bf</sup>
+    * Annotated (using [JetBrains.Annotations](https://blog.jetbrains.com/dotnet/2018/05/03/what-are-jetbrains-annotations/)):
+	    https://fcraft.net/fnbt/fNbt_v0.6.4_Annotated.cs
+		<br><sup>SHA1: ae096d83b57bf59c708ad66168d45c1ea9b58175</sup>
 
 
 ## EXAMPLES
@@ -70,11 +74,11 @@ Latest version of fNbt requires .NET Framework 3.5+ (client or full profile).
     foreach( string tagName in myCompoundTag.Names ){
         Console.WriteLine( tagName );
     }
-    for( int i=0; i<myListTag.Count; i++ ){
+    for( int i = 0; i < myListTag.Count; i++ ){
         Console.WriteLine( myListTag[i] );
     }
-    foreach( NbtInt intListItem in myIntList.ToArray<NbtInt>() ){
-        Console.WriteLine( listIntItem.Value );
+    foreach( NbtInt intItem in myIntList.ToArray<NbtInt>() ){
+        Console.WriteLine( intItem.Value );
     }
 ```
 
@@ -105,25 +109,25 @@ Latest version of fNbt requires .NET Framework 3.5+ (client or full profile).
 
 #### Pretty-printing file structure
 ```cs
-    Console.WriteLine( myFile.ToString("\t") );
-    Console.WriteLine( myRandomTag.ToString("    ") );
+    Console.WriteLine( myFile.ToString("\t") ); // tabs
+    Console.WriteLine( myRandomTag.ToString("    ") ); // spaces
 ```
 
 #### Check out unit tests in fNbt.Test for more examples.
 
 
 ## API REFERENCE
-Online reference can be found at http://www.fcraft.net/fnbt/v0.6.3/
+Online reference can be found at http://www.fcraft.net/fnbt/v0.6.4/
 
 
 ## LICENSING
-fNbt v0.5.0+ is licensed under 3-Clause BSD license. See ./docs/LICENSE
+fNbt v0.5.0+ is licensed under 3-Clause BSD license;
+see [docs/LICENSE](docs/LICENSE).
 LibNbt2012 up to and including v0.4.1 kept LibNbt's original license (LGPLv3).
-fNbt makes use of the NUnit testing framework (www.nunit.org)
 
 
 ## VERSION HISTORY
-See ./docs/Changelog
+See [docs/Changelog.md](docs/Changelog.md)
 
 
 ## OLD VERSIONS
