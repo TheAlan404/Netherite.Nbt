@@ -233,6 +233,7 @@ namespace fNbt.Test {
 
         void ReadRootTagInternal(String fileName, NbtCompression compression) {
             Assert.Throws<ArgumentOutOfRangeException>(() => NbtFile.ReadRootTagName(fileName, compression, true, -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => NbtFile.ReadRootTagName(fileName, (NbtCompression)255, true, 0));
 
             Assert.AreEqual("Level", NbtFile.ReadRootTagName(fileName));
             Assert.AreEqual("Level", NbtFile.ReadRootTagName(fileName, compression, true, 0));

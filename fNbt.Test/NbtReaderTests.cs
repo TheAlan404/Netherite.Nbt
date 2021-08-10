@@ -290,6 +290,9 @@ namespace fNbt.Test {
             // Ensure ReadToDescendant returns false when at end-of-stream
             while (reader.ReadToFollowing()) { }
             Assert.IsFalse(reader.ReadToDescendant("*"));
+
+            // Ensure that this works even on the root
+            Assert.IsFalse(new NbtReader(TestFiles.MakeReaderTest()).ReadToDescendant("*"));
         }
 
 

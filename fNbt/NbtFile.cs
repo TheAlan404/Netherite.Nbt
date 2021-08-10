@@ -501,8 +501,7 @@ namespace fNbt {
                     RootTag.WriteTag(writer);
                     break;
 
-                default:
-                    throw new ArgumentOutOfRangeException("compression");
+                // Can't be AutoDetect or unknown: parameter is already validated
             }
 
             if (stream.CanSeek) {
