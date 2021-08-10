@@ -207,11 +207,10 @@ namespace fNbt {
             Debug.Assert(oldName != null);
             Debug.Assert(newName != null);
             Debug.Assert(newName != oldName);
-            NbtTag tag;
-            if (tags.TryGetValue(newName, out tag)) {
+            if (tags.TryGetValue(newName, out _)) {
                 throw new ArgumentException("Cannot rename: a tag with the name already exists in this compound.");
             }
-            if (!tags.TryGetValue(oldName, out tag)) {
+            if (!tags.TryGetValue(oldName, out NbtTag tag)) {
                 throw new ArgumentException("Cannot rename: no tag found to rename.");
             }
             tags.Remove(oldName);

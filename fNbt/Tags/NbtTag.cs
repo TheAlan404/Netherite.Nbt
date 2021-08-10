@@ -42,8 +42,7 @@ namespace fNbt {
                     return;
                 }
 
-                var parentAsCompound = Parent as NbtCompound;
-                if (parentAsCompound != null) {
+                if (Parent is NbtCompound parentAsCompound) {
                     if (value == null) {
                         throw new ArgumentNullException(nameof(value),
                                                         "Name of tags inside an NbtCompound may not be null.");
@@ -67,8 +66,7 @@ namespace fNbt {
                 if (Parent == null) {
                     return Name ?? "";
                 }
-                var parentAsList = Parent as NbtList;
-                if (parentAsList != null) {
+                if (Parent is NbtList parentAsList) {
                     return parentAsList.Path + '[' + parentAsList.IndexOf(this) + ']';
                 } else {
                     return Parent.Path + '.' + Name;
