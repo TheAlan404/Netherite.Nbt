@@ -48,7 +48,7 @@ namespace fNbt {
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtLongArray([CanBeNull] string tagName) {
             name = tagName;
-            longs = new long[0];
+            longs = Array.Empty<long>();
         }
 
         /// <summary> Creates an NbtLongArray tag with the given name, containing the given array of longs. </summary>

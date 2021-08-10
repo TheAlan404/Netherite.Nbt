@@ -6,8 +6,6 @@ using JetBrains.Annotations;
 namespace fNbt {
     /// <summary> A tag containing an array of bytes. </summary>
     public sealed class NbtByteArray : NbtTag {
-        static readonly byte[] ZeroArray = new byte[0];
-
         /// <summary> Type of this tag (ByteArray). </summary>
         public override NbtTagType TagType {
             get { return NbtTagType.ByteArray; }
@@ -48,7 +46,7 @@ namespace fNbt {
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtByteArray([CanBeNull] string tagName) {
             name = tagName;
-            bytes = ZeroArray;
+            bytes = Array.Empty<byte>();
         }
 
 

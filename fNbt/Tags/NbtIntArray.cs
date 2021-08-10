@@ -5,8 +5,6 @@ using JetBrains.Annotations;
 namespace fNbt {
     /// <summary> A tag containing an array of signed 32-bit integers. </summary>
     public sealed class NbtIntArray : NbtTag {
-        static readonly int[] ZeroArray = new int[0];
-
         /// <summary> Type of this tag (ByteArray). </summary>
         public override NbtTagType TagType {
             get { return NbtTagType.IntArray; }
@@ -47,7 +45,7 @@ namespace fNbt {
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtIntArray([CanBeNull] string tagName) {
             name = tagName;
-            ints = ZeroArray;
+            ints = Array.Empty<int>();
         }
 
 
