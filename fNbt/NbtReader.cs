@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -170,7 +170,6 @@ namespace fNbt {
                     state = NbtParseState.Error;
                     // read first tag, make sure it's a compound
                     if (reader.ReadTagType() != NbtTagType.Compound) {
-                        state = NbtParseState.Error;
                         throw new NbtFormatException("Given NBT stream does not start with a TAG_Compound");
                     }
                     Depth = 1;
@@ -186,6 +185,7 @@ namespace fNbt {
                     goto case NbtParseState.InCompound;
 
                 case NbtParseState.InCompound:
+                    state = NbtParseState.Error;
                     if (atValue) {
                         SkipValue();
                     }
@@ -194,11 +194,9 @@ namespace fNbt {
                         TagStartOffset = (int)(reader.BaseStream.Position - streamStartOffset);
                     }
 
-                    NbtParseState oldState = state;
                     // set state to error in case reader.ReadTagType throws.
-                    state = NbtParseState.Error;
                     TagType = reader.ReadTagType();
-                    state = oldState;
+                    state = NbtParseState.InCompound;
 
                     if (TagType == NbtTagType.End) {
                         TagName = null;
@@ -223,6 +221,7 @@ namespace fNbt {
                     goto case NbtParseState.InList;
 
                 case NbtParseState.InList:
+                    state = NbtParseState.Error;
                     if (atValue) {
                         SkipValue();
                     }
@@ -238,13 +237,13 @@ namespace fNbt {
                             goto case NbtParseState.InCompound;
                         } else {
                             // This should not happen unless NbtReader is bugged
-                            state = NbtParseState.Error;
                             throw new NbtFormatException(InvalidParentTagError);
                         }
                     } else {
                         if (canSeekStream) {
                             TagStartOffset = (int)(reader.BaseStream.Position - streamStartOffset);
                         }
+                        state = NbtParseState.InList;
                         ReadTagHeader(false);
                     }
                     return true;
@@ -279,6 +278,9 @@ namespace fNbt {
 
 
         void ReadTagHeader(bool readName) {
+            // Setting state to error in case reader throws
+            NbtParseState oldState = state;
+            state = NbtParseState.Error;
             TagsRead++;
             TagName = (readName ? reader.ReadString() : null);
 
@@ -296,18 +298,21 @@ namespace fNbt {
                 case NbtTagType.Double:
                 case NbtTagType.String:
                     atValue = true;
+                    state = oldState;
                     break;
 
                 case NbtTagType.IntArray:
                 case NbtTagType.ByteArray:
                 case NbtTagType.LongArray:
                     TagLength = reader.ReadInt32();
+                    if (TagLength < 0) {
+                        throw new NbtFormatException("Negative array length given: " + TagLength);
+                    }
                     atValue = true;
+                    state = oldState;
                     break;
 
                 case NbtTagType.List:
-                    // Setting state to error in case reader throws
-                    state = NbtParseState.Error;
                     ListType = reader.ReadTagType();
                     TagLength = reader.ReadInt32();
                     if (TagLength < 0) {
@@ -321,7 +326,7 @@ namespace fNbt {
                     break;
 
                 default:
-                    state = NbtParseState.Error;
+                    // This should not happen unless NbtBinaryReader is bugged
                     throw new NbtFormatException("Trying to read tag of unknown type.");
             }
         }
