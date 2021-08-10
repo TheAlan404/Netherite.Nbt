@@ -185,7 +185,7 @@ namespace fNbt.Test {
             // write short (1-element) lists of every possible kind
             using (var ms = new MemoryStream()) {
                 var writer = new NbtWriter(ms, "Test");
-                writer.BeginList("LotsOfLists", NbtTagType.List, 11);
+                writer.BeginList("LotsOfLists", NbtTagType.List, 12);
                 {
                     writer.BeginList(NbtTagType.Byte, 1);
                     writer.WriteByte(1);
@@ -236,6 +236,12 @@ namespace fNbt.Test {
                     writer.BeginList(NbtTagType.String, 1);
                     writer.WriteString("ponies");
                     writer.EndList();
+
+                    writer.BeginList(NbtTagType.LongArray, 1);
+                    writer.WriteLongArray(new[] {
+                        1L
+                    });
+                    writer.EndList();
                 }
                 writer.EndList();
                 Assert.IsFalse(writer.IsDone);
@@ -275,7 +281,7 @@ namespace fNbt.Test {
         public void ErrorTest() {
             byte[] dummyByteArray = { 1, 2, 3, 4, 5 };
             int[] dummyIntArray = { 1, 2, 3, 4, 5 };
-            byte[] dummyBuffer = new byte[1024];
+            long[] dummyLongArray = { 1, 2, 3, 4, 5 };
             MemoryStream dummyStream = new MemoryStream(dummyByteArray);
 
             using (var ms = new MemoryStream()) {
@@ -352,6 +358,12 @@ namespace fNbt.Test {
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray("NullIntArray", null));
                     Assert.Throws<ArgumentNullException>(() => writer.WriteIntArray("NullIntArray", null, 0, 5));
 
+                    // unacceptable nulls: WriteIntArray
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteLongArray(null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteLongArray(null, 0, 5));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteLongArray("NullLongArray", null));
+                    Assert.Throws<ArgumentNullException>(() => writer.WriteLongArray("NullLongArray", null, 0, 5));
+
                     // non-readable streams are unacceptable
                     Assert.Throws<ArgumentException>(() => writer.WriteByteArray(new NonReadableStream(), 0));
                     Assert.Throws<ArgumentException>(
@@ -385,6 +397,19 @@ namespace fNbt.Test {
                         () => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 0, 6));
                     Assert.Throws<ArgumentException>(
                         () => writer.WriteIntArray("OutOfRangeIntArray", dummyIntArray, 1, 5));
+
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteLongArray(dummyLongArray, -1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteLongArray(dummyLongArray, 0, -1));
+                    Assert.Throws<ArgumentException>(() => writer.WriteLongArray(dummyLongArray, 0, 6));
+                    Assert.Throws<ArgumentException>(() => writer.WriteLongArray(dummyLongArray, 1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(
+                        () => writer.WriteLongArray("OutOfRangeLongArray", dummyLongArray, -1, 5));
+                    Assert.Throws<ArgumentOutOfRangeException>(
+                        () => writer.WriteLongArray("OutOfRangeLongArray", dummyLongArray, 0, -1));
+                    Assert.Throws<ArgumentException>(
+                        () => writer.WriteLongArray("OutOfRangeLongArray", dummyLongArray, 0, 6));
+                    Assert.Throws<ArgumentException>(
+                        () => writer.WriteLongArray("OutOfRangeLongArray", dummyLongArray, 1, 5));
 
                     // out-of-range values for stream-reading overloads of WriteByteArray
                     Assert.Throws<ArgumentOutOfRangeException>(() => writer.WriteByteArray(dummyStream, -1));

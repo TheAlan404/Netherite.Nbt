@@ -142,7 +142,6 @@ namespace fNbt.Test {
 
 
         public static void AssertNbtSmallFile(NbtFile file) {
-            // See TestFiles/test.nbt.txt to see the expected format
             Assert.IsInstanceOf<NbtCompound>(file.RootTag);
 
             NbtCompound root = file.RootTag;
@@ -158,12 +157,11 @@ namespace fNbt.Test {
 
 
         public static void AssertNbtBigFile(NbtFile file) {
-            // See TestFiles/bigtest.nbt.txt to see the expected format
             Assert.IsInstanceOf<NbtCompound>(file.RootTag);
 
             NbtCompound root = file.RootTag;
             Assert.AreEqual("Level", root.Name);
-            Assert.AreEqual(12, root.Count);
+            Assert.AreEqual(13, root.Count);
 
             Assert.IsInstanceOf<NbtLong>(root["longTest"]);
             NbtTag node = root["longTest"];
@@ -297,9 +295,19 @@ namespace fNbt.Test {
             Assert.IsInstanceOf<NbtIntArray>(root["intArrayTest"]);
             var intArrayTag = root.Get<NbtIntArray>("intArrayTest");
             Assert.IsNotNull(intArrayTag);
+            Assert.AreEqual(10, intArrayTag.Value.Length);
             var rand = new Random(0);
             for (int i = 0; i < 10; i++) {
                 Assert.AreEqual(rand.Next(), intArrayTag.Value[i]);
+            }
+
+            Assert.IsInstanceOf<NbtLongArray>(root["longArrayTest"]);
+            var longArrayTag = root.Get<NbtLongArray>("longArrayTest");
+            Assert.IsNotNull(longArrayTag);
+            Assert.AreEqual(5, longArrayTag.Value.Length);
+            var rand2 = new Random(0);
+            for (int i = 0; i < 5; i++) {
+                Assert.AreEqual(((long)rand2.Next() << 32) | (uint)rand2.Next(), longArrayTag.Value[i]);
             }
         }
 

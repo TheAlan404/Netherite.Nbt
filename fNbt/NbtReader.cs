@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -390,9 +390,9 @@ namespace fNbt {
                     break;
 
                 case NbtTagType.IntArray:
-                    reader.Skip(sizeof(int)*TagLength);
+                    reader.Skip(sizeof(int) * TagLength);
                     break;
-                
+
                 case NbtTagType.LongArray:
                     reader.Skip(sizeof(long) * TagLength);
                     break;
