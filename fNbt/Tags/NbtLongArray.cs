@@ -14,6 +14,7 @@ namespace fNbt {
 
         /// <summary> Value/payload of this tag (an array of signed 64-bit integers). Value is stored as-is and is NOT cloned. May not be <c>null</c>. </summary>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
+        [NotNull]
         public long[] Value {
             get { return longs; }
             set {
