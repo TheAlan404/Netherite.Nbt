@@ -9,9 +9,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("fNbt")]
 [assembly: AssemblyDescription("A library for working with NBT files and streams.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("github.com/fragmer/fNbt")]
+[assembly: AssemblyCompany("github.com/mstefarov/fNbt")]
 [assembly: AssemblyProduct("fNbt")]
-[assembly: AssemblyCopyright("2012-2018 Matvei Stefarov")]
+[assembly: AssemblyCopyright("2012-2021 Matvei Stefarov")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("0.6.4.0")]
-[assembly: AssemblyFileVersion("0.6.4.0")]
+[assembly: AssemblyVersion("0.7.0.0")]
+[assembly: AssemblyFileVersion("0.7.0.0")]
 
 // Potentially speed up resource probes
 

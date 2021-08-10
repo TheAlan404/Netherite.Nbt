@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace fNbt.Test {
     public static class TestFiles {
-        public const string DirName = "TestFiles";
+        public static readonly string DirName = Path.Combine(TestContext.CurrentContext.TestDirectory, "TestFiles");
         public static readonly string Small = Path.Combine(DirName, "test.nbt");
         public static readonly string SmallGZip = Path.Combine(DirName, "test.nbt.gz");
         public static readonly string SmallZLib = Path.Combine(DirName, "test.nbt.z");

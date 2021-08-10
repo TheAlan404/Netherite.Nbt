@@ -8,7 +8,7 @@ namespace fNbt.Test {
     public sealed class NbtReaderTests {
         [Test]
         public void PrintBigFileUncompressed() {
-            using (FileStream fs = File.OpenRead("TestFiles/bigtest.nbt")) {
+            using (FileStream fs = File.OpenRead(TestFiles.Big)) {
                 var reader = new NbtReader(fs);
                 Assert.AreEqual(fs, reader.BaseStream);
                 while (reader.ReadToFollowing()) {
@@ -22,7 +22,7 @@ namespace fNbt.Test {
 
         [Test]
         public void PrintBigFileUncompressedNoSkip() {
-            using (FileStream fs = File.OpenRead("TestFiles/bigtest.nbt")) {
+            using (FileStream fs = File.OpenRead(TestFiles.Big)) {
                 var reader = new NbtReader(fs) {
                     SkipEndTags = false
                 };
@@ -558,7 +558,7 @@ namespace fNbt.Test {
 
         [Test]
         public void NonSeekableStreamSkip1() {
-            byte[] fileBytes = File.ReadAllBytes("TestFiles/bigtest.nbt");
+            byte[] fileBytes = File.ReadAllBytes(TestFiles.Big);
             using (var ms = new MemoryStream(fileBytes)) {
                 using (var nss = new NonSeekableStream(ms)) {
                     var reader = new NbtReader(nss);
