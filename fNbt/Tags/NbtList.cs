@@ -27,7 +27,7 @@ namespace fNbt {
                         throw new ArgumentException("Only empty list tags may have TagType of End.");
                     }
                 }else if (value < NbtTagType.Byte || (value > NbtTagType.LongArray && value != NbtTagType.Unknown)) {
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
                 }
                 if (tags.Count > 0) {
                     NbtTagType actualType = tags[0].TagType;
@@ -65,7 +65,7 @@ namespace fNbt {
         public NbtList([NotNull] IEnumerable<NbtTag> tags)
             : this(null, tags, NbtTagType.Unknown) {
             // the base constructor will allow null "tags," but we don't want that in this constructor
-            if (tags == null) throw new ArgumentNullException("tags");
+            if (tags == null) throw new ArgumentNullException(nameof(tags));
         }
 
 
@@ -88,7 +88,7 @@ namespace fNbt {
         public NbtList([CanBeNull] string tagName, [NotNull] IEnumerable<NbtTag> tags)
             : this(tagName, tags, NbtTagType.Unknown) {
             // the base constructor will allow null "tags," but we don't want that in this constructor
-            if (tags == null) throw new ArgumentNullException("tags");
+            if (tags == null) throw new ArgumentNullException(nameof(tags));
         }
 
 
@@ -103,7 +103,7 @@ namespace fNbt {
         public NbtList([NotNull] IEnumerable<NbtTag> tags, NbtTagType givenListType)
             : this(null, tags, givenListType) {
             // the base constructor will allow null "tags," but we don't want that in this constructor
-            if (tags == null) throw new ArgumentNullException("tags");
+            if (tags == null) throw new ArgumentNullException(nameof(tags));
         }
 
 
@@ -138,7 +138,7 @@ namespace fNbt {
         /// <param name="other"> An existing NbtList to copy. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
         public NbtList([NotNull] NbtList other) {
-            if (other == null) throw new ArgumentNullException("other");
+            if (other == null) throw new ArgumentNullException(nameof(other));
             name = other.name;
             listType = other.listType;
             foreach (NbtTag tag in other.tags) {
@@ -158,7 +158,7 @@ namespace fNbt {
             get { return tags[tagIndex]; }
             set {
                 if (value == null) {
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 } else if (value.Parent != null) {
                     throw new ArgumentException("A tag may only be added to one compound/list at a time.");
                 } else if (value == this || value == Parent) {
@@ -193,7 +193,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="newTags"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If given tags do not match ListType, or are of mixed types. </exception>
         public void AddRange([NotNull] IEnumerable<NbtTag> newTags) {
-            if (newTags == null) throw new ArgumentNullException("newTags");
+            if (newTags == null) throw new ArgumentNullException(nameof(newTags));
             foreach (NbtTag tag in newTags) {
                 Add(tag);
             }
@@ -402,7 +402,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="newTag"/> is <c>null</c>. </exception>
         public void Insert(int tagIndex, [NotNull] NbtTag newTag) {
             if (newTag == null) {
-                throw new ArgumentNullException("newTag");
+                throw new ArgumentNullException(nameof(newTag));
             }
             if (listType != NbtTagType.Unknown && newTag.TagType != listType) {
                 throw new ArgumentException("Items must be of type " + listType);
@@ -433,7 +433,7 @@ namespace fNbt {
         /// <exception cref="ArgumentException"> If <paramref name="newTag"/> does not match ListType. </exception>
         public void Add([NotNull] NbtTag newTag) {
             if (newTag == null) {
-                throw new ArgumentNullException("newTag");
+                throw new ArgumentNullException(nameof(newTag));
             } else if (newTag.Parent != null) {
                 throw new ArgumentException("A tag may only be added to one compound/list at a time.");
             } else if (newTag == this || newTag == Parent) {
@@ -491,7 +491,7 @@ namespace fNbt {
         /// <param name="tag"> The tag to remove from this NbtList. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="tag"/> is <c>null</c>. </exception>
         public bool Remove([NotNull] NbtTag tag) {
-            if (tag == null) throw new ArgumentNullException("tag");
+            if (tag == null) throw new ArgumentNullException(nameof(tag));
             if (!tags.Remove(tag)) {
                 return false;
             }

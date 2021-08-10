@@ -19,7 +19,7 @@ namespace fNbt {
             get { return ints; }
             set {
                 if (value == null) {
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 }
                 ints = value;
             }
@@ -58,7 +58,7 @@ namespace fNbt {
         /// <remarks> Given int array will be cloned. To avoid unnecessary copying, call one of the other constructor
         /// overloads (that do not take a int[]) and then set the Value property yourself. </remarks>
         public NbtIntArray([CanBeNull] string tagName, [NotNull] int[] value) {
-            if (value == null) throw new ArgumentNullException("value");
+            if (value == null) throw new ArgumentNullException(nameof(value));
             name = tagName;
             ints = (int[])value.Clone();
         }
@@ -69,7 +69,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
         /// <remarks> Int array of given tag will be cloned. </remarks>
         public NbtIntArray([NotNull] NbtIntArray other) {
-            if (other == null) throw new ArgumentNullException("other");
+            if (other == null) throw new ArgumentNullException(nameof(other));
             name = other.name;
             ints = (int[])other.Value.Clone();
         }

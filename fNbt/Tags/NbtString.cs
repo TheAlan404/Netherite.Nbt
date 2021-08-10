@@ -16,7 +16,7 @@ namespace fNbt {
             get { return stringVal; }
             set {
                 if (value == null) {
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 }
                 stringVal = value;
             }
@@ -42,7 +42,7 @@ namespace fNbt {
         /// <param name="value"> String value to assign to this tag. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         public NbtString([CanBeNull] string tagName, [NotNull] string value) {
-            if (value == null) throw new ArgumentNullException("value");
+            if (value == null) throw new ArgumentNullException(nameof(value));
             name = tagName;
             Value = value;
         }
@@ -52,7 +52,7 @@ namespace fNbt {
         /// <param name="other"> Tag to copy. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
         public NbtString([NotNull] NbtString other) {
-            if (other == null) throw new ArgumentNullException("other");
+            if (other == null) throw new ArgumentNullException(nameof(other));
             name = other.name;
             Value = other.Value;
         }

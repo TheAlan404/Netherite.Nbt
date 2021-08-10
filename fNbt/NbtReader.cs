@@ -32,7 +32,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> <paramref name="stream"/> is not readable. </exception>
         public NbtReader([NotNull] Stream stream, bool bigEndian) {
-            if (stream == null) throw new ArgumentNullException("stream");
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
             SkipEndTags = true;
             CacheTagValues = false;
             ParentTagType = NbtTagType.Unknown;
@@ -902,7 +902,7 @@ namespace fNbt {
         /// <param name="includeValue"> If set to <c>true</c>, also reads and prints the current tag's value. </param>
         [NotNull]
         public string ToString(bool includeValue, [NotNull] string indentString) {
-            if (indentString == null) throw new ArgumentNullException("indentString");
+            if (indentString == null) throw new ArgumentNullException(nameof(indentString));
             var sb = new StringBuilder();
             for (int i = 0; i < Depth; i++) {
                 sb.Append(indentString);

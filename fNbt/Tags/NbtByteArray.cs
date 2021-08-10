@@ -20,7 +20,7 @@ namespace fNbt {
             get { return bytes; }
             set {
                 if (value == null) {
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 }
                 bytes = value;
             }
@@ -59,7 +59,7 @@ namespace fNbt {
         /// <remarks> Given byte array will be cloned. To avoid unnecessary copying, call one of the other constructor
         /// overloads (that do not take a byte[]) and then set the Value property yourself. </remarks>
         public NbtByteArray([CanBeNull] string tagName, [NotNull] byte[] value) {
-            if (value == null) throw new ArgumentNullException("value");
+            if (value == null) throw new ArgumentNullException(nameof(value));
             name = tagName;
             bytes = (byte[])value.Clone();
         }
@@ -70,7 +70,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="other"/> is <c>null</c>. </exception>
         /// <remarks> Byte array of given tag will be cloned. </remarks>
         public NbtByteArray([NotNull] NbtByteArray other) {
-            if (other == null) throw new ArgumentNullException("other");
+            if (other == null) throw new ArgumentNullException(nameof(other));
             name = other.name;
             bytes = (byte[])other.Value.Clone();
         }

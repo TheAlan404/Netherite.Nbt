@@ -109,7 +109,7 @@ namespace fNbt {
 
         public void Skip(int bytesToSkip) {
             if (bytesToSkip < 0) {
-                throw new ArgumentOutOfRangeException("bytesToSkip");
+                throw new ArgumentOutOfRangeException(nameof(bytesToSkip));
             } else if (BaseStream.CanSeek) {
                 BaseStream.Position += bytesToSkip;
             } else if (bytesToSkip != 0) {

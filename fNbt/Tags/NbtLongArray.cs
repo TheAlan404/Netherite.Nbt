@@ -22,7 +22,7 @@ namespace fNbt {
             set
             {
                 if (value == null) {
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 }
 
                 longs = value;
@@ -58,7 +58,7 @@ namespace fNbt {
         /// <remarks> Given long array will be cloned. To avoid unnecessary copying, call one of the other constructor
         /// overloads (that do not take a long[]) and then set the Value property yourself. </remarks>
         public NbtLongArray([CanBeNull] string tagName, [NotNull] long[] value) {
-            if (value == null) throw new ArgumentNullException("value");
+            if (value == null) throw new ArgumentNullException(nameof(value));
             name = tagName;
             longs = (long[])value.Clone();
         }
@@ -70,7 +70,7 @@ namespace fNbt {
         /// <remarks> Long array of given tag will be cloned. </remarks>
         public NbtLongArray([NotNull] NbtLongArray other) {
             if (other == null) {
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
             }
 
             name = other.name;

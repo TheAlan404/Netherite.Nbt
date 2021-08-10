@@ -45,7 +45,7 @@ namespace fNbt {
                 var parentAsCompound = Parent as NbtCompound;
                 if (parentAsCompound != null) {
                     if (value == null) {
-                        throw new ArgumentNullException("value",
+                        throw new ArgumentNullException(nameof(value),
                                                         "Name of tags inside an NbtCompound may not be null.");
                     } else if (name != null) {
                         parentAsCompound.RenameTag(name, value);
@@ -359,7 +359,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="indentString"/> is <c>null</c>. </exception>
         [NotNull]
         public string ToString([NotNull] string indentString) {
-            if (indentString == null) throw new ArgumentNullException("indentString");
+            if (indentString == null) throw new ArgumentNullException(nameof(indentString));
             var sb = new StringBuilder();
             PrettyPrint(sb, indentString, 0);
             return sb.ToString();
@@ -374,7 +374,7 @@ namespace fNbt {
         public static string DefaultIndentString {
             get { return defaultIndentString; }
             set {
-                if (value == null) throw new ArgumentNullException("value");
+                if (value == null) throw new ArgumentNullException(nameof(value));
                 defaultIndentString = value;
             }
         }
