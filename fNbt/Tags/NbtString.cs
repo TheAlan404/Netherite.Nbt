@@ -27,14 +27,14 @@ namespace fNbt {
 
 
         /// <summary> Creates an unnamed NbtString tag with the default value (empty string). </summary>
-        public NbtString() {}
+        public NbtString() { }
 
 
         /// <summary> Creates an unnamed NbtString tag with the given value. </summary>
         /// <param name="value"> String value to assign to this tag. May not be <c>null</c>. </param>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
         public NbtString([NotNull] string value)
-            : this(null, value) {}
+            : this(null, value) { }
 
 
         /// <summary> Creates an NbtString tag with the given name and value. </summary>

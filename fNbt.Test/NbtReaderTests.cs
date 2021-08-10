@@ -69,8 +69,8 @@ namespace fNbt.Test {
             CollectionAssert.AreEqual(new[] { 20, 21, 22 }, (int[])reader.ReadValue());
             CollectionAssert.AreEqual(new[] { 20, 21, 22 }, (int[])reader.ReadValue());
             Assert.IsTrue(reader.ReadToFollowing());
-            CollectionAssert.AreEqual(new long[] { 200, 210, 220 }, (long[]) reader.ReadValue());
-            CollectionAssert.AreEqual(new long[] { 200, 210, 220 }, (long[]) reader.ReadValue());
+            CollectionAssert.AreEqual(new long[] { 200, 210, 220 }, (long[])reader.ReadValue());
+            CollectionAssert.AreEqual(new long[] { 200, 210, 220 }, (long[])reader.ReadValue());
             Assert.IsTrue(reader.ReadToFollowing()); // string
             Assert.AreEqual("123", reader.ReadValue());
             Assert.AreEqual("123", reader.ReadValue());
@@ -224,7 +224,7 @@ namespace fNbt.Test {
             Assert.AreEqual("root", reader.ParentName);
             Assert.AreEqual(NbtTagType.Compound, reader.ParentTagType);
             Assert.AreEqual(0, reader.ParentTagLength);
-            Assert.AreEqual(1024*1024, reader.TagLength);
+            Assert.AreEqual(1024 * 1024, reader.TagLength);
             Assert.AreEqual(19, reader.TagsRead);
         }
 
@@ -441,7 +441,7 @@ namespace fNbt.Test {
             Assert.Throws<InvalidOperationException>(() => reader.ReadListAsArray<NbtCompound>());
 
             // skip to the end of the stream
-            while (reader.ReadToFollowing()) {}
+            while (reader.ReadToFollowing()) { }
             Assert.Throws<EndOfStreamException>(() => reader.ReadListAsArray<int>());
         }
 
@@ -489,7 +489,7 @@ namespace fNbt.Test {
             Assert.IsTrue(reader.ReadToFollowing()); // intArray
             CollectionAssert.AreEqual(new[] { 20, 21, 22 }, (int[])reader.ReadValue());
             Assert.IsTrue(reader.ReadToFollowing()); // longArray
-            CollectionAssert.AreEqual(new long[] { 200, 210, 220 }, (long[]) reader.ReadValue());
+            CollectionAssert.AreEqual(new long[] { 200, 210, 220 }, (long[])reader.ReadValue());
             Assert.IsTrue(reader.ReadToFollowing()); // string
             Assert.AreEqual("123", reader.ReadValue());
 
@@ -737,7 +737,7 @@ namespace fNbt.Test {
             TestFiles.AssertNbtSmallFile(PartialReadTestInternal(TestFiles.MakeSmallFile()));
             TestFiles.AssertNbtBigFile(PartialReadTestInternal(new NbtFile(TestFiles.Big)));
         }
-        
+
 
         [Test]
         public void PartialBatchReadTest() {
@@ -803,7 +803,7 @@ namespace fNbt.Test {
             using (MemoryStream ms = new MemoryStream(data)) {
                 NbtReader reader = new NbtReader(ms);
                 try {
-                    while (reader.ReadToFollowing()) {}
+                    while (reader.ReadToFollowing()) { }
                 } catch (Exception) {
                     Assert.IsTrue(reader.IsInErrorState);
                     throw;

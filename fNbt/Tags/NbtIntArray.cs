@@ -29,7 +29,7 @@ namespace fNbt {
 
         /// <summary> Creates an unnamed NbtIntArray tag, containing an empty array of ints. </summary>
         public NbtIntArray()
-            : this((string)null) {}
+            : this((string)null) { }
 
 
         /// <summary> Creates an unnamed NbtIntArray tag, containing the given array of ints. </summary>
@@ -38,7 +38,7 @@ namespace fNbt {
         /// <remarks> Given int array will be cloned. To avoid unnecessary copying, call one of the other constructor
         /// overloads (that do not take a int[]) and then set the Value property yourself. </remarks>
         public NbtIntArray([NotNull] int[] value)
-            : this(null, value) {}
+            : this(null, value) { }
 
 
         /// <summary> Creates an NbtIntArray tag with the given name, containing an empty array of ints. </summary>
@@ -90,7 +90,7 @@ namespace fNbt {
             }
 
             if (readStream.Selector != null && !readStream.Selector(this)) {
-                readStream.Skip(length*sizeof(int));
+                readStream.Skip(length * sizeof(int));
                 return false;
             }
 
@@ -107,7 +107,7 @@ namespace fNbt {
             if (length < 0) {
                 throw new NbtFormatException("Negative length given in TAG_Int_Array");
             }
-            readStream.Skip(length*sizeof(int));
+            readStream.Skip(length * sizeof(int));
         }
 
 

@@ -257,10 +257,8 @@ namespace fNbt {
         /// <summary> Returns the value of this tag, cast as a long array.
         /// Only supported by NbtLongArray tags. </summary>
         /// <exception cref="InvalidCastException"> When used on a tag other than NbtLongArray. </exception>
-        public long[] LongArrayValue
-        {
-            get
-            {
+        public long[] LongArrayValue {
+            get {
                 if (TagType == NbtTagType.LongArray) {
                     return ((NbtLongArray)this).Value;
                 } else {

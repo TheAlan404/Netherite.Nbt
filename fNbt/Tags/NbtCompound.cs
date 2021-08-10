@@ -17,7 +17,7 @@ namespace fNbt {
 
 
         /// <summary> Creates an empty unnamed NbtByte tag. </summary>
-        public NbtCompound() {}
+        public NbtCompound() { }
 
 
         /// <summary> Creates an empty NbtByte tag with the given name. </summary>
@@ -32,7 +32,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="tags"/> is <c>null</c>, or one of the tags is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> If some of the given tags were not named, or two tags with the same name were given. </exception>
         public NbtCompound([NotNull] IEnumerable<NbtTag> tags)
-            : this(null, tags) {}
+            : this(null, tags) { }
 
 
         /// <summary> Creates an NbtByte tag with the given name, containing the given tags. </summary>
@@ -290,7 +290,7 @@ namespace fNbt {
                     case NbtTagType.IntArray:
                         newTag = new NbtIntArray();
                         break;
-                    
+
                     case NbtTagType.LongArray:
                         newTag = new NbtLongArray();
                         break;
@@ -361,7 +361,7 @@ namespace fNbt {
                     case NbtTagType.IntArray:
                         newTag = new NbtIntArray();
                         break;
-                    
+
                     case NbtTagType.LongArray:
                         newTag = new NbtLongArray();
                         break;

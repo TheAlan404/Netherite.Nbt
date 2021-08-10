@@ -62,7 +62,7 @@ namespace fNbt.Test {
 
         public override long Position {
             get { return baseStream.Position; }
-            set { baseStream.Position= value; }
+            set { baseStream.Position = value; }
         }
     }
 }

@@ -30,7 +30,7 @@ namespace fNbt {
 
         /// <summary> Creates an unnamed NbtByte tag, containing an empty array of bytes. </summary>
         public NbtByteArray()
-            : this((string)null) {}
+            : this((string)null) { }
 
 
         /// <summary> Creates an unnamed NbtByte tag, containing the given array of bytes. </summary>
@@ -39,7 +39,7 @@ namespace fNbt {
         /// <remarks> Given byte array will be cloned. To avoid unnecessary copying, call one of the other constructor
         /// overloads (that do not take a byte[]) and then set the Value property yourself. </remarks>
         public NbtByteArray([NotNull] byte[] value)
-            : this(null, value) {}
+            : this(null, value) { }
 
 
         /// <summary> Creates an NbtByte tag with the given name, containing an empty array of bytes. </summary>

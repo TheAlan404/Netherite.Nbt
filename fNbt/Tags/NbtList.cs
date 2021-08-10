@@ -26,7 +26,7 @@ namespace fNbt {
                     if (tags.Count > 0) {
                         throw new ArgumentException("Only empty list tags may have TagType of End.");
                     }
-                }else if (value < NbtTagType.Byte || (value > NbtTagType.LongArray && value != NbtTagType.Unknown)) {
+                } else if (value < NbtTagType.Byte || (value > NbtTagType.LongArray && value != NbtTagType.Unknown)) {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
                 if (tags.Count > 0) {
@@ -43,17 +43,17 @@ namespace fNbt {
         }
 
         NbtTagType listType;
-        
+
 
         /// <summary> Creates an unnamed NbtList with empty contents and undefined ListType. </summary>
         public NbtList()
-            : this(null, null, NbtTagType.Unknown) {}
+            : this(null, null, NbtTagType.Unknown) { }
 
 
         /// <summary> Creates an NbtList with given name, empty contents, and undefined ListType. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtList([CanBeNull] string tagName)
-            : this(tagName, null, NbtTagType.Unknown) {}
+            : this(tagName, null, NbtTagType.Unknown) { }
 
 
         /// <summary> Creates an unnamed NbtList with the given contents, and inferred ListType. 
@@ -75,7 +75,7 @@ namespace fNbt {
         /// <param name="givenListType"> Name to assign to this tag. May be Unknown. </param>
         /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a recognized tag type. </exception>
         public NbtList(NbtTagType givenListType)
-            : this(null, null, givenListType) {}
+            : this(null, null, givenListType) { }
 
 
         /// <summary> Creates an NbtList with the given name and contents, and inferred ListType. 
@@ -113,7 +113,7 @@ namespace fNbt {
         /// If givenListType is Unknown, ListType will be inferred from the first tag added to this NbtList. </param>
         /// <exception cref="ArgumentOutOfRangeException"> <paramref name="givenListType"/> is not a valid tag type. </exception>
         public NbtList([CanBeNull] string tagName, NbtTagType givenListType)
-            : this(tagName, null, givenListType) {}
+            : this(tagName, null, givenListType) { }
 
 
         /// <summary> Creates an NbtList with the given name and contents, and an explicitly specified ListType. </summary>
@@ -307,19 +307,19 @@ namespace fNbt {
                     readStream.Skip(length);
                     break;
                 case NbtTagType.Short:
-                    readStream.Skip(length*sizeof(short));
+                    readStream.Skip(length * sizeof(short));
                     break;
                 case NbtTagType.Int:
-                    readStream.Skip(length*sizeof(int));
+                    readStream.Skip(length * sizeof(int));
                     break;
                 case NbtTagType.Long:
-                    readStream.Skip(length*sizeof(long));
+                    readStream.Skip(length * sizeof(long));
                     break;
                 case NbtTagType.Float:
-                    readStream.Skip(length*sizeof(float));
+                    readStream.Skip(length * sizeof(float));
                     break;
                 case NbtTagType.Double:
-                    readStream.Skip(length*sizeof(double));
+                    readStream.Skip(length * sizeof(double));
                     break;
                 default:
                     for (int i = 0; i < length; i++) {

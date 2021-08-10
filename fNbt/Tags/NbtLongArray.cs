@@ -6,21 +6,17 @@ namespace fNbt {
     /// <summary> A tag containing an array of signed 64-bit integers. </summary>
     public sealed class NbtLongArray : NbtTag {
         /// <summary> Type of this tag (LongArray). </summary>
-        public override NbtTagType TagType
-        {
-            get
-            {
+        public override NbtTagType TagType {
+            get {
                 return NbtTagType.LongArray;
             }
         }
 
         /// <summary> Value/payload of this tag (an array of signed 64-bit integers). Value is stored as-is and is NOT cloned. May not be <c>null</c>. </summary>
         /// <exception cref="ArgumentNullException"> <paramref name="value"/> is <c>null</c>. </exception>
-        public long[] Value
-        {
+        public long[] Value {
             get { return longs; }
-            set
-            {
+            set {
                 if (value == null) {
                     throw new ArgumentNullException(nameof(value));
                 }
@@ -31,10 +27,10 @@ namespace fNbt {
 
         [NotNull]
         private long[] longs;
-        
+
         /// <summary> Creates an unnamed NbtLongArray tag, containing an empty array of longs. </summary>
         public NbtLongArray()
-            : this((string)null) {}
+            : this((string)null) { }
 
         /// <summary> Creates an unnamed NbtLongArray tag, containing the given array of longs. </summary>
         /// <param name="value"> Long array to assign to this tag's Value. May not be <c>null</c>. </param>
@@ -42,8 +38,8 @@ namespace fNbt {
         /// <remarks> Given long array will be cloned. To avoid unnecessary copying, call one of the other constructor
         /// overloads (that do not take a long[]) and then set the Value property yourself. </remarks>
         public NbtLongArray([NotNull] long[] value)
-            : this(null, value) {}
-        
+            : this(null, value) { }
+
         /// <summary> Creates an NbtLongArray tag with the given name, containing an empty array of longs. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtLongArray([CanBeNull] string tagName) {
@@ -82,8 +78,7 @@ namespace fNbt {
         /// <param name="index"> The zero-based index of the element to get or set. </param>
         /// <returns> The long at the specified index. </returns>
         /// <exception cref="IndexOutOfRangeException"> <paramref name="index"/> is outside the array bounds. </exception>
-        public new long this[int index]
-        {
+        public new long this[int index] {
             get { return Value[index]; }
             set { Value[index] = value; }
         }
@@ -97,7 +92,7 @@ namespace fNbt {
             }
 
             if (readStream.Selector != null && !readStream.Selector(this)) {
-                readStream.Skip(length*sizeof(long));
+                readStream.Skip(length * sizeof(long));
                 return false;
             }
 
@@ -118,7 +113,7 @@ namespace fNbt {
                 throw new NbtFormatException("Negative length given in TAG_Long_Array");
             }
 
-            readStream.Skip(length*sizeof(long));
+            readStream.Skip(length * sizeof(long));
         }
 
 

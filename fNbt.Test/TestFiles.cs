@@ -284,7 +284,7 @@ namespace fNbt.Test {
 
             // Values are: the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...)
             for (int n = 0; n < 1000; n++) {
-                Assert.AreEqual((n*n*255 + n*7)%100, ((NbtByteArray)node)[n]);
+                Assert.AreEqual((n * n * 255 + n * 7) % 100, ((NbtByteArray)node)[n]);
             }
 
             Assert.IsInstanceOf<NbtDouble>(root["doubleTest"]);
@@ -377,7 +377,7 @@ namespace fNbt.Test {
             node = root["intArray"];
             Assert.AreEqual("intArray", node.Name);
             CollectionAssert.AreEqual(new[] { 20, 21, 22 }, node.IntArrayValue);
-            
+
             Assert.IsInstanceOf<NbtLongArray>(root["longArray"]);
             node = root["longArray"];
             Assert.AreEqual("longArray", node.Name);

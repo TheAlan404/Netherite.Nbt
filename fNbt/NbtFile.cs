@@ -8,10 +8,10 @@ namespace fNbt {
     /// <summary> Represents a complete NBT file. </summary>
     public sealed class NbtFile {
         // Size of buffers that are used to avoid frequent reads from / writes to compressed streams
-        const int WriteBufferSize = 8*1024;
+        const int WriteBufferSize = 8 * 1024;
 
         // Size of buffers used for reading to/from files
-        const int FileStreamBufferSize = 64*1024;
+        const int FileStreamBufferSize = 64 * 1024;
 
         /// <summary> Gets the file name used for most recent loading/saving of this file.
         /// May be <c>null</c>, if this <c>NbtFile</c> instance has not been loaded from, or saved to, a file. </summary>
@@ -56,7 +56,7 @@ namespace fNbt {
             }
         }
 
-        static int defaultBufferSize = 8*1024;
+        static int defaultBufferSize = 8 * 1024;
 
         /// <summary> Gets or sets the size of internal buffer used for reading files and streams.
         /// Initialized to value of <c>DefaultBufferSize</c> property. </summary>
@@ -501,7 +501,7 @@ namespace fNbt {
                     RootTag.WriteTag(writer);
                     break;
 
-                // Can't be AutoDetect or unknown: parameter is already validated
+                    // Can't be AutoDetect or unknown: parameter is already validated
             }
 
             if (stream.CanSeek) {

@@ -15,19 +15,19 @@ namespace fNbt {
 
 
         /// <summary> Creates an unnamed NbtShort tag with the default value of 0. </summary>
-        public NbtShort() {}
+        public NbtShort() { }
 
 
         /// <summary> Creates an unnamed NbtShort tag with the given value. </summary>
         /// <param name="value"> Value to assign to this tag. </param>
         public NbtShort(short value)
-            : this(null, value) {}
+            : this(null, value) { }
 
 
         /// <summary> Creates an NbtShort tag with the given name and the default value of 0. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtShort([CanBeNull] string tagName)
-            : this(tagName, 0) {}
+            : this(tagName, 0) { }
 
 
         /// <summary> Creates an NbtShort tag with the given name and value. </summary>

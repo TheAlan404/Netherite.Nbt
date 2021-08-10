@@ -23,7 +23,7 @@ namespace fNbt {
         /// <exception cref="ArgumentNullException"> <paramref name="stream"/> is <c>null</c>. </exception>
         /// <exception cref="ArgumentException"> <paramref name="stream"/> is not readable. </exception>
         public NbtReader([NotNull] Stream stream)
-            : this(stream, true) {}
+            : this(stream, true) { }
 
 
         /// <summary> Initializes a new instance of the NbtReader class. </summary>
@@ -587,17 +587,13 @@ namespace fNbt {
 
 
         void AddToParent([NotNull] NbtTag thisTag, [NotNull] NbtTag parent) {
-            var parentAsList = parent as NbtList;
-            if (parentAsList != null) {
+            if (parent is NbtList parentAsList) {
                 parentAsList.Add(thisTag);
+            } else if (parent is NbtCompound parentAsCompound) {
+                parentAsCompound.Add(thisTag);
             } else {
-                var parentAsCompound = parent as NbtCompound;
-                if (parentAsCompound != null) {
-                    parentAsCompound.Add(thisTag);
-                } else {
-                    // cannot happen unless NbtReader is bugged
-                    throw new NbtFormatException(InvalidParentTagError);
-                }
+                // cannot happen unless NbtReader is bugged
+                throw new NbtFormatException(InvalidParentTagError);
             }
         }
 
@@ -644,13 +640,13 @@ namespace fNbt {
                         ints[i] = reader.ReadInt32();
                     }
                     return new NbtIntArray(TagName, ints);
-                
+
                 case NbtTagType.LongArray:
                     var longs = new long[TagLength];
                     for (int i = 0; i < TagLength; i++) {
                         longs[i] = reader.ReadInt64();
                     }
-                    
+
                     return new NbtLongArray(TagName, longs);
 
                 default:
@@ -923,7 +919,7 @@ namespace fNbt {
         }
 
 
-        const string NoValueToReadError = "Value aready read, or no value to read.",
+        const string NoValueToReadError = "Value already read, or no value to read.",
             NonValueTagError = "Trying to read value of a non-value tag.",
             InvalidParentTagError = "Parent tag is neither a Compound nor a List.",
             ErroneousStateError = "NbtReader is in an erroneous state!";

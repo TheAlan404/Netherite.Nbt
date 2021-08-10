@@ -15,19 +15,19 @@ namespace fNbt {
 
 
         /// <summary> Creates an unnamed NbtInt tag with the default value of 0. </summary>
-        public NbtInt() {}
+        public NbtInt() { }
 
 
         /// <summary> Creates an unnamed NbtInt tag with the given value. </summary>
         /// <param name="value"> Value to assign to this tag. </param>
         public NbtInt(int value)
-            : this(null, value) {}
+            : this(null, value) { }
 
 
         /// <summary> Creates an NbtInt tag with the given name and the default value of 0. </summary>
         /// <param name="tagName"> Name to assign to this tag. May be <c>null</c>. </param>
         public NbtInt([CanBeNull] string tagName)
-            : this(tagName, 0) {}
+            : this(tagName, 0) { }
 
 
         /// <summary> Creates an NbtInt tag with the given name and value. </summary>

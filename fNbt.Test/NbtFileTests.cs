@@ -272,7 +272,7 @@ namespace fNbt.Test {
         [Test]
         public void HugeNbtFileTest() {
             // Tests writing byte arrays that exceed the max NbtBinaryWriter chunk size
-            byte[] val = new byte[5*1024*1024];
+            byte[] val = new byte[5 * 1024 * 1024];
             NbtCompound root = new NbtCompound("root") {
                 new NbtByteArray("payload1") {
                     Value = val
