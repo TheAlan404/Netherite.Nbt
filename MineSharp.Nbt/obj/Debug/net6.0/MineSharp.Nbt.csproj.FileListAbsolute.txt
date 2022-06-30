@@ -1,0 +1,12 @@
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\obj\Debug\net6.0\MineSharp.Nbt.csproj.AssemblyReference.cache
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\obj\Debug\net6.0\MineSharp.Nbt.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\obj\Debug\net6.0\MineSharp.Nbt.AssemblyInfoInputs.cache
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\obj\Debug\net6.0\MineSharp.Nbt.AssemblyInfo.cs
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\obj\Debug\net6.0\MineSharp.Nbt.csproj.CoreCompileInputs.cache
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\bin\Debug\net6.0\MineSharp.Nbt.deps.json
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\bin\Debug\net6.0\MineSharp.Nbt.dll
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\bin\Debug\net6.0\MineSharp.Nbt.pdb
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\obj\Debug\net6.0\MineSharp.Nbt.dll
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\obj\Debug\net6.0\refint\MineSharp.Nbt.dll
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\obj\Debug\net6.0\MineSharp.Nbt.pdb
+C:\Users\KEMAL\Source\Repos\TheAlan404\MineSharp.Nbt\MineSharp.Nbt\obj\Debug\net6.0\ref\MineSharp.Nbt.dll
