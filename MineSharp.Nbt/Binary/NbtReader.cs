@@ -45,7 +45,9 @@ namespace DeepSlate.Nbt.Binary
 				NbtTagType tagType = _reader.ReadTagType();
 				if (tagType == NbtTagType.End) break;
 				if (tagType == NbtTagType.Unknown) throw new NotImplementedException($"Unknown tag type at position {_reader.BaseStream.Position}");
-				
+
+				Console.WriteLine($"reading {tagType} at {_reader.BaseStream.Position}");
+
 				NbtTag? newTag = tagType switch
 				{
 					NbtTagType.Byte => new NbtByte(),
@@ -65,20 +67,25 @@ namespace DeepSlate.Nbt.Binary
 					newTag.Name = _reader.ReadSString();
 					newTag.ReadTag(_reader);
 					compound.Add(newTag);
+					Console.WriteLine(_reader.BaseStream.Position + " " + newTag.ToString());
 				}
 				else
 				{
 					switch (tagType)
 					{
 						case NbtTagType.Compound:
+							string cname = _reader.ReadSString();
 							NbtCompound childCompound = ReadCompound();
-							childCompound.Name = _reader.ReadSString();
+							childCompound.Name = cname;
 							compound.Add(childCompound);
+							Console.WriteLine(_reader.BaseStream.Position + " " + childCompound.ToString());
 							break;
 						case NbtTagType.List:
+							string lname = _reader.ReadSString();
 							NbtList childList = ReadList();
-							childList.Name = _reader.ReadSString();
+							childList.Name = lname;
 							compound.Add(childList);
+							Console.WriteLine(_reader.BaseStream.Position + " " + childList.ToString());
 							break;
 						default:
 							throw new NbtFormatException($"Unknown tag type at position {_reader.BaseStream.Position}");
@@ -95,11 +102,15 @@ namespace DeepSlate.Nbt.Binary
 
 			list.ListType = _reader.ReadTagType();
 
+			Console.WriteLine($"reading list of type {list.ListType} at {_reader.BaseStream.Position}");
+
 			int length = _reader.Read<int>();
 			if (length < 0)
 			{
 				throw new NbtFormatException($"Negative list size given at position {_reader.BaseStream.Position}");
 			}
+
+			Console.WriteLine($"list length is {length}");
 
 			for (int i = 0; i < length; i++)
 			{
@@ -122,6 +133,7 @@ namespace DeepSlate.Nbt.Binary
 				{
 					newTag.ReadTag(_reader);
 					list.Add(newTag);
+					Console.WriteLine(_reader.BaseStream.Position + " " + newTag.ToString());
 				}
 				else
 				{
@@ -130,10 +142,12 @@ namespace DeepSlate.Nbt.Binary
 						case NbtTagType.Compound:
 							NbtCompound childCompound = ReadCompound();
 							list.Add(childCompound);
+							Console.WriteLine(_reader.BaseStream.Position + " " + childCompound.ToString());
 							break;
 						case NbtTagType.List:
 							NbtList childList = ReadList();
 							list.Add(childList);
+							Console.WriteLine(_reader.BaseStream.Position + " " + childList.ToString());
 							break;
 						default:
 							throw new NbtFormatException($"Unknown tag type at position {_reader.BaseStream.Position}");

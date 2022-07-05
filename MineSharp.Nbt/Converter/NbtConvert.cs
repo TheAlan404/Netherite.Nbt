@@ -87,8 +87,10 @@ namespace DeepSlate.Nbt
 			return DeserializeCompound(nbtprops, type, obj, nbt);
 		}
 
-		internal static object DeserializeCompound( Type type, object obj, NbtCompound compound)
-			=> DeserializeCompound(new(), type, obj, compound);
+		internal static object DeserializeCompound(Type type, NbtCompound compound)
+			=> DeserializeCompound(type, InitializeType(type), compound);
+		internal static object DeserializeCompound(Type type, object obj, NbtCompound compound)
+			=> DeserializeCompound(type.GetCustomAttribute<NbtDocumentAttribute>() ?? new(), type, obj, compound);
 		internal static object DeserializeCompound(NbtDocumentAttribute nbtprops, Type type, object obj, NbtCompound compound)
 		{
 			Console.WriteLine($"DeserializeCompound: {type}, {obj}, comp: {compound}");

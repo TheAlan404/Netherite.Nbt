@@ -460,7 +460,7 @@ namespace DeepSlate.Nbt.Entities
 
 			if(TagType == NbtTagType.Compound)
 			{
-				return NbtConvert.DeserializeCompound(type, NbtConvert.InitializeType(type), (NbtCompound)this);
+				return NbtConvert.DeserializeCompound(type, (NbtCompound)this);
 			}
 
 			throw new NotImplementedException($"NbtTag cannot convert to {type}");
