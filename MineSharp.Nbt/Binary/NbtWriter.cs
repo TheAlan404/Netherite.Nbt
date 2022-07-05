@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using Dennis.BinaryUtils;
-using MineSharp.Nbt.Entities;
-using MineSharp.Nbt.Exceptions;
+using DeepSlate.Nbt.Entities;
+using DeepSlate.Nbt.Exceptions;
 
-namespace MineSharp.Nbt.Binary
+namespace DeepSlate.Nbt.Binary
 {
     public class NbtWriter
     {

@@ -1,4 +1,4 @@
-﻿using MineSharp.Nbt.Binary;
+﻿using DeepSlate.Nbt.Binary;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MineSharp.Nbt
+namespace DeepSlate.Nbt
 {
 	public static class BinaryExtensions
 	{

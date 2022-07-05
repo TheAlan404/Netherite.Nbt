@@ -1,6 +1,6 @@
 ﻿using Dennis.BinaryUtils;
-using MineSharp.Nbt.Entities;
-using MineSharp.Nbt.Exceptions;
+using DeepSlate.Nbt.Entities;
+using DeepSlate.Nbt.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MineSharp.Nbt
+namespace DeepSlate.Nbt
 {
 	internal static class InternalReaderExtensions
 	{

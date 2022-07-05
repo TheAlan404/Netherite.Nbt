@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 
-namespace MineSharp.Nbt
+namespace DeepSlate.Nbt
 {
     /// <summary> DeflateStream wrapper that calculates Adler32 checksum of the written data,
     /// to allow writing ZLib header (RFC-1950). </summary>

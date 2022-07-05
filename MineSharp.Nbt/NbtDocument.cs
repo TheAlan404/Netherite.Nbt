@@ -1,5 +1,5 @@
-﻿using MineSharp.Nbt.Binary;
-using MineSharp.Nbt.Entities;
+﻿using DeepSlate.Nbt.Binary;
+using DeepSlate.Nbt.Entities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MineSharp.Nbt
+namespace DeepSlate.Nbt
 {
 	/// <summary>
 	/// Main class for Nbt data. Intended to be used instead of other classes such as NbtReader/Writer

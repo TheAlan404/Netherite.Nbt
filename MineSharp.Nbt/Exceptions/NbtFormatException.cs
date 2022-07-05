@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MineSharp.Nbt.Exceptions
+namespace DeepSlate.Nbt.Exceptions
 {
     /// <summary> Exception thrown when a format violation is detected while
     /// parsing or serializing an NBT file. </summary>

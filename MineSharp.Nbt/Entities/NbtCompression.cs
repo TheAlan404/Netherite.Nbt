@@ -1,4 +1,4 @@
-﻿namespace MineSharp.Nbt.Entities
+﻿namespace DeepSlate.Nbt.Entities
 {
     /// <summary> Compression method used for loading/saving NBT files. </summary>
     public enum NbtCompression

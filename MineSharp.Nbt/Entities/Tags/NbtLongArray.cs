@@ -1,5 +1,5 @@
 using Dennis.BinaryUtils;
-using MineSharp.Nbt.Exceptions;
+using DeepSlate.Nbt.Exceptions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace MineSharp.Nbt.Entities
+namespace DeepSlate.Nbt.Entities
 {
     /// <summary> A tag containing an array of signed 64-bit integers. </summary>
     public sealed class NbtLongArray : NbtTag

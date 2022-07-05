@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dennis.BinaryUtils;
-using MineSharp.Nbt.Exceptions;
+using DeepSlate.Nbt.Exceptions;
 
-namespace MineSharp.Nbt.Entities
+namespace DeepSlate.Nbt.Entities
 {
 	public class NbtTag<T> : NbtTag
 	{

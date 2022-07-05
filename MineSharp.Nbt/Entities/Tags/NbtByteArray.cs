@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Dennis.BinaryUtils;
-using MineSharp.Nbt.Exceptions;
+using DeepSlate.Nbt.Exceptions;
 
-namespace MineSharp.Nbt.Entities
+namespace DeepSlate.Nbt.Entities
 {
 	/// <summary> A tag containing an array of bytes. </summary>
 	public sealed class NbtByteArray : NbtTag

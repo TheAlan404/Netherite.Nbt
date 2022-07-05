@@ -1,10 +1,10 @@
 ﻿using Dennis.BinaryUtils;
-using MineSharp.Nbt.Exceptions;
+using DeepSlate.Nbt.Exceptions;
 using System;
 using System.IO;
 using System.Text;
 
-namespace MineSharp.Nbt.Entities
+namespace DeepSlate.Nbt.Entities
 {
 	/// <summary> A tag containing a single string. String is stored in UTF-8 encoding. </summary>
 	public sealed class NbtString : NbtTag
@@ -65,10 +65,10 @@ namespace MineSharp.Nbt.Entities
 		internal override void PrettyPrint(StringBuilder sb, string indentString, int indentLevel)
 		{
 			base.PrettyPrint(sb, indentString, indentLevel);
-			sb.Append(Value);
+			sb.Append($"'{Value}'");
 		}
 
-		public static implicit operator string?(NbtString nbt) => nbt.Value;
+		public static implicit operator string(NbtString nbt) => nbt.Value ?? "";
 		public static implicit operator NbtString(string nbt) => new NbtString(nbt);
 	}
 }

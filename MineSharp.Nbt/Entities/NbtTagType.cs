@@ -1,4 +1,4 @@
-﻿namespace MineSharp.Nbt.Entities
+﻿namespace DeepSlate.Nbt.Entities
 {
     /// <summary> Enumeration of named binary tag types, and their corresponding codes. </summary>
     public enum NbtTagType : byte
@@ -61,6 +61,23 @@
                 NbtTagType.String => true,
                 _ => false,
             };
+		}
+
+        internal static bool IsIntIndexable(this NbtTagType tagType)
+		{
+			return tagType switch
+			{
+				NbtTagType.List => true,
+				NbtTagType.LongArray => true,
+				NbtTagType.ByteArray => true,
+				NbtTagType.IntArray => true,
+				_ => false,
+			};
+		}
+
+		internal static bool IsStringIndexable(this NbtTagType tagType)
+		{
+            return tagType == NbtTagType.Compound;
 		}
 	}
 }

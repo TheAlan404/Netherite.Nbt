@@ -1,12 +1,12 @@
 ﻿using Dennis.BinaryUtils;
-using MineSharp.Nbt.Exceptions;
+using DeepSlate.Nbt.Exceptions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace MineSharp.Nbt.Entities
+namespace DeepSlate.Nbt.Entities
 {
 	/// <summary> A tag containing a set of other named tags. Order is not guaranteed. </summary>
 	public class NbtCompound : NbtTag, IEnumerable<KeyValuePair<string, NbtTag>>
@@ -208,7 +208,12 @@ namespace MineSharp.Nbt.Entities
         internal override void PrettyPrint(StringBuilder sb, string indentString, int indentLevel)
         {
             base.PrettyPrint(sb, indentString, indentLevel);
-            sb.AppendFormat($"{_tags.Count} entries {{");
+            sb.AppendLine($"{_tags.Count} {(_tags.Count == 1 ? "entry" : "entries")}");
+			for (int i = 0; i < indentLevel; i++)
+			{
+				sb.Append(indentString);
+			}
+			sb.Append($"{{");
             if (_tags.Count > 0)
             {
                 sb.Append('\n');

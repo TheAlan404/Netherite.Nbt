@@ -1,4 +1,4 @@
-﻿using MineSharp.Nbt.Entities;
+﻿using DeepSlate.Nbt.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MineSharp.Nbt
+namespace DeepSlate.Nbt
 {
 	/// <summary>
 	/// Provides helpers for converting to Types to NbtDocument or vice-versa
@@ -82,22 +82,76 @@ namespace MineSharp.Nbt
 
 			object obj = InitializeType(type);
 
-			return DeserializeCompound(type, obj, nbt);
+			NbtDocumentAttribute nbtprops = type.GetCustomAttribute<NbtDocumentAttribute>() ?? new();
+
+			return DeserializeCompound(nbtprops, type, obj, nbt);
 		}
 
-		internal static object DeserializeCompound(Type type, object obj, NbtCompound compound)
+		internal static object DeserializeCompound( Type type, object obj, NbtCompound compound)
+			=> DeserializeCompound(new(), type, obj, compound);
+		internal static object DeserializeCompound(NbtDocumentAttribute nbtprops, Type type, object obj, NbtCompound compound)
 		{
-			NbtMemberSerialization memSer = type.GetCustomAttribute<NbtDocumentAttribute>()?.Serialization ?? NbtMemberSerialization.OptOut;
+			Console.WriteLine($"DeserializeCompound: {type}, {obj}, comp: {compound}");
+
+			if(type == typeof(NbtTag) || type.BaseType == typeof(NbtTag) || type.BaseType?.BaseType == typeof(NbtTag))
+			{
+				Console.WriteLine($"!!! Basetype of {type} was NbtTag, returning obj");
+				return obj;
+			}
+
+			NbtMemberSerialization memSer = nbtprops.Serialization;
 			
+			foreach(var kvp in compound)
+			{
+				if(kvp.Value.TagType == NbtTagType.Compound)
+				{
+					Console.WriteLine($"{kvp.Value.Path} is a compound");
+					PropertyInfo? compoundProp = TryGetNbtProperty(nbtprops, type, kvp.Key);
+					if (compoundProp != null)
+					{
+						object? compObj = DeserializeCompound(nbtprops, compoundProp.PropertyType, InitializeType(compoundProp.PropertyType), (NbtCompound)kvp.Value);
+						compoundProp.SetValue(obj, Convert.ChangeType(compObj, compoundProp.PropertyType));
+					}
+
+					FieldInfo? compoundField = TryGetNbtField(nbtprops, type, kvp.Key);
+					if (compoundField != null)
+					{
+						object? compObj = DeserializeCompound(nbtprops, compoundField.FieldType, InitializeType(compoundField.FieldType), (NbtCompound)kvp.Value);
+						compoundField.SetValue(obj, Convert.ChangeType(compObj, compoundField.FieldType));
+					}
+					continue;
+				}
+
+				PropertyInfo? prop = TryGetNbtProperty(nbtprops, type, kvp.Key);
+				if (prop != null)
+				{
+					prop.SetValue(obj, Convert.ChangeType(kvp.Value, prop.PropertyType));
+					continue;
+				}
+
+				FieldInfo? field = TryGetNbtField(nbtprops, type, kvp.Key);
+				if(field != null)
+				{
+					field.SetValue(obj, Convert.ChangeType(kvp.Value, field.FieldType));
+					continue;
+				}
+			}
+
+			/*
 			foreach (var prop in type.GetProperties().Where(p => ShouldInclude(memSer, p)))
 			{
 				if(compound.Contains(GetName(prop)))
 				{
+					Console.WriteLine($"Compound contains '{GetName(prop)}' (prop='{prop.Name}') ; type = {prop.PropertyType}");
 					NbtTag? tag = compound[GetName(prop)];
-					if (prop.PropertyType.IsAssignableFrom(typeof(NbtTag)))
-						prop.SetValue(obj, tag);
-					else
+					try
 					{
+						prop.SetValue(obj, Convert.ChangeType(tag, prop.PropertyType));
+					}
+					catch(Exception ex)
+					{
+						Console.WriteLine($"{prop.PropertyType} wasnt assignable, treating it as a compound");
+						Console.WriteLine($"{prop.PropertyType}: ex: {ex}");
 						var comp = (NbtCompound?)compound[GetName(prop)];
 						if (comp == null) throw new Exception($"component null");
 						object? value = prop.GetValue(obj);
@@ -111,10 +165,15 @@ namespace MineSharp.Nbt
 			{
 				if (compound.Contains(GetName(field)))
 				{
-					if (field.FieldType.IsAssignableFrom(typeof(NbtTag)))
-						field.SetValue(obj, compound[GetName(field)]);
-					else
+					Console.WriteLine($"Compound contains '{GetName(field)}' (field='{field.Name}') ; type = {field.FieldType}");
+					try
 					{
+						field.SetValue(obj, Convert.ChangeType(compound[GetName(field)], field.FieldType));
+					}
+					catch(Exception ex)
+					{
+						Console.WriteLine($"{field.FieldType} wasnt assignable, treating it as a compound");
+						Console.WriteLine($"{field.FieldType}: ex: {ex}");
 						var comp = (NbtCompound?)compound[GetName(field)];
 						if (comp == null) throw new Exception($"component null");
 						object? value = field.GetValue(obj);
@@ -122,7 +181,7 @@ namespace MineSharp.Nbt
 						field.SetValue(obj, DeserializeCompound(field.FieldType, value, comp));
 					}
 				}
-			}
+			}*/
 
 			return obj;
 		}
@@ -148,6 +207,20 @@ namespace MineSharp.Nbt
 			object? obj = Activator.CreateInstance(type);
 			if (obj == null) throw new Exception($"Couldn't construct {type}! Make sure you have a parameterless constructor");
 			return obj;
+		}
+
+		internal static PropertyInfo? TryGetNbtProperty(NbtDocumentAttribute nbtprops, Type t, string name)
+		{
+			return t.GetProperties().FirstOrDefault(p => ShouldInclude(nbtprops.Serialization, p) &&
+				string.Equals(name, GetName(p), nbtprops.StrictCase ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase),
+				null);
+		}
+
+		internal static FieldInfo? TryGetNbtField(NbtDocumentAttribute nbtprops, Type t, string name)
+		{
+			return t.GetFields().FirstOrDefault(p => ShouldInclude(nbtprops.Serialization, p) &&
+				string.Equals(name, GetName(p), nbtprops.StrictCase ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase),
+				null);
 		}
 
 		//internal static string ToCamelCase(string s) => (char.ToLowerInvariant(s[0]) + s.Substring(1)).Replace("_", string.Empty);

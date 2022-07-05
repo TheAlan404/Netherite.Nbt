@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MineSharp.Nbt
+namespace DeepSlate.Nbt
 {
 	[AttributeUsage(AttributeTargets.All)]
 	public sealed class NbtIgnoreAttribute : Attribute
@@ -32,7 +32,8 @@ namespace MineSharp.Nbt
 	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class NbtDocumentAttribute : Attribute
 	{
-		public NbtMemberSerialization Serialization;
+		public NbtMemberSerialization Serialization = NbtMemberSerialization.OptOut;
+		public bool StrictCase = false;
 
 		public NbtDocumentAttribute(NbtMemberSerialization serialization = NbtMemberSerialization.OptOut)
 		{
